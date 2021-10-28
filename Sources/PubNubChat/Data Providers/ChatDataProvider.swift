@@ -57,7 +57,10 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     batchHandler: (([ChatChannel<ModelData.Channel>], Error?) -> Void)? = nil,
     completion: (() -> Void)? = nil
   ) {
-    if channels.isEmpty { return }
+    if channels.isEmpty {
+      completion?()
+      return
+    }
     
     datastoreQueue.async { [weak self] in
       for batch in channels.chunked(into: batchSize) {
@@ -84,7 +87,10 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     batchHandler: (([ChatUser<ModelData.User>], Error?) -> Void)? = nil,
     completion: (() -> Void)? = nil
   ) {
-    if users.isEmpty { return }
+    if users.isEmpty {
+      completion?()
+      return
+    }
     
     datastoreQueue.async { [weak self] in
       for batch in users.chunked(into: batchSize) {
@@ -111,7 +117,10 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     batchHandler: (([ChatMember<ModelData>], Error?) -> Void)? = nil,
     completion: (() -> Void)? = nil
   ) {
-    if members.isEmpty { return }
+    if members.isEmpty {
+      completion?()
+      return
+    }
     
     datastoreQueue.async { [weak self] in
       for batch in members.chunked(into: batchSize) {
@@ -139,7 +148,10 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     batchHandler: (([ChatMessage<ModelData>], Error?) -> Void)? = nil,
     completion: (() -> Void)? = nil
   ) {
-    if messages.isEmpty { return }
+    if messages.isEmpty {
+      completion?()
+      return
+    }
 
     datastoreQueue.async { [weak self] in
       for batch in messages.chunked(into: batchSize) {
@@ -234,9 +246,6 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     didStartTypingOn channelId: String,
     timetoken date: Date?
   ) {
-    // TODO: This should call the stored typing indicator service
-//    provider.typingIndicatorService.
-    
     TypingIndicatorService.shared
       .updateTypingStatus(
         channelId: channelId,
@@ -258,12 +267,8 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
         switch result {
         case .success(let message):
           PubNub.log.debug("Send Message Success \(message)")
-          self?.load(messages: [message], batchHandler: { messages, error in
-            if let error = error {
-              completion?(.failure(error))
-            } else {
-              completion?(.success(message))
-            }
+          self?.load(messages: [message], completion: {
+            completion?(.success(message))
           })
         case .failure(let error):
           PubNub.log.error("Send Message Error \(error)")
@@ -284,12 +289,8 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
         // Get all the message values
         let messages = messagesByChannel.values.flatMap({ $0 })
         // Store in DB
-        self?.load(messages: messages, batchHandler: { messages, error in
-          if let error = error {
-            completion?(.failure(PaginationError(request: request, error: error)))
-          } else {
-            completion?(.success((messageByChannelId: messagesByChannel, next: next)))
-          }
+        self?.load(messages: messages, completion: {
+          completion?(.success((messageByChannelId: messagesByChannel, next: next)))
         })
       case .failure(let error):
         PubNub.log.error("Sync Remote Messages Error \(error)")
@@ -316,8 +317,8 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
       } receiveValue: { [weak self] messagesById, next in
         let messages = messagesById.values.flatMap { $0 }
         
-        self?.load(messages: messages, batchHandler: { _, error in
-          pageHandler?(messagesById, next, error)
+        self?.load(messages: messages, completion: {
+          pageHandler?(messagesById, next, nil)
         })
       }
       .store(in: &cancellations)
@@ -335,12 +336,8 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     ) { [weak self] result in
       switch result {
       case .success(let remoteChannel):
-        self?.load(channels: [remoteChannel], batchHandler: { _, error in
-          if let error = error {
-            completion?(.failure(error))
-          } else {
-            completion?(.success(remoteChannel))
-          }
+        self?.load(channels: [remoteChannel], completion: {
+          completion?(.success(remoteChannel))
         })
       case .failure(let error):
         PubNub.log.error("Error syncing remote channels \(error)")
@@ -357,12 +354,8 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
       channels: request, into: ModelData.Channel.self) { [weak self] result in
         switch result {
         case .success((let channels, let next)):
-          self?.load(channels: channels, batchHandler: { _, error in
-            if let error = error {
-              completion?(.failure(error))
-            } else {
-              completion?(.success((channels, next)))
-            }
+          self?.load(channels: channels, completion: {
+            completion?(.success((channels, next)))
           })
         case .failure(let error):
           completion?(.failure(error))
@@ -386,8 +379,8 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
           completion?(error)
         }
       } receiveValue: { [weak self] channels, next in
-        self?.load(channels: channels, batchHandler: { _, error in
-          pageHandler?(channels, next, error)
+        self?.load(channels: channels, completion: {
+          pageHandler?(channels, next, nil)
         })
       }
       .store(in: &cancellations)
@@ -403,12 +396,8 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     ) { [weak self] result in
       switch result {
       case .success(let remoteChannel):
-        self?.load(channels: [remoteChannel], batchHandler: { _, error in
-          if let error = error {
-            completion?(.failure(error))
-          } else {
-            completion?(.success(remoteChannel))
-          }
+        self?.load(channels: [remoteChannel], completion: {
+          completion?(.success(remoteChannel))
         })
       case .failure(let error):
         PubNub.log.error("Error setting remote channel metadata error \(error)")
@@ -450,12 +439,8 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     ) { [weak self] result in
       switch result {
       case .success(let remoteUser):
-        self?.load(users: [remoteUser], batchHandler: { _, error in
-          if let error = error {
-            completion?(.failure(error))
-          } else {
-            completion?(.success(remoteUser))
-          }
+        self?.load(users: [remoteUser], completion: {
+          completion?(.success(remoteUser))
         })
       case .failure(let error):
         PubNub.log.error("Error syncing remote User \(error)")
@@ -472,12 +457,8 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
       users: request, into: ModelData.User.self) { [weak self] result in
         switch result {
         case .success((let users, let next)):
-          self?.load(users: users, batchHandler: { _, error in
-            if let error = error {
-              completion?(.failure(error))
-            } else {
-              completion?(.success((users, next)))
-            }
+          self?.load(users: users, completion: {
+            completion?(.success((users, next)))
           })
         case .failure(let error):
           completion?(.failure(error))
@@ -501,8 +482,8 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
           completion?(error)
         }
       } receiveValue: { [weak self] users, next in
-        self?.load(users: users, batchHandler: { _, error in
-          pageHandler?(users, next, error)
+        self?.load(users: users, completion: {
+          pageHandler?(users, next, nil)
         })
       }
       .store(in: &cancellations)
@@ -518,12 +499,8 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     ) { [weak self] result in
       switch result {
       case .success(let remoteUser):
-        self?.load(users: [remoteUser], batchHandler: { _, error in
-          if let error = error {
-            completion?(.failure(error))
-          } else {
-            completion?(.success(remoteUser))
-          }
+        self?.load(users: [remoteUser], completion: {
+          completion?(.success(remoteUser))
         })
       case .failure(let error):
         PubNub.log.error("Error setting remote user metadata \(error)")
@@ -564,12 +541,8 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     ) { [weak self] result in
       switch result {
       case let .success((members, next)):
-        self?.load(members: members, batchHandler: { _, error in
-          if let error = error {
-            completion?(.failure(error))
-          } else {
-            completion?(.success((members, next: next)))
-          }
+        self?.load(members: members, completion: {
+          completion?(.success((members, next: next)))
         })
       case .failure(let error):
         PubNub.log.error("Error syncing remote members \(error)")
@@ -587,12 +560,8 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     ) { [weak self] result in
       switch result {
       case let .success((members, next)):
-        self?.load(members: members, batchHandler: { _, error in
-          if let error = error {
-            completion?(.failure(error))
-          } else {
-            completion?(.success((members, next: next)))
-          }
+        self?.load(members: members, completion: {
+          completion?(.success((members, next: next)))
         })
       case .failure(let error):
         PubNub.log.error("Error fetching remote memberships \(error)")
@@ -617,8 +586,8 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
           completion?(error)
         }
       } receiveValue: { [weak self] members, next in
-        self?.load(members: members, batchHandler: { _, error in
-          pageHandler?(members, next, error)
+        self?.load(members: members, completion: {
+          pageHandler?(members, next, nil)
         })
       }
       .store(in: &cancellations)
@@ -640,9 +609,9 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
           completion?(error)
         }
       } receiveValue: { [weak self] members, next in
-        self?.load(members: members) { _, error in
-          pageHandler?(members, next, error)
-        }
+        self?.load(members: members, completion: {
+          pageHandler?(members, next, nil)
+        })
       }
       .store(in: &cancellations)
   }
@@ -656,12 +625,8 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     ) { [weak self] result in
       switch result {
       case let .success((members, next)):
-        self?.load(members: members, batchHandler: { _, error in
-          if let error = error {
-            completion?(.failure(error))
-          } else {
-            completion?(.success((members, next: next)))
-          }
+        self?.load(members: members, completion: {
+          completion?(.success((members, next: next)))
         })
       case .failure(let error):
         PubNub.log.error("Error setting remote member \(error)")
@@ -679,12 +644,8 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     ) { [weak self] result in
       switch result {
       case let .success((members, next)):
-        self?.load(members: members, batchHandler: { _, error in
-          if let error = error {
-            completion?(.failure(error))
-          } else {
-            completion?(.success((members, next: next)))
-          }
+        self?.load(members: members, completion: {
+          completion?(.success((members, next: next)))
         })
       case .failure(let error):
         PubNub.log.error("Error setting remote membership \(error)")
@@ -702,12 +663,8 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     ) { [weak self] result in
       switch result {
       case let .success((members, next)):
-        self?.load(members: members, batchHandler: { _, error in
-          if let error = error {
-            completion?(.failure(error))
-          } else {
-            completion?(.success((members, next: next)))
-          }
+        self?.load(members: members, completion: {
+          completion?(.success((members, next: next)))
         })
       case .failure(let error):
         PubNub.log.error("Error removing remote member \(error)")
@@ -725,12 +682,8 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     ) { [weak self] result in
       switch result {
       case let .success((members, next)):
-        self?.load(members: members, batchHandler: { _, error in
-          if let error = error {
-            completion?(.failure(error))
-          } else {
-            completion?(.success((members, next: next)))
-          }
+        self?.load(members: members, completion: {
+          completion?(.success((members, next: next)))
         })
       case .failure(let error):
         PubNub.log.error("Error removing remote membership \(error)")
@@ -748,12 +701,8 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     provider.pubnubProvider.fetch(hereNow: request, into: ModelData.self) { [weak self] result in
       switch result {
       case let .success((occupancy, members)):
-        self?.load(members: members, batchHandler: { members, error in
-          if let error = error {
-            completion?(.failure(error))
-          } else {
-            completion?(.success((occupancy, members)))
-          }
+        self?.load(members: members, completion: {
+          completion?(.success((occupancy, members)))
         })
       case let .failure(error):
         PubNub.log.error("Error syncing HereNow \(error)")
@@ -769,12 +718,8 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     provider.pubnubProvider.fetch(presenceState: request, into: ModelData.self) { [weak self] result in
       switch result {
       case let .success(members):
-        self?.load(members: members, batchHandler: { members, error in
-          if let error = error {
-            completion?(.failure(error))
-          } else {
-            completion?(.success(members))
-          }
+        self?.load(members: members, completion: {
+          completion?(.success(members))
         })
       case let .failure(error):
         PubNub.log.error("Error syncing remote presence state \(error)")
@@ -790,12 +735,8 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     provider.pubnubProvider.set(presenceState: request, into: ModelData.self) { [weak self] result in
       switch result {
       case let .success(members):
-        self?.load(members: members, batchHandler: { members, error in
-          if let error = error {
-            completion?(.failure(error))
-          } else {
-            completion?(.success(members))
-          }
+        self?.load(members: members, completion: {
+          completion?(.success(members))
         })
       case let .failure(error):
         PubNub.log.error("Error setting presence state \(error)")

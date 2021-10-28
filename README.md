@@ -122,12 +122,16 @@ The first required step is to call `ChatProvider`, which initializes all the dat
     ```swift
     guard let defaultChannelViewModel = chatProvider?
           .senderMembershipsChanneListComponentViewModel() else { return }
+
+    // Create navigation structure
+    let componentNavigation = UINavigationController()
+    componentNavigation.viewControllers = [defaultChannelViewModel.configuredComponentView()]
     ```
 
 1. Set the component as the root view controller and display the window.
 
     ```swift
-    window.rootViewController = defaultChannelViewModel.configuredComponentView()
+    window.rootViewController = componentNavigation
     self.window = window
     window.makeKeyAndVisible()
     ```
@@ -157,7 +161,7 @@ The first required step is to call `ChatProvider`, which initializes all the dat
 
         if chatProvider == nil {
           var pubnubConfig = PubNubConfiguration(publishKey: "pub-c-key", subscribeKey: "sub-c-key")
-          pubnubConfig.uuid = PubNubChatProvider.cachedSenderID ?? "uuid-of-current-user"
+          pubnubConfig.uuid = PubNubChatProvider.cachedCurrentUserId ?? "uuid-of-current-user"
 
           chatProvider = PubNubChatProvider(
             pubnubConfiguration: pubnubConfig
@@ -165,11 +169,16 @@ The first required step is to call `ChatProvider`, which initializes all the dat
         }
 
         // Create the default Channel List Component
-        guard let defaultChannelViewModel = chatProvider?.senderMembershipsChanneListComponentViewModel() else { return }
+        guard let defaultChannelViewModel = chatProvider?.senderMembershipsChanneListComponentViewModel() else {
+          preconditionFailure("Could not create intial view")
+        }
+
+        // Create navigation structure
+        let navigation = UINavigationController()
+        navigation.viewControllers = [defaultChannelViewModel.configuredComponentView()]
 
         // Set the component as the root view controller
-        window.rootViewController = defaultChannelViewModel.configuredComponentView()
-
+        window.rootViewController = navigation
         self.window = window
         window.makeKeyAndVisible()
       }

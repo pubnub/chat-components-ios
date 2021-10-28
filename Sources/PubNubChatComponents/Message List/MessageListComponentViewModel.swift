@@ -223,7 +223,7 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
 
     viewModel.selectedChannel.presentMemberCountPublisher
       .sink { [weak barButton] presenceCount in
-        barButton?.button.setTitle("100", for: .normal)
+        barButton?.button.setTitle("\(presenceCount)", for: .normal)
       }
       .store(in: &viewModel.cancellables)
     

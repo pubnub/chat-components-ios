@@ -42,9 +42,6 @@ open class ComponentThemeProvider {
 // MARK: - Chat Provider Ext
 
 extension ChatProvider {
-
-  // TODO: Service defaults should be applied here?
-
   public var themeProvider: ComponentThemeProvider {
     return ComponentThemeProvider.shared
   }

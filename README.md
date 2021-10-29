@@ -67,7 +67,7 @@ For any additional questions, refer to [Apple documentation](https://developer.a
 
 1. Inside your Xcode project, select **File** > **Add Packages...**, and enter the project repository URL.
 
-1. If your GitHub account is added to Xcode's preferences, you can search for `PubNubChatComponents` in the **Github** section. If it's not added, search using the package URL `https://github.com/pubnub/apple-chat-components`.
+1. If your GitHub account is added to Xcode's preferences, you can search for `PubNubChatComponents` in the **Github** section. If it's not added, search using the package URL `https://github.com/pubnub/chat-components-ios`.
 
 1. After the package details load, click the **Add Package** button in the lower right corner.
 
@@ -103,10 +103,10 @@ The first required step is to call `ChatProvider`, which initializes all the dat
     )
     ```
 
-    You can configure the UUID to associate a sender/current user with the PubNub messages. You can get it from a previously cached entry.
+    You can configure the UUID to associate a current user with the PubNub messages. You can get it from a previously cached entry.
 
     ```swift
-    pubnubConfig.uuid = PubNubChatProvider.cachedSenderID ?? "uuid-of-current-user"
+    pubnubConfig.uuid = PubNubChatProvider.cachedCurrentUserId ?? "uuid-of-current-user"
     ```
 
 1. Create `ChatProvider`. This object is used to facilitate the majority of the functionality provided by PubNub Chat Components for iOS.

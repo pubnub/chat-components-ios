@@ -66,7 +66,7 @@ public struct ChatChannel<Custom: ChannelCustomData>: Identifiable, Codable, Has
   
   public let id: String
 
-  public var name: String
+  public var name: String?
   public var details: String?
   public var updated: Date?
   public var eTag: String?
@@ -78,7 +78,7 @@ public struct ChatChannel<Custom: ChannelCustomData>: Identifiable, Codable, Has
 
   public init(
     id: String ,
-    name: String,
+    name: String?,
     type: String,
     details: String? = nil,
     avatarURL: URL? = nil,

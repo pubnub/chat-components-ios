@@ -136,7 +136,6 @@ public struct ChatMessage<CustomData: ChatCustomData>: Identifiable, Codable {
         custom: custom
       ),
       timetoken: timetoken,
-      //    sentStatus: String = "pending",
       dateSent: dateSent,
       dateReceived: dateReceived,
       pubnubUserId: pubnubUserId,

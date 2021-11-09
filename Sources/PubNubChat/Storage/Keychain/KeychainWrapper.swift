@@ -27,74 +27,131 @@
 
 import Foundation
 
+import PubNub
+
+public struct KeychainDefaults {
+
+  public var suiteName: String?
+  public var domain: String
+  
+  public init(
+    suiteName: String?,
+    domain: String
+  ) {
+    self.suiteName = suiteName
+    self.domain = domain
+  }
+  
+  public static let standard: KeychainDefaults = {
+    return KeychainDefaults(suiteName: nil, domain: "com.pubnub.keychain.service.chat")
+  }()
+  
+  // MARK: - CRUD
+  
+  public func store<Value: Codable>(_ value: Value, forKey key: String) {
+    do {
+      try KeychainWrapper.store(
+        service: domain,
+        accessGroup: suiteName,
+        account: key,
+        content: value
+      )
+    } catch {
+      PubNub.log.error("Keychain Defaults Error: Could not store value \(value) for key \(key) due to \(error)")
+    }
+  }
+  
+  public func read<Value: Codable>(forKey key: String) -> Value? {
+    do {
+      return try KeychainWrapper.read(
+        service: domain,
+        accessGroup: suiteName,
+        account: key
+      )
+    } catch {
+      PubNub.log.error("Keychain Defaults Error: Could not read value for key \(key) due to \(error)")
+      return nil
+    }
+  }
+  
+  public func removeValue(forKey key: String) {
+    do {
+      try KeychainWrapper.delete(service: domain, accessGroup: suiteName, account: key)
+    } catch {
+      PubNub.log.error("Keychain Defaults Error: Could not remove value for key \(key) due to \(error)")
+    }
+  }
+  
+  public func removeAll() {
+    do {
+      try KeychainWrapper.deleteAll(service: domain, accessGroup: suiteName)
+    } catch {
+      PubNub.log.error("Keychain Defaults Error: Could not remove all values due to \(error)")
+    }
+  }
+}
+
+// MARK: - Keychain Impl.
+
 struct KeychainWrapper {
   enum KeychainError: Error {
-    
     case dataCodingError
-    
     // Attempted read for an item that does not exist.
     case itemNotFound
-    
     // Attempted save to override an existing item.
     // Use update instead of save to update existing items
     case duplicateItem
-    
     // A read of an item in any format other than Data
     case invalidItemFormat
-    
     // Any operation result status than errSecSuccess
     case unexpectedStatus(OSStatus)
   }
+
+  // MARK: - Create/Update
   
-  static let chatService = "com.pubnub.keychain.service.chat"
-  static let senderAccount = "com.pubnub.senderId"
-  
-  static func storeString(
-    service: String = chatService,
-    account: String = senderAccount,
-    content: String
+  static func store<Value: Codable>(
+    service: String,
+    accessGroup: String? = nil,
+    account: String,
+    content: Value
   ) throws {
+    let contentData = try JSONEncoder().encode(content)
+
     do {
-      try saveString(
+      try save(
         service: service,
+        accessGroup: accessGroup,
         account: account,
-        content: content
+        contentData: contentData
       )
     } catch KeychainError.duplicateItem {
-      try updateString(
+      try update(
         service: service,
+        accessGroup: accessGroup,
         account: account,
-        content: content
+        contentData: contentData
       )
     } catch {
       throw error
     }
   }
   
-  static func saveString(
-    service: String = chatService,
-    account: String = senderAccount,
-    content: String
-  ) throws {
-    guard let contentData = content.data(using: .utf8) else {
-      throw KeychainError.dataCodingError
-    }
-    
-    try save(service: service, account: account, content: contentData)
-  }
-  
-  static func save(
-    service: String = chatService,
+  private static func save(
+    service: String,
+    accessGroup: String? = nil,
     account: String,
-    content: Data
+    contentData: Data
   ) throws {
-    
-    let query: [String: AnyObject] = [
-      kSecAttrService as String: service as AnyObject,
-      kSecAttrAccount as String: account as AnyObject,
+    var query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
-      kSecValueData as String: content as AnyObject
+      kSecAttrService as String: service as Any,
+      kSecAttrAccount as String: account as Any,
+      kSecValueData as String: contentData as Any
     ]
+
+    if let accessGroup = accessGroup {
+      query[kSecAttrAccessGroup as String] = accessGroup as Any
+    }
 
     let status = SecItemAdd(
       query as CFDictionary,
@@ -110,31 +167,24 @@ struct KeychainWrapper {
     }
   }
   
-  static func updateString(
-    service: String = chatService,
-    account: String = senderAccount,
-    content: String
-  ) throws {
-    guard let contentData = content.data(using: .utf8) else {
-      throw KeychainError.dataCodingError
-    }
-    
-    try update(service: service, account: account, content: contentData)
-  }
-  
-  static func update(
-    service: String = chatService,
+  private static func update(
+    service: String,
+    accessGroup: String? = nil,
     account: String,
-    content: Data
+    contentData: Data
   ) throws {
-    let query: [String: AnyObject] = [
-      kSecAttrService as String: service as AnyObject,
-      kSecAttrAccount as String: account as AnyObject,
-      kSecClass as String: kSecClassGenericPassword
+    var query: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrService as String: service as Any,
+      kSecAttrAccount as String: account as Any
     ]
+    
+    if let accessGroup = accessGroup {
+      query[kSecAttrAccessGroup as String] = accessGroup as Any
+    }
 
     let attributes: [String: AnyObject] = [
-      kSecValueData as String: content as AnyObject
+      kSecValueData as String: contentData as AnyObject
     ]
 
     let status = SecItemUpdate(
@@ -151,18 +201,18 @@ struct KeychainWrapper {
     }
   }
   
-  static func readString(
-    service: String = chatService,
-    account: String = senderAccount
-  ) throws -> String? {
+  // MARK: - Read
+  
+  static func read<Value: Codable>(
+    service: String,
+    accessGroup: String? = nil,
+    account: String
+  ) throws -> Value? {
     do {
-      let content = try read(service: service, account: account)
+      let content = try read(service: service, accessGroup: accessGroup, account: account)
+
+      return try JSONDecoder().decode(Value.self, from: content)
       
-      guard let contentString = String(data: content, encoding: .utf8) else {
-        throw KeychainError.dataCodingError
-      }
-      
-      return contentString
     } catch KeychainError.itemNotFound {
       return nil
     } catch {
@@ -170,17 +220,22 @@ struct KeychainWrapper {
     }
   }
   
-  static func read(
-    service: String = chatService,
+  private static func read(
+    service: String,
+    accessGroup: String? = nil,
     account: String
   ) throws -> Data {
-    let query: [String: AnyObject] = [
-      kSecAttrService as String: service as AnyObject,
-      kSecAttrAccount as String: account as AnyObject,
+    var query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
       kSecMatchLimit as String: kSecMatchLimitOne,
-      kSecReturnData as String: kCFBooleanTrue
+      kSecReturnData as String: true,
+      kSecAttrService as String: service as Any,
+      kSecAttrAccount as String: account as Any
     ]
+    
+    if let accessGroup = accessGroup {
+      query[kSecAttrAccessGroup as String] = accessGroup as Any
+    }
     
     var itemCopy: AnyObject?
     let status = SecItemCopyMatching(
@@ -203,20 +258,60 @@ struct KeychainWrapper {
     return password
   }
   
+  // MARK: - Remove
+  
   static func delete(
-    service: String = chatService,
-    account: String = senderAccount
+    service: String,
+    accessGroup: String? = nil,
+    account: String
   ) throws {
-    let query: [String: AnyObject] = [
-      kSecAttrService as String: service as AnyObject,
-      kSecAttrAccount as String: account as AnyObject,
-      kSecClass as String: kSecClassGenericPassword
+    var query: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrService as String: service as Any,
+      kSecAttrAccount as String: account as Any
     ]
+    
+    if let accessGroup = accessGroup {
+      query[kSecAttrAccessGroup as String] = accessGroup as Any
+    }
 
     let status = SecItemDelete(query as CFDictionary)
     
     guard status == errSecSuccess else {
       throw KeychainError.unexpectedStatus(status)
+    }
+  }
+  
+  // MARK: - Remove All
+  
+  static func deleteAll(
+    service: String,
+    accessGroup: String? = nil
+  ) throws {
+
+    let secClasses = [
+      kSecClassGenericPassword,
+      kSecClassInternetPassword,
+      kSecClassCertificate,
+      kSecClassKey,
+      kSecClassIdentity
+    ]
+    
+    for secClass in secClasses {
+      var query: [String: Any] = [
+        kSecClass as String: secClass,
+        kSecAttrService as String: service as Any
+      ]
+      
+      if let accessGroup = accessGroup {
+        query[kSecAttrAccessGroup as String] = accessGroup as Any
+      }
+      
+      let status = SecItemDelete(query as CFDictionary)
+      
+      guard status == errSecSuccess else {
+        throw KeychainError.unexpectedStatus(status)
+      }
     }
   }
 }

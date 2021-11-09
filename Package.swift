@@ -51,7 +51,7 @@ let package = Package(
   ],
   dependencies: [
     // Common
-    .package(name: "PubNub", url: "https://github.com/pubnub/swift.git", from: "4.1.0"),
+    .package(name: "PubNub", url: "https://github.com/pubnub/swift.git", from: "4.1.2"),
     
     // PubNubChat
     

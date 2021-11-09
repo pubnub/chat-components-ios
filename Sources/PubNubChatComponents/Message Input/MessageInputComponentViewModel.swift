@@ -72,6 +72,9 @@ public class MessageInputComponentViewModel<ModelData, ManagedEntities>
   public let provider: ChatProvider<ModelData, ManagedEntities>
   public let selectedChannel: ManagedEntities.Channel
   
+  // TODO: Don't require the cancellable
+  public var cancellables = Set<AnyCancellable>()
+  
   @Published public var componentTheme: MessageInputComponentTheme
   
   @Published public var typingMemberIds: Set<String> = []

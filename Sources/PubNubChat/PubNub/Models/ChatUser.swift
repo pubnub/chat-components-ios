@@ -49,7 +49,7 @@ public struct ChatUser<Custom: UserCustomData>: Identifiable, Codable, Hashable 
   }
   
   public var id: String
-  public var name: String
+  public var name: String?
   
   public var externalId: String?
   public var avatarURL: URL?
@@ -65,7 +65,7 @@ public struct ChatUser<Custom: UserCustomData>: Identifiable, Codable, Hashable 
   
   public init(
     id: String,
-    name: String,
+    name: String?,
     occupation: String? = nil,
     externalId: String? = nil,
     avatarURL: URL? = nil,

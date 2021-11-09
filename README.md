@@ -41,7 +41,7 @@ This page outlines the steps to follow to set up a sample application with PubNu
 | Platform | iOS, iPad, macOS |
 | Language | >= Swift 5 |
 | UI Framework | UIKit |
-| [PubNub Swift SDK](https://github.com/pubnub/swift) | >= 4.1.0 |
+| [PubNub Swift SDK](https://github.com/pubnub/swift) | >= 4.1.2 |
 
 ## Create a PubNub account
 
@@ -106,7 +106,7 @@ The first required step is to call `ChatProvider`, which initializes all the dat
     You can configure the UUID to associate a current user with the PubNub messages. You can get it from a previously cached entry.
 
     ```swift
-    pubnubConfig.uuid = PubNubChatProvider.cachedCurrentUserId ?? "uuid-of-current-user"
+    pubnubConfig.uuid = UserDefaults.standard.currentUserId ?? "uuid-of-current-user"
     ```
 
 1. Create `ChatProvider`. This object is used to facilitate the majority of the functionality provided by PubNub Chat Components for iOS.
@@ -161,7 +161,7 @@ The first required step is to call `ChatProvider`, which initializes all the dat
 
         if chatProvider == nil {
           var pubnubConfig = PubNubConfiguration(publishKey: "pub-c-key", subscribeKey: "sub-c-key")
-          pubnubConfig.uuid = PubNubChatProvider.cachedCurrentUserId ?? "uuid-of-current-user"
+          pubnubConfig.uuid = UserDefaults.standard.currentUserId ?? "uuid-of-current-user"
 
           chatProvider = PubNubChatProvider(
             pubnubConfiguration: pubnubConfig
@@ -192,5 +192,5 @@ If you **need help** or have a **general question**, contact <support@pubnub.com
 
 ## License
 
-The PubNub Swift SDK is released under the MIT license.
-[See LICENSE](https://github.com/pubnub/swift/blob/master/LICENSE) for details.
+PubNub Chat Components for iOS is released under the MIT license.
+[See LICENSE](https://github.com/pubnub/chat-components-ios/blob/master/LICENSE) for details.

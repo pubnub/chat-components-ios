@@ -194,7 +194,7 @@ extension MessageListCellComponentTheme {
         textContainerInset: .zero
       ),
       contentLinkTheme: LinkViewComponentTheme(
-        cacheProvider: InMemoryLinkMetadataCache.shared,
+        cacheProvider: InMemoryCache.standard,
         layoutMargin: UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
       ),
       itemTheme: .pubnubGroupChannelList,

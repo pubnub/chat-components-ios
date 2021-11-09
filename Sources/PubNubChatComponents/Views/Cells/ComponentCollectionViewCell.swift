@@ -139,10 +139,6 @@ open class CollectionViewCellComponent: UICollectionViewCell, ReloadCellDelegate
     self.reloadDelegate?.reloadAsyncContainer(reloadId)
   }
   
-  func theming(_ themePublisher: CollectionViewCellTheme) {
-    
-  }
-  
   // MARK: - Base Managed Object View Models
   
   open func configure<Message: ManagedMessageViewModel>(

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="19206" systemVersion="20G165" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="19461" systemVersion="20G165" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="PubNubManagedChannel" representedClassName="PubNubManagedChannel" syncable="YES">
         <attribute name="avatarURL" optional="YES" attributeType="URI"/>
         <attribute name="custom" optional="YES" attributeType="Binary"/>
@@ -8,7 +8,7 @@
         <attribute name="id" attributeType="String"/>
         <attribute name="lastUpdated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="memberCount" optional="YES" attributeType="Integer 64" derived="YES" derivationExpression="members.@count" usesScalarValueType="YES"/>
-        <attribute name="name" attributeType="String"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="presentMemberCount" optional="YES" transient="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="type" attributeType="String"/>
         <relationship name="members" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="PubNubManagedMember" inverseName="channel" inverseEntity="PubNubManagedMember"/>
@@ -74,7 +74,7 @@
         <attribute name="externalId" optional="YES" attributeType="String"/>
         <attribute name="id" attributeType="String"/>
         <attribute name="lastUpdated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="name" attributeType="String"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="occupation" optional="YES" attributeType="String"/>
         <relationship name="memberships" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="PubNubManagedMember" inverseName="user" inverseEntity="PubNubManagedMember"/>
         <relationship name="messages" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="PubNubManagedMessage" inverseName="author" inverseEntity="PubNubManagedMessage"/>

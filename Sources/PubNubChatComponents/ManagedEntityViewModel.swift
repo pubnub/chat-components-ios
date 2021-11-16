@@ -44,7 +44,7 @@ public protocol ManagedChannelViewModel {
   var pubnubId: String { get }
   var managedObjectId: NSManagedObjectID { get }
   
-  var channelNamePublisher: AnyPublisher<String, Never> { get }
+  var channelNamePublisher: AnyPublisher<String?, Never> { get }
   var channelDetailsPublisher: AnyPublisher<String?, Never> { get }
   var channelAvatarUrlPublisher: AnyPublisher<URL?, Never> { get }
   var channelTypePublisher: AnyPublisher<String, Never> { get }
@@ -64,7 +64,7 @@ extension PubNubManagedChannel: ManagedChannelViewModel {
   public var pubnubId: String { return pubnubChannelID }
   public var managedObjectId: NSManagedObjectID { return objectID }
   
-  public var channelNamePublisher: AnyPublisher<String, Never> {
+  public var channelNamePublisher: AnyPublisher<String?, Never> {
     return publisher(for: \.name).eraseToAnyPublisher()
   }
   
@@ -116,8 +116,8 @@ public protocol ManagedUserViewModel {
   var pubnubId: String { get }
   var managedObjectId: NSManagedObjectID { get }
 
-  var userName: String { get }
-  var userNamePublisher: AnyPublisher<String, Never> { get }
+  var userName: String? { get }
+  var userNamePublisher: AnyPublisher<String?, Never> { get }
   
   var userOccupation: String? { get }
   var userOccupationPublisher: AnyPublisher<String?, Never> { get }
@@ -132,10 +132,10 @@ extension PubNubManagedUser: ManagedUserViewModel {
   public var pubnubId: String { return pubnubUserID }
   public var managedObjectId: NSManagedObjectID { return objectID }
   
-  public var userName: String {
+  public var userName: String? {
     return name
   }
-  public var userNamePublisher: AnyPublisher<String, Never> {
+  public var userNamePublisher: AnyPublisher<String?, Never> {
     return publisher(for: \.name).eraseToAnyPublisher()
   }
   

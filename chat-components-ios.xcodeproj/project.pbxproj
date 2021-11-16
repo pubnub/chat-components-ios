@@ -45,6 +45,8 @@
 		3544C60C268939510047DBB7 /* KeychainWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3544C60B268939510047DBB7 /* KeychainWrapper.swift */; };
 		3544C60E268A14F50047DBB7 /* NSSortDescriptor+PubNubChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3544C60D268A14F50047DBB7 /* NSSortDescriptor+PubNubChat.swift */; };
 		3544C611268AF0FB0047DBB7 /* UIKit+Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3544C60F268AF0B40047DBB7 /* UIKit+Components.swift */; };
+		3551EB922739AB4D00ABA555 /* CacheProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3551EB912739AB4D00ABA555 /* CacheProvider.swift */; };
+		3551EB942739CCCC00ABA555 /* ChatError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3551EB932739CCCC00ABA555 /* ChatError.swift */; };
 		355526D026D454BD009698E3 /* BubbleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 355526CF26D454BD009698E3 /* BubbleView.swift */; };
 		355526D226D456C2009698E3 /* ContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 355526D126D456C2009698E3 /* ContainerView.swift */; };
 		355526D426D46363009698E3 /* DateFormatter+Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 355526D326D46363009698E3 /* DateFormatter+Components.swift */; };
@@ -175,6 +177,8 @@
 		3544C60B268939510047DBB7 /* KeychainWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainWrapper.swift; sourceTree = "<group>"; };
 		3544C60D268A14F50047DBB7 /* NSSortDescriptor+PubNubChat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSSortDescriptor+PubNubChat.swift"; sourceTree = "<group>"; };
 		3544C60F268AF0B40047DBB7 /* UIKit+Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIKit+Components.swift"; sourceTree = "<group>"; };
+		3551EB912739AB4D00ABA555 /* CacheProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheProvider.swift; sourceTree = "<group>"; };
+		3551EB932739CCCC00ABA555 /* ChatError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatError.swift; sourceTree = "<group>"; };
 		355526CF26D454BD009698E3 /* BubbleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BubbleView.swift; sourceTree = "<group>"; };
 		355526D126D456C2009698E3 /* ContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerView.swift; sourceTree = "<group>"; };
 		355526D326D46363009698E3 /* DateFormatter+Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DateFormatter+Components.swift"; sourceTree = "<group>"; };
@@ -392,6 +396,7 @@
 		350AC7B02644407300C3D323 /* Storage */ = {
 			isa = PBXGroup;
 			children = (
+				3551EB912739AB4D00ABA555 /* CacheProvider.swift */,
 				3544C60A2689393A0047DBB7 /* Keychain */,
 				350AC7F126447D5300C3D323 /* CoreData */,
 			);
@@ -437,6 +442,7 @@
 				350AC8792644839200C3D323 /* CustomJSONData.swift */,
 				3598B2C72645E09D00878118 /* TransientPropertyHolder.swift */,
 				35ECD9B327148198000E17AF /* ENV.swift */,
+				3551EB932739CCCC00ABA555 /* ChatError.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -871,6 +877,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3598B1E22644B0AE00878118 /* NSPersistentStoreDescription+PubNubChat.swift in Sources */,
+				3551EB922739AB4D00ABA555 /* CacheProvider.swift in Sources */,
 				350AC7D92644442C00C3D323 /* CoreDataContainer.swift in Sources */,
 				35FD758126A0DD10007D7435 /* ChatMessage.swift in Sources */,
 				35787FA12684E9F4006A775E /* NSManagedObjectContext+PubNubChat.swift in Sources */,
@@ -893,6 +900,7 @@
 				350AC82A26447E4400C3D323 /* PubNubManagedUser.swift in Sources */,
 				350AC81426447E1900C3D323 /* PubNubManagedMember.swift in Sources */,
 				350AC78A264355D500C3D323 /* ChatProvider.swift in Sources */,
+				3551EB942739CCCC00ABA555 /* ChatError.swift in Sources */,
 				35B3B511264B387200473120 /* MembershipAPI.swift in Sources */,
 				35B3B518264B38AD00473120 /* MessageAPI.swift in Sources */,
 				35FD757E269F8714007D7435 /* PubNubManagedMessage.swift in Sources */,
@@ -1141,7 +1149,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.1.1;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1220,7 +1228,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.1.1;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pubnub.PubNubChat;
@@ -1446,7 +1454,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.1.1;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1523,7 +1531,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.1.1;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pubnub.PubNubChatComponents;
@@ -1738,7 +1746,7 @@
 			repositoryURL = "https://github.com/pubnub/swift";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 4.0.0;
+				minimumVersion = 4.1.2;
 			};
 		};
 		35B3B5952655D61300473120 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {

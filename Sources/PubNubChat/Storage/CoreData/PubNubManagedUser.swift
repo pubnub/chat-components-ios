@@ -34,7 +34,7 @@ import PubNub
 public final class PubNubManagedUser: NSManagedObject {
   // Entity Attributes
   @NSManaged public var id: String
-  @NSManaged public var name: String
+  @NSManaged public var name: String?
   
   @NSManaged public var occupation: String?
   
@@ -152,7 +152,6 @@ extension PubNubManagedUser: ManagedUserEntityFetches {
   public static func userBy(userId: String) -> NSFetchRequest<PubNubManagedUser> {
     let request = NSFetchRequest<PubNubManagedUser>(entityName: entityName)
     request.predicate = NSPredicate(format: "id == %@", userId)
-    request.fetchLimit = 1
     
     return request
   }

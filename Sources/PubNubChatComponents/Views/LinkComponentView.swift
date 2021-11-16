@@ -62,7 +62,7 @@ final public class LinkComponentView: UIView {
       .map { $0! }
       .handleEvents(
         receiveOutput: { [weak self] url in
-          if let metadata = cache.metadata(for: url) {
+          if let metadata = cache.metadata(forURL: url) {
             self?.setupLinkView(LPLinkView(metadata: metadata))
           } else {
             self?.setupLinkView(LPLinkView(url: url))
@@ -74,7 +74,7 @@ final public class LinkComponentView: UIView {
         }
       )
       .flatMap {
-        cache.fetchMetadata(for: $0, provider: LPMetadataProvider())
+        cache.fetchMetadata(forURL: $0, provider: LPMetadataProvider())
           .replaceError(with: .init())
       }
       .receive(on: DispatchQueue.main)

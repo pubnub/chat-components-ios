@@ -34,26 +34,26 @@ import SwiftUI
 @objc(PubNubManagedChannel)
 public final class PubNubManagedChannel: NSManagedObject {
   @NSManaged public var id: String
-  @NSManaged public var name: String
+  @NSManaged public var name: String?
   @NSManaged public var type: String
-  
+
   @NSManaged public var details: String?
   @NSManaged public var avatarURL: URL?
-  
+
   @NSManaged public var custom: Data
-  
+
   @NSManaged public var lastUpdated: Date?
   @NSManaged public var eTag: String?
-  
+
   // Relationships
-  
+
   @NSManaged public var messages: Set<PubNubManagedMessage>
   @NSManaged public var members: Set<PubNubManagedMember>
-  
+
   // Derived Attributes
 
   @NSManaged public var memberCount: Int
-  
+
   // Transient Property
 }
 
@@ -63,7 +63,7 @@ extension PubNubManagedChannel: ManagedChannelEntity {
   public var pubnubChannelID: String {
     return id
   }
-  
+
   public var memberEntityCount: Int {
     return members.count
   }
@@ -71,19 +71,19 @@ extension PubNubManagedChannel: ManagedChannelEntity {
   public var presentMemberEntityCount: Int {
     return members.filter({ $0.isPresent }).count
   }
-  
+
   public var managedMembers: Set<PubNubManagedMember> {
     return members
   }
-  
+
   public var managedMessages: Set<PubNubManagedMessage> {
     return messages
   }
-  
+
   public func convert<Custom: ChannelCustomData>() -> ChatChannel<Custom> {
     return ChatChannel(
       id: id,
-      name: name,
+      name: name ?? "",
       type: type,
       details: details,
       avatarURL: avatarURL,
@@ -92,7 +92,7 @@ extension PubNubManagedChannel: ManagedChannelEntity {
       custom: (try? Constant.jsonDecoder.decode(Custom.self, from: custom)) ?? Custom()
     )
   }
-  
+
   @discardableResult
   public static func insertOrUpdate<Custom: ChannelCustomData>(
     channel: ChatChannel<Custom>,
@@ -108,7 +108,7 @@ extension PubNubManagedChannel: ManagedChannelEntity {
       return try insert(channel: channel, into: context)
     }
   }
-  
+
   static func insert<Custom: ChannelCustomData>(
     channel: ChatChannel<Custom>,
     into context: NSManagedObjectContext
@@ -130,7 +130,7 @@ extension PubNubManagedChannel: ManagedChannelEntity {
     lastUpdated = channel.updated
     eTag = channel.eTag
   }
-  
+
   func update<Custom: ChatCustomData>(
     from member: ChatMember<Custom>
   ) throws {
@@ -138,7 +138,7 @@ extension PubNubManagedChannel: ManagedChannelEntity {
       try update(from: channelModel)
     }
   }
-  
+
   @discardableResult
   public static func remove(
     channelId: String,
@@ -150,7 +150,7 @@ extension PubNubManagedChannel: ManagedChannelEntity {
       context.delete(existingChannel)
       return existingChannel
     }
-    
+
     return nil
   }
 }
@@ -161,10 +161,10 @@ extension PubNubManagedChannel: ManagedChannelEntityFetches {
   public static func channelBy(channelID: String) -> NSFetchRequest<PubNubManagedChannel> {
     let request = NSFetchRequest<PubNubManagedChannel>(entityName: entityName)
     request.predicate = NSPredicate(format: "id == %@", channelID)
-    
+
     return request
   }
-  
+
   public static func channelBy(pubnubId: String) -> NSFetchRequest<PubNubManagedChannel> {
     return channelBy(channelID: pubnubId)
   }

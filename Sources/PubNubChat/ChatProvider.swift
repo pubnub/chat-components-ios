@@ -30,36 +30,20 @@ import CoreData
 
 import PubNub
 
-public enum ChatError: Error {
-  case notImplemented
-  
-  case entityCreationError
-  case missingRequiredData
-  
-  case wrongContentType
-}
-
 public typealias PubNubChatProvider = ChatProvider<VoidCustomData, PubNubManagedChatEntities>
 
 open class ChatProvider<ModelData, ManagedEntities> where ModelData: ChatCustomData, ManagedEntities: ManagedChatEntities {
   
-  enum Error: LocalizedError, CustomStringConvertible {
-    case Storage
-    
-    var description: String {
-      return ""
-    }
-  }
-  
   let databaseConfig: DatastoreConfiguration
   let coreDataContainer: CoreDataContainer
+
+  public var cacheProvider: CacheProvider
   
   public var pubnubConfig: PubNubConfiguration {
     return pubnubProvider.configuration
   }
   public var pubnubProvider: PubNubAPI {
     didSet {
-      print("DidSet")
       pubnubProvider.add(dataProvider.pubnubListner)
     }
   }
@@ -70,18 +54,14 @@ open class ChatProvider<ModelData, ManagedEntities> where ModelData: ChatCustomD
 
   public init(
     datastoreConfiguration: DatastoreConfiguration = .pubnubDefault,
-    pubnubConfiguration: PubNubConfiguration
+    pubnubConfiguration: PubNubConfiguration,
+    cacheProvider: CacheProvider = UserDefaults.standard
   ) {
     if pubnubConfiguration.uuid.isEmpty {
       preconditionFailure("The PubNub UUID is empty")
     }
     
-    do {
-      try Self.storeCached(currentUserId: pubnubConfiguration.uuid)
-    } catch {
-      preconditionFailure("Could not update the stored SenderID cache")
-    }
-
+    self.cacheProvider = cacheProvider
     self.databaseConfig = datastoreConfiguration
     self.pubnubProvider = PubNub(configuration: pubnubConfiguration.mergeChatConsumerID())
 
@@ -97,6 +77,8 @@ open class ChatProvider<ModelData, ManagedEntities> where ModelData: ChatCustomD
     } catch {
       preconditionFailure("Failed to initialize the in-memory storage with error: \(error). This is a non-recoverable error.")
     }
+    
+    self.cacheProvider.cache(currentUserId: pubnubConfiguration.uuid)
   
     // Add default listener
     self.pubnubProvider.add(dataProvider.pubnubListner)
@@ -123,16 +105,6 @@ extension ChatProvider {
 // MARK: Sender Management
 
 extension ChatProvider {
-  public static var cachedCurrentUserId: String? {
-    return try? KeychainWrapper.readString()
-  }
-  public static func storeCached(currentUserId: String) throws {
-    try KeychainWrapper.storeString(content: currentUserId)
-  }
-  
-  public static func removeCachedCurrentUserId() throws {
-    try KeychainWrapper.delete()
-  }
   
   public var currentUserId: String {
     return pubnubProvider.configuration.uuid

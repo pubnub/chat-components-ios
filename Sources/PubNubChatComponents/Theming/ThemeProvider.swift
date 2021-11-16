@@ -725,7 +725,7 @@ public class LinkViewComponentTheme: ObservableObject {
   @Published public var layoutMargin: UIEdgeInsets
 
   public init(
-    cacheProvider: LinkMetadataService = InMemoryLinkMetadataCache.shared,
+    cacheProvider: LinkMetadataService,
     layoutMargin: UIEdgeInsets
   ) {
     self.cacheProvider = cacheProvider

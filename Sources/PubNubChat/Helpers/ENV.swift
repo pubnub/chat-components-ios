@@ -28,5 +28,9 @@
 import Foundation
 
 struct ENV {
-  static let currentVersion = "0.1.0"
+  static let currentVersion = "0.1.1"
+
+  static let frameworkIdentifier = "ICC"
+  
+  static let bundleIdentifier = "com.pubnub.PubNubChat"
 }

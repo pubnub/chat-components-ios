@@ -1,5 +1,5 @@
 //
-//  PubNub+PubNubChat.swift
+//  ChatError.swift
 //
 //  PubNub Real-time Cloud-Hosted Push API and Push Notification Client Frameworks
 //  Copyright © 2021 PubNub Inc.
@@ -27,45 +27,11 @@
 
 import Foundation
 
-import PubNub
-
-extension URL: JSONCodableScalar {
-  public var scalarValue: JSONCodableScalarType {
-    return JSONCodableScalarType(stringValue: self.absoluteString)
-  }
-}
-
-extension Optional: JSONCodableScalar, JSONCodable where Wrapped: JSONCodableScalar {
-  public var scalarValue: JSONCodableScalarType {
-    switch self {
-    case .some(let value):
-      return value.scalarValue
-    default:
-      return JSONCodableScalarType(stringValue: nil)
-    }
-  }
-}
-
-extension JSONCodableScalar {
-  var urlOptional: URL? {
-    if let urlString = stringOptional {
-      return URL(string: urlString)
-    }
-    
-    return nil
-  }
-}
-
-extension PubNubConfiguration {
-  static var pubnubChatCID: [String: String] {
-    return [ENV.frameworkIdentifier: "\(ENV.frameworkIdentifier)/\(ENV.currentVersion)"]
-  }
+public enum ChatError: Error {
+  case notImplemented
   
-  func mergeChatConsumerID() -> PubNubConfiguration {
-    var config = self
-    config.consumerIdentifiers
-      .merge(PubNubConfiguration.pubnubChatCID) { (old, _) in old }
-    
-    return config
-  }
+  case entityCreationError
+  case missingRequiredData
+  
+  case wrongContentType
 }

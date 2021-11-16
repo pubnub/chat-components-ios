@@ -532,7 +532,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
   
   // MARK: Member API Actions
   
-  public func syncRemoteMember(
+  public func syncRemoteMembers(
     _ request: MemberFetchRequest,
     completion: ((Result<([ChatMember<ModelData>], next: MemberFetchRequest?), Error>) -> Void)?
   ) {
@@ -551,7 +551,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     }
   }
   
-  public func syncRemoteMembership(
+  public func syncRemoteMemberships(
     _ request: MembershipFetchRequest,
     completion: ((Result<([ChatMember<ModelData>], next: MembershipFetchRequest?), Error>) -> Void)?
   ) {
@@ -570,7 +570,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     }
   }
   
-  public func syncAllRemoteMemberPagination(
+  public func syncRemoteMembersPagination(
     _ request: MemberFetchRequest,
     pageHandler: (([ChatMember<ModelData>], MemberFetchRequest?, Error?) -> Void)? = nil,
     completion: ((PaginationError<MemberFetchRequest>?) -> Void)? = nil
@@ -593,7 +593,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
       .store(in: &cancellations)
   }
   
-  public func syncAllRemoteMembershipPagination(
+  public func syncRemoteMembershipsPagination(
     _ request: MembershipFetchRequest,
     pageHandler: (([ChatMember<ModelData>], MembershipFetchRequest?, Error?) -> Void)? = nil,
     completion: ((PaginationError<MembershipFetchRequest>?) -> Void)? = nil
@@ -616,7 +616,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
       .store(in: &cancellations)
   }
   
-  public func setRemoteMember(
+  public func setRemoteMembers(
     _ request: MemberModifyRequest,
     completion: ((Result<([ChatMember<ModelData>], next: MemberModifyRequest?), Error>) -> Void)?
   ) {
@@ -635,7 +635,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     }
   }
   
-  public func setRemoteMembership(
+  public func setRemoteMemberships(
     _ request: MembershipModifyRequest,
     completion: ((Result<([ChatMember<ModelData>], next: MembershipModifyRequest?), Error>) -> Void)?
   ) {
@@ -654,7 +654,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     }
   }
   
-  public func removeRemoteMember(
+  public func removeRemoteMembers(
     _ request: MemberModifyRequest,
     completion: ((Result<([ChatMember<ModelData>], next: MemberModifyRequest?), Error>) -> Void)?
   ) {
@@ -673,7 +673,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     }
   }
   
-  public func removeRemoteMembership(
+  public func removeRemoteMemberships(
     _ request: MembershipModifyRequest,
     completion: ((Result<([ChatMember<ModelData>], next: MembershipModifyRequest?), Error>) -> Void)?
   ) {

@@ -25,6 +25,7 @@ Our iOS component library provides chat features like direct and group messaging
 
 ## Related documentation
 
+* [PubNub documentation for iOS Chat Components](https://www.pubnub.com/docs/chat/components/ios/overview-ios)
 * [Swift SDK Documentation](/docs/sdks/swift)
 * [Core Data Documentation](https://developer.apple.com/documentation/coredata)
 * [UIKit Documentation](https://developer.apple.com/documentation/uikit/)

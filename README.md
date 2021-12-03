@@ -17,16 +17,16 @@ Our iOS component library provides chat features like direct and group messaging
 
 ## Available components
 
-* [ChannelList](/docs/chat/components/ios/ui-components-ios#channellist)
-* [MemberList](/docs/chat/components/ios/ui-components-ios#memberlist)
-* [MessageList](/docs/chat/components/ios/ui-components-ios#messagelist)
-* [MessageInput](/docs/chat/components/ios/ui-components-ios#messageinput)
-* [ChatProvider](/docs/chat/components/ios/chat-provider-ios)
+* [ChannelList](https://www.pubnub.com//docs/chat/components/ios/ui-components-ios#channellist)
+* [MemberList](https://www.pubnub.com//docs/chat/components/ios/ui-components-ios#memberlist)
+* [MessageList](https://www.pubnub.com//docs/chat/components/ios/ui-components-ios#messagelist)
+* [MessageInput](https://www.pubnub.com//docs/chat/components/ios/ui-components-ios#messageinput)
+* [ChatProvider](https://www.pubnub.com//docs/chat/components/ios/chat-provider-ios)
 
 ## Related documentation
 
-* [PubNub documentation for iOS Chat Components](https://www.pubnub.com/docs/chat/components/ios/overview-ios)
-* [Swift SDK Documentation](/docs/sdks/swift)
+* [PubNub Chat Components for iOS Documentation](https://www.pubnub.com/docs/chat/components/ios/overview-ios)
+* [Swift SDK Documentation](https://www.pubnub.com/docs/sdks/swift)
 * [Core Data Documentation](https://developer.apple.com/documentation/coredata)
 * [UIKit Documentation](https://developer.apple.com/documentation/uikit/)
 
@@ -114,7 +114,7 @@ The first required step is to call `ChatProvider`, which initializes all the dat
     self.chatProvider = PubNubChatProvider(pubnubConfiguration: pubnubConfig)
     ```
 
-    For more information, refer to the [ChatProvider](/docs/chat/components/ios/chat-provider-ios) section.
+    For more information, refer to the [ChatProvider](https://www.pubnub.com/docs/chat/components/ios/chat-provider-ios) section.
 
 1. Create a default `ChannelListViewModel` that is used to display all the channels that are associated with the current user.
 

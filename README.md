@@ -32,19 +32,18 @@ Our iOS component library provides chat features like direct and group messaging
 | Language | >= Swift 5 |
 | UI Framework | UIKit |
 | [PubNub Swift SDK](https://github.com/pubnub/swift) | >= 4.1.2 |
-
-## Related documentation
-
-* [PubNub Chat Components for iOS Documentation](https://www.pubnub.com/docs/chat/components/ios/overview-ios)
-* [Swift SDK Documentation](https://www.pubnub.com/docs/sdks/swift)
-* [Core Data Documentation](https://developer.apple.com/documentation/coredata)
-* [UIKit Documentation](https://developer.apple.com/documentation/uikit/)
-
 ## Usage
 
 Start by exploring our [sample apps](https://github.com/pubnub/chat-components-ios-examples/blob/master/README.md) that are built using chat components.
 
 Follow the steps in the [Getting Started guide](https://www.pubnub.com/docs/chat/components/ios/get-started-ios) to set up a sample chat app and send your first message.
+
+## Related documentation
+
+* [PubNub Chat Components for iOS Documentation](https://www.pubnub.com/docs/chat/components/ios/get-started-ios)
+* [Swift SDK Documentation](https://www.pubnub.com/docs/sdks/swift)
+* [Core Data Documentation](https://developer.apple.com/documentation/coredata)
+* [UIKit Documentation](https://developer.apple.com/documentation/uikit/)
 
 ## Support
 

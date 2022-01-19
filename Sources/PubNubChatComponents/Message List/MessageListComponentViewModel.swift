@@ -266,12 +266,14 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
   
   // MARK: - Actions
   
-  public var componentDidLoad: ((MessageListComponentViewModel<ModelData, ManagedEntities>?) -> Void)?
+  public var componentDidLoad: (
+    (UIViewController, MessageListComponentViewModel<ModelData, ManagedEntities>?) -> Void
+  )?
   
   open override func viewControllerDidLoad(_ controller: UIViewController) {
     super.viewControllerDidLoad(controller)
     
-    componentDidLoad?(self)
+    componentDidLoad?(controller, self)
   }
   
   public var componentWillAppear: (

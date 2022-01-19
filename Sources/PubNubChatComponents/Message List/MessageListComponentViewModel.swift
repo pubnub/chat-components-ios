@@ -222,7 +222,6 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
     barButton.button.theming(memberCountTheme, cancelIn: &viewModel.cancellables)
 
     viewModel.selectedChannel.presentMemberCountPublisher
-      .print("Current count!")
       .sink { [weak barButton] presenceCount in
         barButton?.button.setTitle("\(presenceCount)", for: .normal)
       }
@@ -235,9 +234,7 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
   )?
   
   @objc
-  public func rightBarButtonItemPressed(sender: UIBarButtonItem) {
-    print("BarButtonItem pressed")
-  }
+  public func rightBarButtonItemPressed(sender: UIBarButtonItem) {}
 
   public var customNavigationTitleString: (
     (MessageListComponentViewModel<ModelData, ManagedEntities>?) -> AnyPublisher<String?, Never>?

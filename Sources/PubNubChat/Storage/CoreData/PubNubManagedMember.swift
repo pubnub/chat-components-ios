@@ -137,7 +137,6 @@ extension PubNubManagedMember: ManagedMemberEntity {
     self.id = member.id
     
     if let isPresent = member.presence?.isPresent {
-      print("*** Update isPresent for member to \(isPresent)")
       self.isPresent = isPresent
     }
     if let presenceState = member.presence?.presenceState?.jsonData {

@@ -48,6 +48,22 @@ public struct SubscribeRequest: Codable {
   }
 }
 
+public struct UnsubscribeRequest: Codable {
+  public var channels: [String]
+  public var channelGroups: [String]
+  public var withPresence: Bool
+  
+  public init(
+    channels: [String] = [],
+    channelGroups: [String] = [],
+    withPresence: Bool = false
+  ) {
+    self.channels = channels
+    self.channelGroups = channelGroups
+    self.withPresence = withPresence
+  }
+}
+
 // MARK: - PubNubAPI API
 
 public protocol SubscribeAPI {
@@ -57,7 +73,7 @@ public protocol SubscribeAPI {
 
   var previousTimetoken: Timetoken? { get }
 
-  func unsubscribe(from channels: [String], and groups: [String], presenceOnly: Bool)
+  func unsubscribe(_ request: UnsubscribeRequest)
   func unsubscribeAll()
 
   func add(_ listener: SubscriptionListener)
@@ -72,6 +88,14 @@ extension PubNub: SubscribeAPI {
       and: request.channelGroups,
       at: request.timetoken ?? 0,
       withPresence: request.withPresence
+    )
+  }
+  
+  public func unsubscribe(_ request: UnsubscribeRequest) {
+    unsubscribe(
+      from: request.channels,
+      and: request.channelGroups,
+      presenceOnly: request.withPresence
     )
   }
 }

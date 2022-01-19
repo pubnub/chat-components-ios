@@ -109,7 +109,7 @@ extension PubNub: PubNubChannelAPI {
       sort: request.sort,
       limit: request.limit,
       page: request.page,
-      custom: .init(customConfiguration: request.config)
+      custom: .init(customConfiguration: request.config?.mergeChatConsumerID())
     ) { result in
       completion?(result.map {
         ($0.channels.compactMap { try? $0.transcode() }, request.next(page: $0.next))
@@ -125,7 +125,7 @@ extension PubNub: PubNubChannelAPI {
     fetch(
       channel: request.metadataId,
       include: request.includeCustom,
-      custom: .init(customConfiguration: request.config)
+      custom: .init(customConfiguration: request.config?.mergeChatConsumerID())
     ) { result in
       completion?(
         result
@@ -142,7 +142,7 @@ extension PubNub: PubNubChannelAPI {
     set(
       channel: request.channel,
       include: request.includeCustom,
-      custom: .init(customConfiguration: request.config)
+      custom: .init(customConfiguration: request.config?.mergeChatConsumerID())
     ) { result in
       completion?(result.flatMap { do { return .success(try $0.transcode()) } catch { return .failure(error) } })
     }

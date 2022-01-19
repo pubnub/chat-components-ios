@@ -58,7 +58,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     completion: (() -> Void)? = nil
   ) {
     if channels.isEmpty {
-      completion?()
+      DispatchQueue.main.async { completion?() }
       return
     }
     
@@ -77,7 +77,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
         }
       }
 
-      completion?()
+      DispatchQueue.main.async { completion?() }
     }
   }
   
@@ -88,7 +88,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     completion: (() -> Void)? = nil
   ) {
     if users.isEmpty {
-      completion?()
+      DispatchQueue.main.async { completion?() }
       return
     }
     
@@ -107,7 +107,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
         }
       }
 
-      completion?()
+      DispatchQueue.main.async { completion?() }
     }
   }
 
@@ -118,7 +118,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     completion: (() -> Void)? = nil
   ) {
     if members.isEmpty {
-      completion?()
+      DispatchQueue.main.async { completion?() }
       return
     }
     
@@ -137,7 +137,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
         }
       }
       
-      completion?()
+      DispatchQueue.main.async { completion?() }
     }
   }
   
@@ -149,7 +149,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     completion: (() -> Void)? = nil
   ) {
     if messages.isEmpty {
-      completion?()
+      DispatchQueue.main.async { completion?() }
       return
     }
 
@@ -168,7 +168,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
         }
       }
 
-      completion?()
+      DispatchQueue.main.async { completion?() }
     }
   }
   

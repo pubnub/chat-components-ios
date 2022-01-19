@@ -222,6 +222,7 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
     barButton.button.theming(memberCountTheme, cancelIn: &viewModel.cancellables)
 
     viewModel.selectedChannel.presentMemberCountPublisher
+      .print("Current count!")
       .sink { [weak barButton] presenceCount in
         barButton?.button.setTitle("\(presenceCount)", for: .normal)
       }
@@ -274,6 +275,24 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
     super.viewControllerDidLoad(controller)
     
     componentDidLoad?(self)
+  }
+  
+  public var componentWillAppear: (
+    (UIViewController, MessageListComponentViewModel<ModelData, ManagedEntities>?) -> Void
+  )?
+  
+  open override func viewController(_ controller: UIViewController, viewWillAppear animated: Bool) {
+    super.viewController(controller, viewWillAppear: animated)
+    
+    componentWillAppear?(controller, self)
+  }
+  
+  public var componentWillDisappear: ((UIViewController, MessageListComponentViewModel<ModelData, ManagedEntities>?) -> Void)?
+  
+  open override func viewController(_ controller: UIViewController, viewWillDisappear animated: Bool) {
+    super.viewController(controller, viewWillDisappear: animated)
+    
+    componentWillDisappear?(controller, self)
   }
 
   // MARK: - Features

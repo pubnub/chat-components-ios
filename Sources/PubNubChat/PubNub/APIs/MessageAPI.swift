@@ -101,7 +101,8 @@ extension PubNub: MessageAPI {
       includeMeta: request.metaInResponse,
       includeUUID: request.uuidInResponse,
       includeMessageType: request.messageTypeInResponse,
-      page: request.page
+      page: request.page,
+      custom: .init(customConfiguration: request.config?.mergeChatConsumerID())
     ) { result in
       switch result {
       case .success((let messagesByChannel, let next)):
@@ -130,7 +131,8 @@ extension PubNub: MessageAPI {
       shouldStore: request.storeInHistory,
       storeTTL: request.ttl,
       meta: request.metadata,
-      shouldCompress: request.shouldCompress
+      shouldCompress: request.shouldCompress,
+      custom: .init(customConfiguration: request.config?.mergeChatConsumerID())
     ) { result in
       completion?(result.map { timetoken in
         var requestMessage = request.message
@@ -198,7 +200,7 @@ public struct MessageHistoryRequest {
     uuidInResponse: Bool = true,
     messageTypeInResponse: Bool = true,
     limit: Int? = nil,
-    start: Timetoken?,
+    start: Timetoken? = nil,
     end: Timetoken? = nil,
     config: PubNubConfiguration? = nil
   ) {

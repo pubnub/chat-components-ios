@@ -99,7 +99,7 @@ extension PubNub: PubNubMemberAPI {
       sort: request.sort,
       limit: request.limit,
       page: request.page,
-      custom: .init(customConfiguration: request.config)
+      custom: .init(customConfiguration: request.config?.mergeChatConsumerID())
     ) { result in
       completion?(
         result
@@ -124,7 +124,7 @@ extension PubNub: PubNubMemberAPI {
       sort: request.sort,
       limit: request.limit,
       page: request.page,
-      custom: .init(customConfiguration: request.config)
+      custom: .init(customConfiguration: request.config?.mergeChatConsumerID())
     ) { result in
       completion?(
         result
@@ -149,7 +149,7 @@ extension PubNub: PubNubMemberAPI {
       sort: request.sort,
       limit: request.limit,
       page: request.page,
-      custom: .init(customConfiguration: request.config)
+      custom: .init(customConfiguration: request.config?.mergeChatConsumerID())
     ) { result in
       completion?(
         result

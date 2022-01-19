@@ -31,13 +31,13 @@ import Combine
 
 import PubNub
 
-class CoreDataContainer: NSPersistentContainer {
+public class CoreDataProvider: NSPersistentContainer {
   
-  enum StoreLocation: Equatable, RawRepresentable {
+  public enum StoreLocation: Equatable, RawRepresentable {
     case memory
     case disk(dbURL: URL)
     
-    init?(rawValue: URL) {
+    public init?(rawValue: URL) {
       switch rawValue {
       case NSPersistentStoreDescription.inMemeoryStoreURL:
         self = .memory
@@ -46,7 +46,7 @@ class CoreDataContainer: NSPersistentContainer {
       }
     }
     
-    var rawValue: URL {
+    public var rawValue: URL {
       switch self {
       case .memory:
         return NSPersistentStoreDescription.inMemeoryStoreURL
@@ -55,10 +55,12 @@ class CoreDataContainer: NSPersistentContainer {
       }
     }
   }
+  
+  public let location: StoreLocation
 
   // MARK: Init
-  
-  init(
+
+  public init(
     bundle: Bundle = .pubnubChat,
     dataModelFilename: String = "PubNubChatModel",
     location: StoreLocation,
@@ -71,6 +73,8 @@ class CoreDataContainer: NSPersistentContainer {
     guard let managedObjectModel = NSManagedObjectModel(contentsOf: modelURL) else {
       preconditionFailure("Managed Object Model Not Found for filename \(dataModelFilename) in bundle \(bundle)")
     }
+    
+    self.location = location
     
     super.init(name: dataModelFilename, managedObjectModel: managedObjectModel)
     
@@ -261,12 +265,12 @@ class CoreDataContainer: NSPersistentContainer {
 
   @objc
   func storeRemoteChange(_ notification: Notification) {
-    PubNub.log.debug("NSPersistentStoreRemoteChange Notification: \(String(describing: notification.userInfo))")
+    PubNub.log.error("NSPersistentStoreRemoteChange Notification: \(String(describing: notification.userInfo))")
   }
   
   @objc
   func managedObjectContextDidSave(_ notification: Notification) {
-    PubNub.log.debug("NSManagedObjectContextDidSave Notification: \(String(describing: notification.userInfo))")
+    PubNub.log.error("NSManagedObjectContextDidSave Notification: \(String(describing: notification.userInfo))")
   }
 }
 
@@ -279,7 +283,7 @@ extension Array {
 }
 
 
-extension CoreDataContainer: TransientPropertyHolder {
+extension CoreDataProvider: TransientPropertyHolder {
   func clearTransientProperties() {
     mutableBackgroundContext.performAndWait {
       do {

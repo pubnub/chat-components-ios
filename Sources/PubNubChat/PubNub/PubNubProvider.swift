@@ -37,6 +37,7 @@ public typealias PubNubAPI = SubscribeAPI & PubNubObjectAPI & MessageAPI & Prese
 // MARK: - Configuration Provider
 public protocol PubNubConfigurable {
   var configuration: PubNubConfiguration { get }
+  mutating func setConsumer(identifier: String, value: String)
 }
 
 public protocol PubNubBase {

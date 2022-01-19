@@ -234,9 +234,7 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
   )?
   
   @objc
-  public func rightBarButtonItemPressed(sender: UIBarButtonItem) {
-    print("BarButtonItem pressed")
-  }
+  public func rightBarButtonItemPressed(sender: UIBarButtonItem) {}
 
   public var customNavigationTitleString: (
     (MessageListComponentViewModel<ModelData, ManagedEntities>?) -> AnyPublisher<String?, Never>?
@@ -268,12 +266,32 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
   
   // MARK: - Actions
   
-  public var componentDidLoad: ((MessageListComponentViewModel<ModelData, ManagedEntities>?) -> Void)?
+  public var componentDidLoad: (
+    (UIViewController, MessageListComponentViewModel<ModelData, ManagedEntities>?) -> Void
+  )?
   
   open override func viewControllerDidLoad(_ controller: UIViewController) {
     super.viewControllerDidLoad(controller)
     
-    componentDidLoad?(self)
+    componentDidLoad?(controller, self)
+  }
+  
+  public var componentWillAppear: (
+    (UIViewController, MessageListComponentViewModel<ModelData, ManagedEntities>?) -> Void
+  )?
+  
+  open override func viewController(_ controller: UIViewController, viewWillAppear animated: Bool) {
+    super.viewController(controller, viewWillAppear: animated)
+    
+    componentWillAppear?(controller, self)
+  }
+  
+  public var componentWillDisappear: ((UIViewController, MessageListComponentViewModel<ModelData, ManagedEntities>?) -> Void)?
+  
+  open override func viewController(_ controller: UIViewController, viewWillDisappear animated: Bool) {
+    super.viewController(controller, viewWillDisappear: animated)
+    
+    componentWillDisappear?(controller, self)
   }
 
   // MARK: - Features

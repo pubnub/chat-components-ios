@@ -92,8 +92,9 @@ extension PubNubManagedChannel: ManagedChannelViewModel {
   }
 
   public var presentMemberCountPublisher: AnyPublisher<Int, Never> {
-    return publisher(for: \.members)
-      .map { $0.filter { $0.isPresent }.count }
+    return members.map { $0.isPresentPublisher }.publisher
+      .map { $0.filter { $0 } }
+      .count()
       .eraseToAnyPublisher()
   }
   

@@ -60,7 +60,7 @@ extension PubNub: PresenceAPI {
       and: request.groups,
       includeUUIDs: request.includeUUIDs,
       includeState: request.includeState,
-      custom: .init(customConfiguration: request.config)
+      custom: .init(customConfiguration: request.config?.mergeChatConsumerID())
     ) { result in
       switch result {
       case .success(let presenceByChannelId):
@@ -88,7 +88,7 @@ extension PubNub: PresenceAPI {
       for: request.uuid,
       on: request.channels,
       and: request.groups,
-      custom: .init(customConfiguration: request.config)
+         custom: .init(customConfiguration: request.config?.mergeChatConsumerID())
     ) { result in
       switch result {
       case .success((let memberId, let stateByChannel)):
@@ -118,7 +118,7 @@ extension PubNub: PresenceAPI {
       state: request.state.scalarDictionary,
       on: request.channels,
       and: request.groups,
-      custom: .init(customConfiguration: request.config)
+      custom: .init(customConfiguration: request.config?.mergeChatConsumerID())
     ) { result in
       switch result {
       case .success(let state):

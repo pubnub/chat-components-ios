@@ -100,6 +100,7 @@ extension PubNubManagedMember: ManagedMemberEntity {
     into context: NSManagedObjectContext
   ) throws -> PubNubManagedMember {
     
+    // Insert or update Channel
     let managedChannel: PubNubManagedChannel
     if let channelModel = member.chatChannel {
       managedChannel = try PubNubManagedChannel.insertOrUpdate(channel: channelModel, into: context)

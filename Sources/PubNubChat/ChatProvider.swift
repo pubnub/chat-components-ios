@@ -34,8 +34,7 @@ public typealias PubNubChatProvider = ChatProvider<VoidCustomData, PubNubManaged
 
 open class ChatProvider<ModelData, ManagedEntities> where ModelData: ChatCustomData, ManagedEntities: ManagedChatEntities {
   
-  let databaseConfig: DatastoreConfiguration
-  let coreDataContainer: CoreDataContainer
+  public let coreDataContainer: CoreDataProvider
 
   public var cacheProvider: CacheProvider
   
@@ -52,34 +51,59 @@ open class ChatProvider<ModelData, ManagedEntities> where ModelData: ChatCustomD
     return ChatDataProvider(provider: self)
   }()
 
-  public init(
+  public convenience init(
+    pubnubProvider: PubNub,
     datastoreConfiguration: DatastoreConfiguration = .pubnubDefault,
-    pubnubConfiguration: PubNubConfiguration,
     cacheProvider: CacheProvider = UserDefaults.standard
   ) {
-    if pubnubConfiguration.uuid.isEmpty {
-      preconditionFailure("The PubNub UUID is empty")
-    }
     
-    self.cacheProvider = cacheProvider
-    self.databaseConfig = datastoreConfiguration
-    self.pubnubProvider = PubNub(configuration: pubnubConfiguration.mergeChatConsumerID())
-
+    var coreDataProvider: CoreDataProvider
     do {
-      if let dbURL = databaseConfig.datastoreURL, let directory = databaseConfig.storageDirectoryURL {
+      if let dbURL = datastoreConfiguration.datastoreURL,
+          let directory = datastoreConfiguration.storageDirectoryURL {
         try directory.createDirectory()
-        coreDataContainer = try CoreDataContainer(location: .disk(dbURL: dbURL), flushDataOnLoad: databaseConfig.cleanStorageOnLoad)
+        coreDataProvider = try CoreDataProvider(
+          location: .disk(dbURL: dbURL),
+          flushDataOnLoad: datastoreConfiguration.cleanStorageOnLoad
+        )
         
         PubNub.log.info("DB Created at \(dbURL)")
       } else {
-        coreDataContainer = try CoreDataContainer(location: .memory, flushDataOnLoad: databaseConfig.cleanStorageOnLoad)
+        coreDataProvider = try CoreDataProvider(
+          location: .memory,
+          flushDataOnLoad: datastoreConfiguration.cleanStorageOnLoad
+        )
       }
     } catch {
       preconditionFailure("Failed to initialize the in-memory storage with error: \(error). This is a non-recoverable error.")
     }
     
-    self.cacheProvider.cache(currentUserId: pubnubConfiguration.uuid)
+    self.init(
+      pubnubProvider: pubnubProvider,
+      coreDataProvider: coreDataProvider,
+      cacheProvider: cacheProvider
+    )
+  }
   
+  public init(
+    pubnubProvider: PubNub,
+    coreDataProvider: CoreDataProvider,
+    cacheProvider: CacheProvider
+  ) {
+    
+    self.pubnubProvider = pubnubProvider
+    // Ensure that the telemetry field is set for Chat Components
+    self.pubnubProvider.setConsumer(
+      identifier: ENV.frameworkIdentifier,
+      value: "\(ENV.frameworkIdentifier)/\(ENV.currentVersion)"
+    )
+    
+    self.coreDataContainer = coreDataProvider
+
+    self.cacheProvider = cacheProvider
+    // Update the cache with the current user
+    self.cacheProvider.cache(currentUserId: pubnubProvider.configuration.uuid)
+    
     // Add default listener
     self.pubnubProvider.add(dataProvider.pubnubListner)
   }

@@ -192,9 +192,53 @@ public protocol ManagedMessageEntity: ManagedEntity {
 }
 
 public protocol ManagedMessageEntityFetches: NSFetchRequestResult {
+  
+  static func messageBy(pubnubTimetoken: Timetoken, channelId: String) -> NSFetchRequest<Self>
+  static func messageBy(messageId: String) -> NSFetchRequest<Self>
+
   static func messagesBy(pubnubUserId: String) -> NSFetchRequest<Self>
   static func messagesBy(pubnubChannelId: String) -> NSFetchRequest<Self>
-  static func messagesBy(messageId: String) -> NSFetchRequest<Self>
+}
+
+// MARK: - Message Actions
+
+public protocol ManagedMessageActionEntity: ManagedEntity {
+  associatedtype MessageEntity: ManagedMessageEntity
+  associatedtype UserEntity: ManagedUserEntity
+  
+  // Accessors
+  
+  var pubnubActionTimetoken: Timetoken { get }
+  var pubnubParentTimetoken: Timetoken { get }
+  var pubnubChannelId: String { get }
+  
+  // Relationships
+  
+  var managedUser: UserEntity { get }
+  var managedMessage: MessageEntity { get }
+  
+  // Model
+  
+  func convert<Custom: ChatCustomData>() throws -> ChatMessageAction<Custom>
+  
+  @discardableResult
+  static func insertOrUpdate<Custom: ChatCustomData>(
+    messageAction: ChatMessageAction<Custom>,
+    into context: NSManagedObjectContext
+  ) throws -> Self
+  
+  @discardableResult
+  static func remove(
+    messageActionId: String,
+    from context: NSManagedObjectContext
+  ) -> Self?
+}
+
+public protocol ManagedMessageActionEntityFetches: NSFetchRequestResult {
+  static func messageActionsBy(pubnubUserId: String) -> NSFetchRequest<Self>
+  static func messageActionsBy(messageId: String) -> NSFetchRequest<Self>
+  
+  static func messageActionsBy(messageTimetoken: Timetoken, channelId: String) -> NSFetchRequest<Self>
 }
 
 // MARK: - Chat
@@ -203,12 +247,14 @@ public typealias ManagedChatChannel = ManagedChannelEntity & ManagedChannelEntit
 public typealias ManagedChatUser = ManagedUserEntity & ManagedUserEntityFetches
 public typealias ManagedChatMember = ManagedMemberEntity & ManagedMemberEntityFetches
 public typealias ManagedChatMessage = ManagedMessageEntity & ManagedMessageEntityFetches
+public typealias ManagedChatMessageAction = ManagedMessageActionEntity & ManagedMessageActionEntityFetches
 
 public protocol ManagedChatEntities {
   associatedtype User: ManagedChatUser
   associatedtype Channel: ManagedChatChannel
   associatedtype Member: ManagedChatMember
   associatedtype Message: ManagedChatMessage
+  associatedtype MessageAction: ManagedChatMessageAction
 }
 
 // MARK: PubNub Default Impl.
@@ -218,4 +264,5 @@ public struct PubNubManagedChatEntities: ManagedChatEntities {
   public typealias Channel = PubNubManagedChannel
   public typealias Member = PubNubManagedMember
   public typealias Message = PubNubManagedMessage
+  public typealias MessageAction = PubNubManagedMessageAction
 }

@@ -172,6 +172,36 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     }
   }
   
+  public func load(
+    messageActions: [ChatMessageAction<ModelData>],
+    batchSize: Int = 256,
+    batchHandler: (([ChatMessageAction<ModelData>], Error?) -> Void)? = nil,
+    completion: (() -> Void)? = nil
+  ) {
+    if messageActions.isEmpty {
+      DispatchQueue.main.async { completion?() }
+      return
+    }
+    
+    datastoreQueue.async { [weak self] in
+      for batch in messageActions.chunked(into: batchSize) {
+        if let error = self?.provider.coreDataContainer.syncWrite({ context in
+          for item in batch {
+            try ManagedEntities.MessageAction.insertOrUpdate(messageAction: item, into: context)
+          }
+        }) {
+          PubNub.log.error("Error saving message batch \(error)")
+          
+          DispatchQueue.main.async { batchHandler?(batch, error) }
+        } else {
+          DispatchQueue.main.async { batchHandler?(batch, nil) }
+        }
+      }
+      
+      DispatchQueue.main.async { completion?() }
+    }
+  }
+  
   // MARK: Remove Model Data
   
   public func removeStoredChannel(
@@ -239,6 +269,22 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     }
   }
   
+  public func removeStoredMessageAction(
+    messageActionId: String,
+    completion: ((Error?) -> Void)? = nil
+  ) {
+    datastoreQueue.async { [weak self] in
+      self?.provider.coreDataContainer.write({ context in
+        ManagedEntities.MessageAction.remove(messageActionId: messageActionId, from: context)
+        completion?(nil)
+      }, errorHandler: { error in
+        PubNub.log.error("Error removing message action \(error)")
+        
+        DispatchQueue.main.async { completion?(error) }
+      })
+    }
+  }
+  
   // MARK: Typing Indicator Service
   
   public func member(
@@ -255,6 +301,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
   }
 
   // MARK: - PubNub Remote API Helpers
+
   
   // MARK: Message API Actions
   
@@ -319,6 +366,70 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
         
         self?.load(messages: messages, completion: {
           pageHandler?(messagesById, next, nil)
+        })
+      }
+      .store(in: &cancellations)
+  }
+  
+  // MARK: Message Action API Actions
+  
+  public func sendRemoteMessageAction(
+    _ request: MessageActionSendRequest<ModelData>,
+    completion: ((Result<ChatMessageAction<ModelData>, Error>) -> Void)?
+  ) {
+    provider.pubnubProvider
+      .sendMessageAction(request) { [weak self] result in
+        switch result {
+        case .success(let action):
+          PubNub.log.debug("Send Message Success \(action)")
+          self?.load(messageActions: [action], completion: {
+            completion?(.success(action))
+          })
+        case .failure(let error):
+          PubNub.log.error("Send Message Action Error \(error)")
+          completion?(.failure(error))
+        }
+      }
+  }
+  
+  public func syncRemoteMessageActions(
+    _ request: MessageActionFetchRequest,
+    completion: ((Result<(actions: [ChatMessageAction<ModelData>], next: MessageActionFetchRequest?), PaginationError<MessageActionFetchRequest>>) -> Void)?
+  ) {
+    provider.pubnubProvider.fetchMessageActions(
+      request, into: ModelData.self
+    ) { [weak self] result in
+      switch result {
+      case let .success((actions, next)):
+        // Store in DB
+        self?.load(messageActions: actions, completion: {
+          completion?(.success((actions: actions, next: next)))
+        })
+      case .failure(let error):
+        PubNub.log.error("Sync Remote Message Actions Error \(error)")
+        completion?(.failure(PaginationError(request: request, error: error)))
+      }
+    }
+  }
+  
+  public func syncAllRemoteMessageActions(
+    _ request: MessageActionFetchRequest,
+    pageHandler: (([ChatMessageAction<ModelData>], MessageActionFetchRequest?, Error?) -> Void)? = nil,
+    completion: ((PaginationError<MessageActionFetchRequest>?) -> Void)? = nil
+  ) {
+    provider.pubnubProvider
+      .fetchMessageActionsPagesPublisher(request, into: ModelData.self)
+      .sink { completionSignal in
+        switch completionSignal {
+        case .finished:
+          completion?(nil)
+        case .failure(let error):
+          PubNub.log.error("Error sycning all remote message actions \(error.localizedDescription) on request \(error.request)")
+          completion?(error)
+        }
+      } receiveValue: { [weak self] actions, next in
+        self?.load(messageActions: actions, completion: {
+          pageHandler?(actions, next, nil)
         })
       }
       .store(in: &cancellations)

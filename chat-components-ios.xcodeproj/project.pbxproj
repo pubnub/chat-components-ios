@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		3501A587265D8BDF00063403 /* AppearanceTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3501A586265D8BDF00063403 /* AppearanceTemplate.swift */; };
+		35043BCD27B7056C00DA9A84 /* MessageActionAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35043BCC27B7056C00DA9A84 /* MessageActionAPI.swift */; };
 		35074ACC27161F9800462624 /* PubNub in Frameworks */ = {isa = PBXBuildFile; productRef = 35074ACB27161F9800462624 /* PubNub */; };
 		35074ACE271878DE00462624 /* MessageInputComponentTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35074ACD271878DE00462624 /* MessageInputComponentTheme.swift */; };
 		35074AD0272072C800462624 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 35074ACF272072C800462624 /* Kingfisher */; };
@@ -23,7 +24,6 @@
 		350AC78A264355D500C3D323 /* ChatProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350AC789264355D500C3D323 /* ChatProvider.swift */; };
 		350AC791264355EA00C3D323 /* ComponentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350AC790264355EA00C3D323 /* ComponentViewController.swift */; };
 		350AC7CD2644441700C3D323 /* PubNubChatModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 350AC7B1264440D700C3D323 /* PubNubChatModel.xcdatamodeld */; };
-		350AC7D92644442C00C3D323 /* CoreDataContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350AC7D82644442C00C3D323 /* CoreDataContainer.swift */; };
 		350AC80126447DFE00C3D323 /* PubNubManagedChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350AC80026447DFE00C3D323 /* PubNubManagedChannel.swift */; };
 		350AC81426447E1900C3D323 /* PubNubManagedMember.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350AC81326447E1900C3D323 /* PubNubManagedMember.swift */; };
 		350AC82A26447E4400C3D323 /* PubNubManagedUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350AC82926447E4400C3D323 /* PubNubManagedUser.swift */; };
@@ -82,6 +82,9 @@
 		3598B2BC2645DD9800878118 /* CustomData_Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3598B2BB2645DD9800878118 /* CustomData_Tests.swift */; };
 		3598B2D82645E12E00878118 /* TransientPropertyHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3598B2C72645E09D00878118 /* TransientPropertyHolder.swift */; };
 		3598B2E02646127F00878118 /* PubNubProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3598B2DF2646127F00878118 /* PubNubProvider.swift */; };
+		35A6C43A27B1C27C00C43414 /* PubNubManagedMessageAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35A6C43927B1C27C00C43414 /* PubNubManagedMessageAction.swift */; };
+		35A6C43C27B1C29300C43414 /* CoreDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35A6C43B27B1C29300C43414 /* CoreDataProvider.swift */; };
+		35A6C43E27B1C9BC00C43414 /* ChatMessageAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35A6C43D27B1C9BC00C43414 /* ChatMessageAction.swift */; };
 		35B3B4F5264B376B00473120 /* UserAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B3B4F4264B376B00473120 /* UserAPI.swift */; };
 		35B3B4FC264B37C900473120 /* ChannelAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B3B4FB264B37C900473120 /* ChannelAPI.swift */; };
 		35B3B503264B380A00473120 /* PresenceAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B3B502264B380A00473120 /* PresenceAPI.swift */; };
@@ -134,6 +137,7 @@
 
 /* Begin PBXFileReference section */
 		3501A586265D8BDF00063403 /* AppearanceTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceTemplate.swift; sourceTree = "<group>"; };
+		35043BCC27B7056C00DA9A84 /* MessageActionAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageActionAPI.swift; sourceTree = "<group>"; };
 		35074ACD271878DE00462624 /* MessageInputComponentTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageInputComponentTheme.swift; sourceTree = "<group>"; };
 		35074AD12720B52600462624 /* MessageInputComponentViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MessageInputComponentViewModel.swift; path = "../Message Input/MessageInputComponentViewModel.swift"; sourceTree = "<group>"; };
 		35074AD32721B79100462624 /* AnimatedTypingIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedTypingIndicatorView.swift; sourceTree = "<group>"; };
@@ -154,7 +158,6 @@
 		350AC789264355D500C3D323 /* ChatProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatProvider.swift; sourceTree = "<group>"; };
 		350AC790264355EA00C3D323 /* ComponentViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentViewController.swift; sourceTree = "<group>"; };
 		350AC7B2264440D700C3D323 /* PubNubChatModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = PubNubChatModel.xcdatamodel; sourceTree = "<group>"; };
-		350AC7D82644442C00C3D323 /* CoreDataContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataContainer.swift; sourceTree = "<group>"; };
 		350AC80026447DFE00C3D323 /* PubNubManagedChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PubNubManagedChannel.swift; sourceTree = "<group>"; };
 		350AC81326447E1900C3D323 /* PubNubManagedMember.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PubNubManagedMember.swift; sourceTree = "<group>"; };
 		350AC82926447E4400C3D323 /* PubNubManagedUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PubNubManagedUser.swift; sourceTree = "<group>"; };
@@ -215,6 +218,9 @@
 		3598B2BB2645DD9800878118 /* CustomData_Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomData_Tests.swift; sourceTree = "<group>"; };
 		3598B2C72645E09D00878118 /* TransientPropertyHolder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransientPropertyHolder.swift; sourceTree = "<group>"; };
 		3598B2DF2646127F00878118 /* PubNubProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PubNubProvider.swift; sourceTree = "<group>"; };
+		35A6C43927B1C27C00C43414 /* PubNubManagedMessageAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PubNubManagedMessageAction.swift; sourceTree = "<group>"; };
+		35A6C43B27B1C29300C43414 /* CoreDataProvider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoreDataProvider.swift; sourceTree = "<group>"; };
+		35A6C43D27B1C9BC00C43414 /* ChatMessageAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessageAction.swift; sourceTree = "<group>"; };
 		35B3B4F4264B376B00473120 /* UserAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAPI.swift; sourceTree = "<group>"; };
 		35B3B4FB264B37C900473120 /* ChannelAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelAPI.swift; sourceTree = "<group>"; };
 		35B3B502264B380A00473120 /* PresenceAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresenceAPI.swift; sourceTree = "<group>"; };
@@ -406,7 +412,7 @@
 		350AC7F126447D5300C3D323 /* CoreData */ = {
 			isa = PBXGroup;
 			children = (
-				350AC7D82644442C00C3D323 /* CoreDataContainer.swift */,
+				35A6C43B27B1C29300C43414 /* CoreDataProvider.swift */,
 				3517009F2686A4510019B615 /* ManagedChatEntities.swift */,
 				350AC7B1264440D700C3D323 /* PubNubChatModel.xcdatamodeld */,
 				350AC7F226447D6A00C3D323 /* Entities */,
@@ -420,6 +426,7 @@
 				350AC80026447DFE00C3D323 /* PubNubManagedChannel.swift */,
 				350AC81326447E1900C3D323 /* PubNubManagedMember.swift */,
 				35FD757D269F8714007D7435 /* PubNubManagedMessage.swift */,
+				35A6C43927B1C27C00C43414 /* PubNubManagedMessageAction.swift */,
 				350AC82926447E4400C3D323 /* PubNubManagedUser.swift */,
 			);
 			name = Entities;
@@ -432,6 +439,7 @@
 				350AC8502644833D00C3D323 /* ChatMember.swift */,
 				350AC8712644835B00C3D323 /* ChatUser.swift */,
 				35FD758026A0DD10007D7435 /* ChatMessage.swift */,
+				35A6C43D27B1C9BC00C43414 /* ChatMessageAction.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -680,6 +688,7 @@
 				35B3B509264B384700473120 /* MemberAPI.swift */,
 				35B3B510264B387200473120 /* MembershipAPI.swift */,
 				35B3B517264B38AD00473120 /* MessageAPI.swift */,
+				35043BCC27B7056C00DA9A84 /* MessageActionAPI.swift */,
 				35B3B523264B38E500473120 /* SubscribeAPI.swift */,
 			);
 			path = APIs;
@@ -878,20 +887,23 @@
 			files = (
 				3598B1E22644B0AE00878118 /* NSPersistentStoreDescription+PubNubChat.swift in Sources */,
 				3551EB922739AB4D00ABA555 /* CacheProvider.swift in Sources */,
-				350AC7D92644442C00C3D323 /* CoreDataContainer.swift in Sources */,
 				35FD758126A0DD10007D7435 /* ChatMessage.swift in Sources */,
 				35787FA12684E9F4006A775E /* NSManagedObjectContext+PubNubChat.swift in Sources */,
 				35C1A75C267AA9E10087241C /* PubNub+PubNubChat.swift in Sources */,
 				35B3B524264B38E500473120 /* SubscribeAPI.swift in Sources */,
 				350AC80126447DFE00C3D323 /* PubNubManagedChannel.swift in Sources */,
+				35A6C43A27B1C27C00C43414 /* PubNubManagedMessageAction.swift in Sources */,
 				350AC8722644835B00C3D323 /* ChatUser.swift in Sources */,
 				350AC87A2644839200C3D323 /* CustomJSONData.swift in Sources */,
 				3583AE5626F996C6006D74A3 /* TypingIndicatorService.swift in Sources */,
 				35B3B52C264C494300473120 /* ChatDataProvider.swift in Sources */,
+				35A6C43C27B1C29300C43414 /* CoreDataProvider.swift in Sources */,
 				351700A02686A4510019B615 /* ManagedChatEntities.swift in Sources */,
 				35B3B4FC264B37C900473120 /* ChannelAPI.swift in Sources */,
 				35B3B4F5264B376B00473120 /* UserAPI.swift in Sources */,
 				35787FA5268523E6006A775E /* URL+PubNubChat.swift in Sources */,
+				35043BCD27B7056C00DA9A84 /* MessageActionAPI.swift in Sources */,
+				35A6C43E27B1C9BC00C43414 /* ChatMessageAction.swift in Sources */,
 				3583AE5A26FBD556006D74A3 /* DiffableData+PubNubChat.swift in Sources */,
 				3544C60E268A14F50047DBB7 /* NSSortDescriptor+PubNubChat.swift in Sources */,
 				350AC7CD2644441700C3D323 /* PubNubChatModel.xcdatamodeld in Sources */,

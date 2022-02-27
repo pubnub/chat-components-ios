@@ -32,7 +32,7 @@ import PubNub
 
 // MARK: - Protocol Wrapper
 public typealias PubNubObjectAPI = PubNubUserAPI & PubNubChannelAPI & PubNubMembershipAPI & PubNubMemberAPI
-public typealias PubNubAPI = SubscribeAPI & PubNubObjectAPI & MessageAPI & PresenceAPI & PubNubConfigurable & PubNubBase
+public typealias PubNubAPI = SubscribeAPI & PubNubObjectAPI & MessageAPI & MessageActionAPI & PresenceAPI & PubNubConfigurable & PubNubBase
 
 // MARK: - Configuration Provider
 public protocol PubNubConfigurable {

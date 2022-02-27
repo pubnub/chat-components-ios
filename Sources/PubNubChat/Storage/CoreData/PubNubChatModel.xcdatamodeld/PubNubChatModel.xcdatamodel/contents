@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="19461" systemVersion="20G165" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="19574" systemVersion="21C52" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="PubNubManagedChannel" representedClassName="PubNubManagedChannel" syncable="YES">
         <attribute name="avatarURL" optional="YES" attributeType="URI"/>
         <attribute name="custom" optional="YES" attributeType="Binary"/>
@@ -55,10 +55,31 @@
         <attribute name="pubnubChannelId" optional="YES" attributeType="String" derived="YES" derivationExpression="channel.id"/>
         <attribute name="pubnubUserId" optional="YES" attributeType="String" derived="YES" derivationExpression="author.id"/>
         <attribute name="timetoken" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="actions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="PubNubManagedMessageAction" inverseName="parent" inverseEntity="PubNubManagedMessageAction"/>
         <relationship name="author" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PubNubManagedUser" inverseName="messages" inverseEntity="PubNubManagedUser"/>
         <relationship name="channel" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PubNubManagedChannel" inverseName="messages" inverseEntity="PubNubManagedChannel"/>
         <fetchIndex name="byChannelId">
             <fetchIndexElement property="pubnubChannelId" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="id"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+    <entity name="PubNubManagedMessageAction" representedClassName="PubNubManagedMessageAction" syncable="YES">
+        <attribute name="id" optional="YES" attributeType="String"/>
+        <attribute name="published" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="pubnubChannelId" optional="YES" attributeType="String"/>
+        <attribute name="pubnubParentId" optional="YES" attributeType="String" derived="YES" derivationExpression="parent.id"/>
+        <attribute name="pubnubParentTimetoken" optional="YES" attributeType="Integer 64" derived="YES" derivationExpression="parent.timetoken" usesScalarValueType="YES"/>
+        <attribute name="pubnubUserId" optional="YES" attributeType="String" derived="YES" derivationExpression="author.id"/>
+        <attribute name="sourceType" optional="YES" attributeType="String"/>
+        <attribute name="value" optional="YES" attributeType="String"/>
+        <relationship name="author" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PubNubManagedUser" inverseName="actions" inverseEntity="PubNubManagedUser"/>
+        <relationship name="parent" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PubNubManagedMessage" inverseName="actions" inverseEntity="PubNubManagedMessage"/>
+        <fetchIndex name="byMessageId">
+            <fetchIndexElement property="pubnubParentTimetoken" type="Binary" order="ascending"/>
         </fetchIndex>
         <uniquenessConstraints>
             <uniquenessConstraint>
@@ -76,6 +97,7 @@
         <attribute name="lastUpdated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="occupation" optional="YES" attributeType="String"/>
+        <relationship name="actions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="PubNubManagedMessageAction" inverseName="author" inverseEntity="PubNubManagedMessageAction"/>
         <relationship name="memberships" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="PubNubManagedMember" inverseName="user" inverseEntity="PubNubManagedMember"/>
         <relationship name="messages" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="PubNubManagedMessage" inverseName="author" inverseEntity="PubNubManagedMessage"/>
         <fetchIndex name="byId">
@@ -90,7 +112,8 @@
     <elements>
         <element name="PubNubManagedChannel" positionX="-78.437255859375" positionY="268.0662231445312" width="128" height="209"/>
         <element name="PubNubManagedMember" positionX="160" positionY="192" width="128" height="149"/>
-        <element name="PubNubManagedMessage" positionX="54" positionY="441" width="128" height="209"/>
-        <element name="PubNubManagedUser" positionX="-76.082275390625" positionY="465.6267700195312" width="128" height="194"/>
+        <element name="PubNubManagedMessage" positionX="54" positionY="441" width="128" height="224"/>
+        <element name="PubNubManagedMessageAction" positionX="45" positionY="351" width="128" height="179"/>
+        <element name="PubNubManagedUser" positionX="-76.082275390625" positionY="465.6267700195312" width="128" height="209"/>
     </elements>
 </model>

@@ -52,6 +52,7 @@ public final class PubNubManagedUser: NSManagedObject {
   // Relationships
   @NSManaged public var memberships: Set<PubNubManagedMember>
   @NSManaged public var messages: Set<PubNubManagedMessage>
+  @NSManaged public var actions: Set<PubNubManagedMessageAction>
 }
 
 extension PubNubManagedUser: ManagedUserEntity {

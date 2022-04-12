@@ -70,6 +70,11 @@ public struct ChatMessage<CustomData: ChatCustomData>: Identifiable, Codable {
         custom: content.custom
       )
     }
+    
+    public enum CodingKeys: String, CodingKey {
+      case id, dateCreated, contentPayload, custom
+      case contentType = "type"
+    }
   }
 
   public var timetoken: Timetoken

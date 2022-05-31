@@ -33,53 +33,39 @@ import PubNub
 public typealias PubNubChatChannel = ChatChannel<VoidCustomData>
 
 @dynamicMemberLookup
-public struct ChatChannel<Custom: ChannelCustomData>: Identifiable, Codable, Hashable {
+public struct ChatChannel<Custom: ChannelCustomData>: Identifiable, Hashable {
   
   public struct ChatChannelDefault: Hashable {
-    public var type: String
+
     public var avatarURL: URL?
-    
-    public init() {
-      self.init(type: "default")
-    }
-    
+    public var custom: Custom
+
     public init(
-      type: String?,
-      avatarURL: URL? = nil
+      avatarURL: URL? = nil,
+      custom: Custom = Custom()
     ) {
-      if let type = type {
-        self.init(type: type, avatarURL: avatarURL)
-      } else {
-        self.init()
-        self.avatarURL = avatarURL
-      }
-    }
-    
-    public init(
-      type: String,
-      avatarURL: URL? = nil
-    ) {
-      self.type = type
       self.avatarURL = avatarURL
+      self.custom = custom
     }
   }
   
   public let id: String
-
   public var name: String?
+  
+  public let type: String
+  public let status: String?
+
   public var details: String?
   public var updated: Date?
   public var eTag: String?
 
-  // `Custom` data required by PubNubCHat
   public var defaultChannel: ChatChannelDefault
-  // Additional `Custom` data not required
-  public var customChannel: Custom
 
   public init(
     id: String ,
-    name: String?,
-    type: String,
+    name: String? = nil,
+    type: String? = nil,
+    status: String? = nil,
     details: String? = nil,
     avatarURL: URL? = nil,
     updated: Date? = nil,
@@ -88,23 +74,24 @@ public struct ChatChannel<Custom: ChannelCustomData>: Identifiable, Codable, Has
   ) {
     self.id = id
     self.name = name
+    self.type = type ?? "default"
+    self.status = status
     self.details = details
-    self.defaultChannel = ChatChannelDefault(type: type, avatarURL: avatarURL)
-    self.customChannel = custom
+    self.defaultChannel = ChatChannelDefault(avatarURL: avatarURL, custom: custom)
   }
   
   // MARK: Dynamic Member Lookup
   
   public subscript<T>(dynamicMember keyPath: WritableKeyPath<Custom, T>) -> T {
-    get { customChannel[keyPath: keyPath] }
-    set { customChannel[keyPath: keyPath] = newValue }
+    get { defaultChannel.custom[keyPath: keyPath] }
+    set { defaultChannel.custom[keyPath: keyPath] = newValue }
   }
   
   public subscript<T>(dynamicMember keyPath: WritableKeyPath<ChatChannelDefault, T>) -> T {
     get { defaultChannel[keyPath: keyPath] }
     set { defaultChannel[keyPath: keyPath] = newValue }
   }
-  
+
   // MARK: Codable
 
   public enum CodingKeys: String, CodingKey {
@@ -113,106 +100,113 @@ public struct ChatChannel<Custom: ChannelCustomData>: Identifiable, Codable, Has
     case custom
   }
   
+//  public init(from decoder: Decoder) throws {
+//    let container = try decoder.container(keyedBy: CodingKeys.self)
+//
+//    let defaultChannel = try container.decode(ChatChannelDefault.self, forKey: .custom)
+//
+//    self.init(
+//      id: try container.decode(String.self, forKey: .id),
+//      name: try container.decode(String.self, forKey: .name),
+//      type: defaultChannel.type,
+//      details: try container.decodeIfPresent(String.self, forKey: .details),
+//      avatarURL: defaultChannel.avatarURL,
+//      updated: try container.decodeIfPresent(Date.self, forKey: .updated),
+//      eTag: try container.decodeIfPresent(String.self, forKey: .eTag),
+//      custom: try container.decode(Custom.self, forKey: .custom)
+//    )
+//  }
+//
+//  public func encode(to encoder: Encoder) throws {
+//    var container = encoder.container(keyedBy: CodingKeys.self)
+//
+//    try container.encode(id, forKey: .id)
+//    try container.encode(name, forKey: .name)
+//
+//    try container.encodeIfPresent(details, forKey: .details)
+//    try container.encodeIfPresent(updated, forKey: .updated)
+//    try container.encodeIfPresent(eTag, forKey: .eTag)
+//
+//    let customJSON = defaultChannel.flatJSON.merging(customChannel.flatJSON) { _, new in new }
+//
+//    try container.encode(customJSON.mapValues { $0.codableValue }, forKey: .custom)
+//  }
+}
+
+// TODO: This needs to be decoded from ChatChannel so custom can be converted into
+// [String: JSONCodableScalar] and then init(flatJSON: custom)
+extension ChatChannel.ChatChannelDefault: Codable {
+  public enum CodingKeys: String, CodingKey {
+    case avatarURL = "profileUrl"
+  }
+  
   public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     
-    let defaultChannel = try container.decode(ChatChannelDefault.self, forKey: .custom)
-    
-    self.init(
-      id: try container.decode(String.self, forKey: .id),
-      name: try container.decode(String.self, forKey: .name),
-      type: defaultChannel.type,
-      details: try container.decodeIfPresent(String.self, forKey: .details),
-      avatarURL: defaultChannel.avatarURL,
-      updated: try container.decodeIfPresent(Date.self, forKey: .updated),
-      eTag: try container.decodeIfPresent(String.self, forKey: .eTag),
-      custom: try container.decode(Custom.self, forKey: .custom)
-    )
+    self.avatarURL = try container.decodeIfPresent(URL.self, forKey: .avatarURL)
+    self.custom = try Custom(from: decoder)
   }
   
   public func encode(to encoder: Encoder) throws {
     var container = encoder.container(keyedBy: CodingKeys.self)
-    
-    try container.encode(id, forKey: .id)
-    try container.encode(name, forKey: .name)
-  
-    try container.encodeIfPresent(details, forKey: .details)
-    try container.encodeIfPresent(updated, forKey: .updated)
-    try container.encodeIfPresent(eTag, forKey: .eTag)
+    try container.encodeIfPresent(avatarURL, forKey: .avatarURL)
+    try custom.encode(to: encoder)
+  }
+}
 
-    let customJSON = defaultChannel.flatJSON.merging(customChannel.flatJSON) { _, new in new }
-    
-    try container.encode(customJSON.mapValues { $0.codableValue }, forKey: .custom)
+extension ChatChannel: Codable {
+  public init(from decoder: Decoder) throws {
+    self.init(id: "TODO")
+  }
+  
+  public func encode(to encoder: Encoder) throws {
+    //    try custom.encode(to: encoder)
   }
 }
 
 // MARK: ChatChannelDefault Extension
 
-extension ChatChannel.ChatChannelDefault: Codable {
-  public enum CodingKeys: String, CodingKey {
-    case type
-    case avatarURL = "profileUrl"
-  }
-}
-
 extension ChatChannel.ChatChannelDefault: ChannelCustomData {
-  
-  public init(flatJSON: [String: JSONCodableScalar]?) {
+  public init() {
+    self.init(avatarURL: nil, custom: .init())
+  }
+
+  public init(flatJSON: [String: JSONCodableScalar]) {
     self.init(
-      type: flatJSON?["type"]?.stringOptional,
-      avatarURL: flatJSON?["profileUrl"]?.urlOptional
+      avatarURL: flatJSON["profileUrl"]?.urlOptional,
+      custom: Custom(flatJSON: flatJSON)
     )
   }
 
   public var flatJSON: [String: JSONCodableScalar] {
-    var json: [String: JSONCodableScalar] = ["type": type]
+    var json = [String: JSONCodableScalar]()
     
     if let url = avatarURL {
       json.updateValue(url, forKey: "profileUrl")
     }
-    
-    return json
+
+    return json.merging(custom.flatJSON, uniquingKeysWith: { _, new in new })
   }
 }
 
-// MARK: PubNubChannelMetadata Extension
+// MARK: PubNubSpace Extension
 
-extension ChatChannel: PubNubChannelMetadata {
-  public var metadataId: String {
-    return id
-  }
-  
-  public var channelDescription: String? {
-    get {
-      return details
-    }
-    set(newValue) {
-      details = newValue
-    }
-  }
-  
-  public var custom: [String : JSONCodableScalar]? {
-    get {
-      defaultChannel.flatJSON.merging(customChannel.flatJSON) { _, new in new }
-    }
-    set(newValue) {
-      self.defaultChannel = ChatChannelDefault(flatJSON: newValue)
-      self.customChannel = Custom(flatJSON: newValue)
-    }
-  }
-  
-  public init(from other: PubNubChannelMetadata) throws {
-    let custom = ChatChannelDefault(flatJSON: other.custom)
+extension ChatChannel {
+  public init(pubnub: PubNubSpace) {
     
+    let channelCustom = ChatChannelDefault(flatJSON: pubnub.custom?.flatJSON)
+
+    // Type was previously located inside the custom, so we check to a certain point
     self.init(
-      id: other.metadataId,
-      name: other.name,
-      type: custom.type,
-      details: other.channelDescription,
-      avatarURL: custom.avatarURL,
-      updated: other.updated,
-      eTag: other.eTag,
-      custom: Custom(flatJSON: other.custom)
+      id: pubnub.id,
+      name: pubnub.name,
+      type: pubnub.type ?? pubnub.custom?.flatJSON["type"]?.stringOptional,
+      status: pubnub.status,
+      details: pubnub.spaceDescription,
+      avatarURL: channelCustom.avatarURL,
+      updated: pubnub.updated,
+      eTag: pubnub.eTag,
+      custom: channelCustom.custom
     )
   }
 }

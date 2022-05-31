@@ -32,24 +32,21 @@ import PubNub
 public typealias PubNubChatUser = ChatUser<VoidCustomData>
 
 @dynamicMemberLookup
-public struct ChatUser<Custom: UserCustomData>: Identifiable, Codable, Hashable {
+public struct ChatUser<Custom: UserCustomData>: Identifiable, Hashable {
   
-  public struct PubNubDefault: Hashable, Codable {
-    public var occupation: String?
+  public struct PubNubDefault: Hashable {
+    public var custom: Custom
     
-    public init() {
-      self.init(occupation: nil)
-    }
-    
-    public init(
-      occupation: String?
-    ) {
-      self.occupation = occupation
+    public init(custom: Custom) {
+      self.custom = custom
     }
   }
   
   public var id: String
   public var name: String?
+
+  public var type: String
+  public var status: String?
   
   public var externalId: String?
   public var avatarURL: URL?
@@ -60,13 +57,12 @@ public struct ChatUser<Custom: UserCustomData>: Identifiable, Codable, Hashable 
 
   // `Custom` data required by PubNubCHat
   public var defaultPubnub: PubNubDefault
-  // Additional `Custom` data not required
-  public var customUser: Custom
   
   public init(
     id: String,
-    name: String?,
-    occupation: String? = nil,
+    name: String? = nil,
+    type: String? = nil,
+    status: String? = nil,
     externalId: String? = nil,
     avatarURL: URL? = nil,
     email: String? = nil,
@@ -76,20 +72,21 @@ public struct ChatUser<Custom: UserCustomData>: Identifiable, Codable, Hashable 
   ) {
     self.id = id
     self.name = name
+    self.type = type ?? "default"
+    self.status = status
     self.externalId = externalId
     self.avatarURL = avatarURL
     self.email = email
     self.updated = updated
     self.eTag = eTag
-    self.defaultPubnub = .init(occupation: occupation)
-    self.customUser = customUser
+    self.defaultPubnub = PubNubDefault(custom: customUser)
   }
   
   // MARK: Dynamic Member Lookup
   
   public subscript<T>(dynamicMember keyPath: WritableKeyPath<Custom, T>) -> T {
-    get { customUser[keyPath: keyPath] }
-    set { customUser[keyPath: keyPath] = newValue }
+    get { defaultPubnub.custom[keyPath: keyPath] }
+    set { defaultPubnub.custom[keyPath: keyPath] = newValue }
   }
   
   public subscript<T>(dynamicMember keyPath: WritableKeyPath<PubNubDefault, T>) -> T {
@@ -98,62 +95,49 @@ public struct ChatUser<Custom: UserCustomData>: Identifiable, Codable, Hashable 
   }
 }
 
-// MARK: PubNubDefault Extension
-
-extension ChatUser.PubNubDefault: UserCustomData {
-  
-  public init(flatJSON: [String: JSONCodableScalar]?) {
-    self.init(
-      occupation: flatJSON?["occupation"]?.stringOptional
-    )
+// TODO: This needs to be decoded from ChatChannel so custom can be converted into
+// [String: JSONCodableScalar] and then init(flatJSON: custom)
+extension ChatUser: Codable {
+  public init(from decoder: Decoder) throws {
+    self.init(id: "TODO")
   }
   
-  public var flatJSON: [String: JSONCodableScalar] {
-    let json: [String: JSONCodableScalar] = ["occupation": occupation]
-    
-    return json
+  public func encode(to encoder: Encoder) throws {
+//    try custom.encode(to: encoder)
   }
 }
 
-// MARK: PubNubUUIDMetadata Extension
+// MARK: PubNubDefault Extension
 
-extension ChatUser: PubNubUUIDMetadata {
-  public var profileURL: String? {
-    get {
-      avatarURL?.absoluteString
-    }
-    set(newValue) {
-      avatarURL = try? URL(string: newValue)
-    }
+extension ChatUser.PubNubDefault: UserCustomData {
+  public init() {
+    self.custom = Custom()
+  }
+
+  public init(flatJSON: [String: JSONCodableScalar]) {
+    self.custom = Custom(flatJSON: flatJSON)
   }
   
-  public var metadataId: String {
-    return id
+  public var flatJSON: [String: JSONCodableScalar] {
+    return custom.flatJSON
   }
-  
-  public var custom: [String : JSONCodableScalar]? {
-    get {
-      defaultPubnub.flatJSON.merging(customUser.flatJSON) { _, new in new }
-    }
-    set(newValue) {
-      self.defaultPubnub = PubNubDefault(flatJSON: newValue)
-      self.customUser = Custom(flatJSON: newValue)
-    }
-  }
-  
-  public init(from other: PubNubUUIDMetadata) throws {
-    let custom = PubNubDefault(flatJSON: other.custom)
-    
+}
+
+// MARK: PubNubUser Extension
+
+extension ChatUser {
+  public init(pubnub: PubNubUser) {
     self.init(
-      id: other.metadataId,
-      name: other.name,
-      occupation: custom.occupation,
-      externalId: other.externalId,
-      avatarURL: try URL(string: other.profileURL),
-      email: other.email,
-      updated: other.updated,
-      eTag: other.eTag,
-      customUser: Custom(flatJSON: other.custom)
+      id: pubnub.id,
+      name: pubnub.name,
+      type: pubnub.type,
+      status: pubnub.status,
+      externalId: pubnub.externalId,
+      avatarURL: pubnub.profileURL,
+      email: pubnub.email,
+      updated: pubnub.updated,
+      eTag: pubnub.eTag,
+      customUser: Custom(flatJSON: pubnub.custom?.flatJSON)
     )
   }
 }

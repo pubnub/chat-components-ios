@@ -89,7 +89,6 @@
 		35B3B4FC264B37C900473120 /* ChannelAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B3B4FB264B37C900473120 /* ChannelAPI.swift */; };
 		35B3B503264B380A00473120 /* PresenceAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B3B502264B380A00473120 /* PresenceAPI.swift */; };
 		35B3B50A264B384700473120 /* MemberAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B3B509264B384700473120 /* MemberAPI.swift */; };
-		35B3B511264B387200473120 /* MembershipAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B3B510264B387200473120 /* MembershipAPI.swift */; };
 		35B3B518264B38AD00473120 /* MessageAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B3B517264B38AD00473120 /* MessageAPI.swift */; };
 		35B3B524264B38E500473120 /* SubscribeAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B3B523264B38E500473120 /* SubscribeAPI.swift */; };
 		35B3B52C264C494300473120 /* ChatDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B3B52B264C494300473120 /* ChatDataProvider.swift */; };
@@ -225,7 +224,6 @@
 		35B3B4FB264B37C900473120 /* ChannelAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelAPI.swift; sourceTree = "<group>"; };
 		35B3B502264B380A00473120 /* PresenceAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresenceAPI.swift; sourceTree = "<group>"; };
 		35B3B509264B384700473120 /* MemberAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemberAPI.swift; sourceTree = "<group>"; };
-		35B3B510264B387200473120 /* MembershipAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembershipAPI.swift; sourceTree = "<group>"; };
 		35B3B517264B38AD00473120 /* MessageAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageAPI.swift; sourceTree = "<group>"; };
 		35B3B523264B38E500473120 /* SubscribeAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscribeAPI.swift; sourceTree = "<group>"; };
 		35B3B52B264C494300473120 /* ChatDataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatDataProvider.swift; sourceTree = "<group>"; };
@@ -686,7 +684,6 @@
 				35B3B4FB264B37C900473120 /* ChannelAPI.swift */,
 				35B3B502264B380A00473120 /* PresenceAPI.swift */,
 				35B3B509264B384700473120 /* MemberAPI.swift */,
-				35B3B510264B387200473120 /* MembershipAPI.swift */,
 				35B3B517264B38AD00473120 /* MessageAPI.swift */,
 				35043BCC27B7056C00DA9A84 /* MessageActionAPI.swift */,
 				35B3B523264B38E500473120 /* SubscribeAPI.swift */,
@@ -913,7 +910,6 @@
 				350AC81426447E1900C3D323 /* PubNubManagedMember.swift in Sources */,
 				350AC78A264355D500C3D323 /* ChatProvider.swift in Sources */,
 				3551EB942739CCCC00ABA555 /* ChatError.swift in Sources */,
-				35B3B511264B387200473120 /* MembershipAPI.swift in Sources */,
 				35B3B518264B38AD00473120 /* MessageAPI.swift in Sources */,
 				35FD757E269F8714007D7435 /* PubNubManagedMessage.swift in Sources */,
 				3598B2D82645E12E00878118 /* TransientPropertyHolder.swift in Sources */,
@@ -1757,8 +1753,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/pubnub/swift";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 4.1.2;
+				branch = "features/CLEN-351_VSP-modules";
+				kind = branch;
 			};
 		};
 		35B3B5952655D61300473120 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {

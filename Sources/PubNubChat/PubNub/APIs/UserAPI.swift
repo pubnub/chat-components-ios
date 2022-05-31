@@ -33,53 +33,59 @@ import PubNub
 // MARK: Protocol API
 
 public protocol PubNubUserAPI {
-  func fetchAll<Custom: UserCustomData>(
-    users request: ObjectsFetchRequest,
+  func fetch<Custom: UserCustomData>(
+    users request: UsersFetchRequest,
     into: Custom.Type,
-    completion: ((Result<(users: [ChatUser<Custom>], next: ObjectsFetchRequest?), Error>) -> Void)?
+    completion: @escaping ((Result<(users: [ChatUser<Custom>], next: UsersFetchRequest?), Error>) -> Void)
   )
   
   func fetch<Custom: UserCustomData>(
-    user request: ObjectMetadataIdRequest,
+    user request: ChatUserRequest<Custom>,
+    into: Custom.Type,
+    completion: @escaping ((Result<ChatUser<Custom>, Error>) -> Void)
+  )
+
+  func create<Custom: UserCustomData>(
+    user request: ChatUserRequest<Custom>,
     into: Custom.Type,
     completion: ((Result<ChatUser<Custom>, Error>) -> Void)?
   )
 
-  func set<Custom: UserCustomData>(
-    user request: UserMetadataRequest<Custom>,
+  func update<Custom: UserCustomData>(
+    user request: ChatUserRequest<Custom>,
     into: Custom.Type,
     completion: ((Result<ChatUser<Custom>, Error>) -> Void)?
   )
 
-  func remove(
-    user request: ObjectRemoveRequest,
-    completion: ((Result<String, Error>) -> Void)?
+  func remove<Custom: UserCustomData>(
+    user request: ChatUserRequest<Custom>,
+    completion: ((Result<Void, Error>) -> Void)?
   )
 }
 
 // MARK: - PubNub Ext
 
 extension PubNubUserAPI {
-  func fetchAllPublisher<Custom: UserCustomData>(
-    users request: ObjectsFetchRequest,
+  func fetchPublisher<Custom: UserCustomData>(
+    users request: UsersFetchRequest,
     into customType: Custom.Type
-  ) -> AnyPublisher<(users: [ChatUser<Custom>], next: ObjectsFetchRequest?), Error> {
+  ) -> AnyPublisher<(users: [ChatUser<Custom>], next: UsersFetchRequest?), Error> {
     return Future { promise in
-      fetchAll(users: request, into: customType) { promise($0) }
+      fetch(users: request, into: customType) { promise($0) }
     }.eraseToAnyPublisher()
   }
   
-  public func fetchAllPagesPublisher<Custom: UserCustomData>(
-    users request: ObjectsFetchRequest,
+  public func fetchPagesPublisher<Custom: UserCustomData>(
+    users request: UsersFetchRequest,
     into customType: Custom.Type
-  ) -> AnyPublisher<([ChatUser<Custom>], ObjectsFetchRequest?), PaginationError<ObjectsFetchRequest>> {
+  ) -> AnyPublisher<([ChatUser<Custom>], UsersFetchRequest?), PaginationError<UsersFetchRequest>> {
     
-    let pagedPublisher = CurrentValueSubject<ObjectsFetchRequest, PaginationError<ObjectsFetchRequest>>(request)
+    let pagedPublisher = CurrentValueSubject<UsersFetchRequest, PaginationError<UsersFetchRequest>>(request)
     
     return pagedPublisher
       .flatMap({ request in
-        fetchAllPublisher(users: request, into: customType)
-          .mapError { PaginationError<ObjectsFetchRequest>(request: request, error: $0) }
+        fetchPublisher(users: request, into: customType)
+          .mapError { PaginationError<UsersFetchRequest>(request: request, error: $0) }
       })
       .handleEvents(receiveOutput: { output in
         if let request = output.next {
@@ -94,64 +100,87 @@ extension PubNubUserAPI {
 }
 
 extension PubNub: PubNubUserAPI {
-  
-  public func fetchAll<Custom: UserCustomData>(
-    users request: ObjectsFetchRequest,
+  public func fetch<Custom: UserCustomData>(
+    users request: UsersFetchRequest,
     into: Custom.Type,
-    completion: ((Result<(users: [ChatUser<Custom>], next: ObjectsFetchRequest?), Error>) -> Void)?
-  ) {
-    allUUIDMetadata(
-      include: request.include,
+    completion: @escaping ((Result<(users: [ChatUser<Custom>], next: UsersFetchRequest?), Error>) -> Void)
+  ) {    
+    User.fetchUsers(
+      includeCustom: request.includeCustom,
+      includeTotalCount: request.includeTotalCount,
       filter: request.filter,
       sort: request.sort,
       limit: request.limit,
       page: request.page,
       custom: .init(customConfiguration: request.config)
     ) { result in
-      completion?(result.map { ($0.uuids.compactMap { try? $0.transcode() }, request.next(page: $0.next)) })
+      completion(result.map { ($0.users.map { ChatUser(pubnub: $0) }, request.next(page: $0.next)) })
     }
   }
 
   public func fetch<Custom: UserCustomData>(
-    user request: ObjectMetadataIdRequest,
+    user request: ChatUserRequest<Custom>,
     into: Custom.Type,
-    completion: ((Result<ChatUser<Custom>, Error>) -> Void)?
+    completion: @escaping ((Result<ChatUser<Custom>, Error>) -> Void)
   ) {
-    fetch(
-      uuid: request.metadataId,
-      include: request.includeCustom,
+    User.fetchUser(
+      userId: request.user.id,
+      includeCustom: request.includeCustom,
       custom: .init(customConfiguration: request.config)
     ) { result in
-      completion?(
-        result
-          .flatMap { do { return .success(try $0.transcode()) } catch { return .failure(error) } }
-      )
+      completion(result.map { ChatUser(pubnub: $0) })
     }
   }
 
-  public func set<Custom: UserCustomData>(
-    user request: UserMetadataRequest<Custom>,
+  public func create<Custom: UserCustomData>(
+    user request: ChatUserRequest<Custom>,
     into: Custom.Type,
     completion: ((Result<ChatUser<Custom>, Error>) -> Void)?
   ) {
-    set(
-      uuid: request.user,
-      include: request.includeCustom,
+    User.createUser(
+      userId: request.user.id,
+      name: request.user.name,
+      type: request.user.type,
+      status:  request.user.status,
+      externalId:  request.user.externalId,
+      profileUrl:  request.user.avatarURL,
+      email:  request.user.email,
+      custom:  request.user.defaultPubnub,
+      includeCustom: request.includeCustom,
       custom: .init(customConfiguration: request.config)
     ) { result in
-      completion?(
-        result.flatMap { do { return .success(try $0.transcode()) } catch { return .failure(error) } }
-      )
+      completion?(result.map { ChatUser(pubnub: $0) })
+    }
+  }
+  
+  public func update<Custom: UserCustomData>(
+    user request: ChatUserRequest<Custom>,
+    into: Custom.Type,
+    completion: ((Result<ChatUser<Custom>, Error>) -> Void)?
+  ) {
+    User.updateUser(
+      userId: request.user.id,
+      name: request.user.name,
+      type: request.user.type,
+      status:  request.user.status,
+      externalId:  request.user.externalId,
+      profileUrl:  request.user.avatarURL,
+      email:  request.user.email,
+      custom:  request.user.defaultPubnub,
+      includeCustom: request.includeCustom,
+      custom: .init(customConfiguration: request.config)
+    ) { result in
+      completion?(result.map { ChatUser(pubnub: $0) })
     }
   }
 
-  public func remove(
-    user request: ObjectRemoveRequest,
-    completion: ((Result<String, Error>) -> Void)?
+  public func remove<Custom: UserCustomData>(
+    user request: ChatUserRequest<Custom>,
+    completion: ((Result<Void, Error>) -> Void)?
   ) {
-    remove(
-      uuid: request.metadataId,
-      custom: .init(customConfiguration: request.config?.mergeChatConsumerID()),
+    User.removeUser(
+      userId: request.user.id,
+      custom: .init(customConfiguration: request.config),
       completion: completion
     )
   }
@@ -162,26 +191,31 @@ extension PubNub: PubNubUserAPI {
 
 // MARK: - Request
 
-public struct ObjectsFetchRequest {
+public typealias UsersFetchRequest = FetchEntitiesRequest<PubNub.UserSort>
+
+public struct FetchEntitiesRequest<Sort> {
   public let requestId: String = UUID().uuidString
 
-  public var include: PubNub.IncludeFields
+  public var includeCustom: Bool
+  public var includeTotalCount: Bool
   public var limit: Int?
   public var filter: String?
-  public var sort: [PubNub.ObjectSortField]
+  public var sort: [Sort]
   public var page: PubNubHashedPage?
   
   public var config: PubNubConfiguration?
 
   public init(
-    include: PubNub.IncludeFields = .init(),
+    includeCustom: Bool = true,
+    includeTotalCount: Bool = false,
     limit: Int? = 100,
     filter: String? = nil,
-    sort: [PubNub.ObjectSortField] = [],
-    page: PubNubHashedPage? = PubNub.Page(),
+    sort: [Sort] = [],
+    page: PubNubHashedPage? = nil,
     config: PubNubConfiguration? = nil
   ) {
-    self.include = include
+    self.includeCustom = includeCustom
+    self.includeTotalCount = includeTotalCount
     self.limit = limit
     self.filter = filter
     self.sort = sort
@@ -189,7 +223,7 @@ public struct ObjectsFetchRequest {
     self.config = config
   }
   
-  func next(page: PubNubHashedPage?) -> ObjectsFetchRequest? {
+  func next(page: PubNubHashedPage?) -> FetchEntitiesRequest<Sort>? {
     guard let page = page, page.start != nil, page.start != self.page?.end else {
       return nil
     }
@@ -200,32 +234,13 @@ public struct ObjectsFetchRequest {
   }
 }
 
-extension ObjectsFetchRequest: Equatable {
-  public static func == (lhs: ObjectsFetchRequest, rhs: ObjectsFetchRequest) -> Bool {
+extension FetchEntitiesRequest: Equatable {
+  public static func == (lhs: FetchEntitiesRequest<Sort>, rhs: FetchEntitiesRequest<Sort>) -> Bool {
     return lhs.requestId == rhs.requestId
   }
 }
 
-public struct ObjectMetadataIdRequest: Equatable {
-  public let requestId: String = UUID().uuidString
-
-  public var metadataId: String
-  public var includeCustom: Bool
-  
-  public var config: PubNubConfiguration?
-
-  public init(
-    metadataId: String,
-    includeCustom: Bool = true,
-    config: PubNubConfiguration? = nil
-  ) {
-    self.metadataId = metadataId
-    self.includeCustom = includeCustom
-    self.config = config
-  }
-}
-
-public struct UserMetadataRequest<Custom: UserCustomData> {
+public struct ChatUserRequest<Custom: UserCustomData> {
   public let requestId: String = UUID().uuidString
 
   public var user: ChatUser<Custom>
@@ -244,8 +259,8 @@ public struct UserMetadataRequest<Custom: UserCustomData> {
   }
 }
 
-extension UserMetadataRequest: Equatable {
-  public static func == (lhs: UserMetadataRequest, rhs: UserMetadataRequest) -> Bool {
+extension ChatUserRequest: Equatable {
+  public static func == (lhs: ChatUserRequest, rhs: ChatUserRequest) -> Bool {
     return lhs.requestId == rhs.requestId
   }
 }

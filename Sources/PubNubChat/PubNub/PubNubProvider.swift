@@ -31,7 +31,7 @@ import Combine
 import PubNub
 
 // MARK: - Protocol Wrapper
-public typealias PubNubObjectAPI = PubNubUserAPI & PubNubChannelAPI & PubNubMembershipAPI & PubNubMemberAPI
+public typealias PubNubObjectAPI = PubNubUserAPI & PubNubChannelAPI & PubNubMemberAPI
 public typealias PubNubAPI = SubscribeAPI & PubNubObjectAPI & MessageAPI & MessageActionAPI & PresenceAPI & PubNubConfigurable & PubNubBase
 
 // MARK: - Configuration Provider
@@ -130,12 +130,8 @@ extension ChatDataProvider {
 
         case .membershipMetadataSet(let membership):
           PubNub.log.debug("Listener: Membership Metadata set \(membership)")
-          do {
-            members.append(try ChatMember<ModelData>(from: membership))
-          } catch {
-            PubNub.log.error("Listener Membership Metadata received conversion error \(error)")
-          }
-          
+          members.append(ChatMember<ModelData>(pubnub: membership.convert()))
+
         case .membershipMetadataRemoved(let membership):
           PubNub.log.debug("Listener: Membership Metadata removed \(membership)")
           self.removeStoredMember(

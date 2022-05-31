@@ -36,8 +36,9 @@ public final class PubNubManagedUser: NSManagedObject {
   @NSManaged public var id: String
   @NSManaged public var name: String?
   
-  @NSManaged public var occupation: String?
-  
+  @NSManaged public var type: String
+  @NSManaged public var status: String?
+
   @NSManaged public var externalId: String?
   @NSManaged public var avatarURL: URL?
   @NSManaged public var email: String?
@@ -76,7 +77,8 @@ extension PubNubManagedUser: ManagedUserEntity {
     return ChatUser(
       id: id,
       name: name,
-      occupation: occupation,
+      type: type,
+      status: status,
       externalId: externalId,
       avatarURL: avatarURL,
       email: email,
@@ -117,10 +119,12 @@ extension PubNubManagedUser: ManagedUserEntity {
   ) throws where Custom : UserCustomData {
     self.id = user.id
     self.name = user.name
+    self.type = user.type
+    self.status = user.status
     self.externalId = user.externalId
     self.avatarURL = user.avatarURL
     self.email = user.email
-    self.custom = try user.customUser.jsonDataResult.get()
+    self.custom = try user.defaultPubnub.custom.jsonDataResult.get()
     self.lastUpdated = user.updated
     self.eTag = user.eTag
   }

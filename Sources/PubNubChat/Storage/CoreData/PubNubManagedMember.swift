@@ -35,6 +35,8 @@ public final class PubNubManagedMember: NSManagedObject {
   // Entity Attributes
   @NSManaged public var id: String
   @NSManaged public var custom: Data
+  @NSManaged public var status: String?
+
   // Presence Attributes
   @NSManaged public var isPresent: Bool
   @NSManaged public var presenceState: Data?
@@ -67,6 +69,7 @@ extension PubNubManagedMember: ManagedMemberEntity {
       channel: channel.convert(),
       pubnubUserId: userId,
       user: user.convert(),
+      status: status,
       isPresent: isPresent
     )
   }
@@ -135,6 +138,8 @@ extension PubNubManagedMember: ManagedMemberEntity {
     from member: ChatMember<Custom>
   ) throws where Custom : ChatCustomData {
     self.id = member.id
+    
+    self.status = member.status
     
     if let isPresent = member.presence?.isPresent {
       self.isPresent = isPresent

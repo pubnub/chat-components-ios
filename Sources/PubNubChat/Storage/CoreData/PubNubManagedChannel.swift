@@ -36,8 +36,10 @@ import SwiftUI
 public final class PubNubManagedChannel: NSManagedObject {
   @NSManaged public var id: String
   @NSManaged public var name: String?
-  @NSManaged public var type: String
 
+  @NSManaged public var type: String
+  @NSManaged public var status: String?
+  
   @NSManaged public var details: String?
   @NSManaged public var avatarURL: URL?
 
@@ -86,6 +88,7 @@ extension PubNubManagedChannel: ManagedChannelEntity {
       id: id,
       name: name ?? "",
       type: type,
+      status: status,
       details: details,
       avatarURL: avatarURL,
       updated: lastUpdated,
@@ -125,9 +128,10 @@ extension PubNubManagedChannel: ManagedChannelEntity {
     id = channel.id
     name = channel.name
     type = channel.type
+    status = channel.status
     details = channel.details
     avatarURL = channel.avatarURL
-    custom = try channel.customChannel.jsonDataResult.get()
+    custom = try channel.defaultChannel.custom.jsonDataResult.get()
     lastUpdated = channel.updated
     eTag = channel.eTag
   }

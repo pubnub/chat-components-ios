@@ -1,8 +1,13 @@
-//
-//  CustomData.swift
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>FILEHEADER</key>
+	<string>
+//  ___FILENAME___
 //
 //  PubNub Real-time Cloud-Hosted Push API and Push Notification Client Frameworks
-//  Copyright © 2021 PubNub Inc.
+//  Copyright © ___YEAR___ PubNub Inc.
 //  https://www.pubnub.com/
 //  https://www.pubnub.com/terms
 //
@@ -23,39 +28,6 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-//
-
-import Foundation
-
-import PubNub
-
-public protocol CustomFlatJSONData: FlatJSONCodable, Hashable, Defaultable {}
-public protocol CustomJSONData: JSONCodable, Hashable, Defaultable {}
-
-public struct VoidCustomData: Codable, Hashable,
-  ChatCustomData,
-  UserCustomData,
-  ChannelCustomData,
-  MemberCustomData,
-  MessageCustomData
-{
-  public init() {}
-  public init(flatJSON: [String: JSONCodableScalar]) { }
-  public var flatJSON: [String: JSONCodableScalar] { [:] }
-}
-
-public protocol UserCustomData: CustomFlatJSONData {}
-public protocol ChannelCustomData: CustomFlatJSONData {}
-public protocol MemberCustomData: CustomFlatJSONData {}
-public protocol MessageCustomData: CustomJSONData {}
-
-public protocol ChatCustomData {
-  associatedtype User: UserCustomData = VoidCustomData
-  associatedtype Channel: ChannelCustomData = VoidCustomData
-  associatedtype Member: MemberCustomData = VoidCustomData
-  associatedtype Message: MessageCustomData = VoidCustomData
-}
-
-public protocol Defaultable {
-  init()
-}
+//</string>
+</dict>
+</plist>

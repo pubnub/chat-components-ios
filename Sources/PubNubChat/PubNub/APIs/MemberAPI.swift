@@ -32,45 +32,88 @@ import PubNub
 
 public protocol PubNubMemberAPI {
   func fetch<Custom: ChatCustomData>(
-    members request: MemberFetchRequest,
+    userMembers request: UserMemberFetchRequest,
     into: Custom.Type,
-    completion: ((Result<(members: [ChatMember<Custom>], next: MemberFetchRequest?), Error>) -> Void)?
+    completion: @escaping ((Result<(members: [ChatMember<Custom>], next: UserMemberFetchRequest?), Error>) -> Void)
+  )
+  
+  func fetch<Custom: ChatCustomData>(
+    channelMembers request: ChannelMemberFetchRequest,
+    into: Custom.Type,
+    completion: @escaping ((Result<(members: [ChatMember<Custom>], next: ChannelMemberFetchRequest?), Error>) -> Void)
   )
 
-  func set<Custom: ChatCustomData>(
-    members request: MemberModifyRequest,
+  func create<Custom: ChatCustomData>(
+    members request: MembersModifyRequest<Custom>,
     into: Custom.Type,
-    completion: ((Result<([ChatMember<Custom>], next: MemberModifyRequest?), Error>) -> Void)?
+    completion: ((Result<Void, Error>) -> Void)?
+  )
+
+  func update<Custom: ChatCustomData>(
+    members request: MembersModifyRequest<Custom>,
+    into: Custom.Type,
+    completion: ((Result<Void, Error>) -> Void)?
   )
 
   func remove<Custom: ChatCustomData>(
-    members request: MemberModifyRequest,
+    members request: MembersModifyRequest<Custom>,
     into: Custom.Type,
-    completion: ((Result<([ChatMember<Custom>], next: MemberModifyRequest?), Error>) -> Void)?
+    completion: ((Result<Void, Error>) -> Void)?
   )
 }
 
 extension PubNubMemberAPI {
 
   public func fetchPublisher<Custom: ChatCustomData>(
-    members request: MemberFetchRequest,
+    userMembers request: UserMemberFetchRequest,
     into customType: Custom.Type
-  ) -> AnyPublisher<(members: [ChatMember<Custom>], next: MemberFetchRequest?), Error> {
+  ) -> AnyPublisher<(members: [ChatMember<Custom>], next: UserMemberFetchRequest?), Error> {
     return Future { promise in
-      fetch(members: request, into: customType) { promise($0) }
+      fetch(userMembers: request, into: customType) { promise($0) }
     }.eraseToAnyPublisher()
   }
   public func fetchPagesPublisher<Custom: ChatCustomData>(
-    members request: MemberFetchRequest,
+    userMembers request: UserMemberFetchRequest,
     into customType: Custom.Type
-  ) -> AnyPublisher<([ChatMember<Custom>], MemberFetchRequest?), PaginationError<MemberFetchRequest>> {
+  ) -> AnyPublisher<([ChatMember<Custom>], UserMemberFetchRequest?), PaginationError<UserMemberFetchRequest>> {
     
-    let pagedPublisher = CurrentValueSubject<MemberFetchRequest, PaginationError<MemberFetchRequest>>(request)
+    let pagedPublisher = CurrentValueSubject<UserMemberFetchRequest, PaginationError<UserMemberFetchRequest>>(request)
     
     return pagedPublisher
       .flatMap({ request in
-        fetchPublisher(members: request, into: customType)
-          .mapError { PaginationError<MemberFetchRequest>(request: request, error: $0) }
+        fetchPublisher(userMembers: request, into: customType)
+          .mapError { PaginationError<UserMemberFetchRequest>(request: request, error: $0) }
+      })
+      .handleEvents(receiveOutput: { output in
+        if let request = output.next {
+          pagedPublisher.send(request)
+        } else {
+          pagedPublisher.send(completion: .finished)
+        }
+      })
+      .map { ($0.members, $0.next) }
+      .eraseToAnyPublisher()
+  }
+  
+  public func fetchPublisher<Custom: ChatCustomData>(
+    channelMembers request: ChannelMemberFetchRequest,
+    into customType: Custom.Type
+  ) -> AnyPublisher<(members: [ChatMember<Custom>], next: ChannelMemberFetchRequest?), Error> {
+    return Future { promise in
+      fetch(channelMembers: request, into: customType) { promise($0) }
+    }.eraseToAnyPublisher()
+  }
+  public func fetchPagesPublisher<Custom: ChatCustomData>(
+    channelMembers request: ChannelMemberFetchRequest,
+    into customType: Custom.Type
+  ) -> AnyPublisher<([ChatMember<Custom>], ChannelMemberFetchRequest?), PaginationError<ChannelMemberFetchRequest>> {
+    
+    let pagedPublisher = CurrentValueSubject<ChannelMemberFetchRequest, PaginationError<ChannelMemberFetchRequest>>(request)
+    
+    return pagedPublisher
+      .flatMap({ request in
+        fetchPublisher(channelMembers: request, into: customType)
+          .mapError { PaginationError<ChannelMemberFetchRequest>(request: request, error: $0) }
       })
       .handleEvents(receiveOutput: { output in
         if let request = output.next {
@@ -87,105 +130,164 @@ extension PubNubMemberAPI {
 // MARK: - PubNub Ext
 
 extension PubNub: PubNubMemberAPI {
+
   public func fetch<Custom: ChatCustomData>(
-    members request: MemberFetchRequest,
+    userMembers request: UserMemberFetchRequest,
     into: Custom.Type,
-    completion: ((Result<(members: [ChatMember<Custom>], next: MemberFetchRequest?), Error>) -> Void)?
+    completion: @escaping ((Result<(members: [ChatMember<Custom>], next: UserMemberFetchRequest?), Error>) -> Void)
   ) {
-    fetchMembers(
-      channel: request.channelMetadataId,
-      include: request.include,
+    Membership.fetchMemberships(
+      spaceId: request.channelId,
+      includeCustom: request.includeCustom,
+      includeTotalCount: request.includeTotalCount,
+      includeUserFields: request.includeUserFields,
+      includeUserCustomFields: request.includeUserFields,
       filter: request.filter,
       sort: request.sort,
       limit: request.limit,
       page: request.page,
-      custom: .init(customConfiguration: request.config?.mergeChatConsumerID())
+      custom: .init(customConfiguration: request.config)
     ) { result in
-      completion?(
-        result
-          .map {(
-            $0.memberships.compactMap { try? $0.transcode() },
-            request.next(page: $0.next)
-          )}
-      )
+      completion(result.map { ($0.memberships.map { ChatMember(pubnub: $0) }, request.next(page: $0.next)) })
     }
   }
-
-  public func set<Custom: ChatCustomData>(
-    members request: MemberModifyRequest,
+  
+  public func fetch<Custom: ChatCustomData>(
+    channelMembers request: ChannelMemberFetchRequest,
     into: Custom.Type,
-    completion: ((Result<([ChatMember<Custom>], next: MemberModifyRequest?), Error>) -> Void)?
+    completion: @escaping ((Result<(members: [ChatMember<Custom>], next: ChannelMemberFetchRequest?), Error>) -> Void)
   ) {
-    setMembers(
-      channel: request.channelMetadataId,
-      uuids: request.userMembers,
-      include: request.include,
+    Membership.fetchMemberships(
+      userId: request.userId,
+      includeCustom: request.includeCustom,
+      includeTotalCount: request.includeTotalCount,
+      includeSpaceFields: request.includeChannelFields,
+      includeSpaceCustomFields: request.includeChannelFields,
       filter: request.filter,
       sort: request.sort,
       limit: request.limit,
       page: request.page,
-      custom: .init(customConfiguration: request.config?.mergeChatConsumerID())
+      custom: .init(customConfiguration: request.config)
     ) { result in
-      completion?(
-        result
-          .map {(
-            $0.memberships.compactMap { try? $0.transcode() },
-            request.next(page: $0.next)
-          )}
-      )
+      completion(result.map { ($0.memberships.map { ChatMember(pubnub: $0) }, request.next(page: $0.next)) })
     }
   }
-
+  
+  public func create<Custom: ChatCustomData>(
+    members request: MembersModifyRequest<Custom>,
+    into: Custom.Type,
+    completion: ((Result<Void, Error>) -> Void)?
+  ) {
+    // Determine PubNub directionality
+    switch(request.membershipPartials) {
+    case let (.some(userId), .none, partials):
+      // Call the appropriate method
+      Membership.addMemberships(
+        spaces: partials,
+        to: userId,
+        custom: .init(customConfiguration: request.config),
+        completion: completion
+      )
+    case let (.none, .some(channelId), partials):
+      // Call the appropriate method
+      Membership.addMemberships(
+        users: partials,
+        to: channelId,
+        custom: .init(customConfiguration: request.config),
+        completion: completion
+      )
+    default:
+      completion?(.failure(ChatError.missingRequiredData))
+    }
+  }
+  
+  public func update<Custom: ChatCustomData>(
+    members request: MembersModifyRequest<Custom>,
+    into: Custom.Type,
+    completion: ((Result<Void, Error>) -> Void)?
+  ) {
+    // Determine PubNub directionality
+    switch(request.membershipPartials) {
+    case let (.some(userId), .none, partials):
+      // Call the appropriate method
+      Membership.updateMemberships(
+        spaces: partials,
+        on: userId,
+        custom: .init(customConfiguration: request.config),
+        completion: completion
+      )
+    case let (.none, .some(channelId), partials):
+      // Call the appropriate method
+      Membership.updateMemberships(
+        users: partials,
+        on: channelId,
+        custom: .init(customConfiguration: request.config),
+        completion: completion
+      )
+    default:
+      completion?(.failure(ChatError.missingRequiredData))
+    }
+  }
+  
   public func remove<Custom: ChatCustomData>(
-    members request: MemberModifyRequest,
+    members request: MembersModifyRequest<Custom>,
     into: Custom.Type,
-    completion: ((Result<([ChatMember<Custom>], next: MemberModifyRequest?), Error>) -> Void)?
+    completion: ((Result<Void, Error>) -> Void)?
   ) {
-    removeMembers(
-      channel: request.channelMetadataId,
-      uuids: request.userMembers,
-      include: request.include,
-      filter: request.filter,
-      sort: request.sort,
-      limit: request.limit,
-      page: request.page,
-      custom: .init(customConfiguration: request.config?.mergeChatConsumerID())
-    ) { result in
-      completion?(
-        result
-          .map {(
-            $0.memberships.compactMap { try? $0.transcode() },
-            request.next(page: $0.next)
-          )}
+    // Determine PubNub directionality
+    switch(request.membershipPartials) {
+    case let (.some(userId), .none, partials):
+      // Call the appropriate method
+      Membership.removeMemberships(
+        spaceIds: partials.map { $0.id },
+        from: userId,
+        custom: .init(customConfiguration: request.config),
+        completion: completion
       )
+    case let (.none, .some(channelId), partials):
+      // Call the appropriate method
+      Membership.removeMemberships(
+        userIds: partials.map { $0.id },
+        from: channelId,
+        custom: .init(customConfiguration: request.config),
+        completion: completion
+      )
+    default:
+      completion?(.failure(ChatError.missingRequiredData))
     }
   }
 }
 
 // MARK: - Requests
 
-public struct MemberFetchRequest {
+public struct UserMemberFetchRequest {
   public let requestId: String = UUID().uuidString
-  public var channelMetadataId: String
-  public var include: PubNub.MemberInclude
+  public var channelId: String
+  public var includeCustom: Bool
+  public var includeTotalCount: Bool
+  public var includeUserFields: Bool
   public var limit: Int?
-  public var sort: [PubNub.MembershipSortField]
+  public var sort: [PubNub.UserMembershipSort]
   public var filter: String?
   public var page: PubNubHashedPage?
   
   public var config: PubNubConfiguration?
 
   public init(
-    channelMetadataId: String,
-    include: PubNub.MemberInclude = .init(customFields: true, uuidFields: true, uuidCustomFields: true),
+    channelId: String,
+    includeCustom: Bool = true,
+    includeTotalCount: Bool = true,
+    includeUserFields: Bool = true,
     filter: String? = nil,
-    sort: [PubNub.MembershipSortField] = [],
+    sort: [PubNub.UserMembershipSort] = [],
     limit: Int? = 100,
-    page: PubNubHashedPage? = PubNub.Page(),
+    page: PubNubHashedPage? = nil,
     config: PubNubConfiguration? = nil
   ) {
-    self.channelMetadataId = channelMetadataId
-    self.include = include
+    self.channelId = channelId
+    self.includeCustom = includeCustom
+    self.includeTotalCount = includeTotalCount
+    self.includeUserFields = includeUserFields
     self.filter = filter
     self.sort = sort
     self.limit = limit
@@ -193,7 +295,7 @@ public struct MemberFetchRequest {
     self.config = config
   }
   
-  func next(page: PubNubHashedPage?) -> MemberFetchRequest? {
+  func next(page: PubNubHashedPage?) -> UserMemberFetchRequest? {
     guard let page = page, page.start != nil, page.start != self.page?.end else {
       return nil
     }
@@ -204,37 +306,40 @@ public struct MemberFetchRequest {
   }
 }
 
-extension MemberFetchRequest: Equatable {
-  public static func == (lhs: MemberFetchRequest, rhs: MemberFetchRequest) -> Bool {
+extension UserMemberFetchRequest: Equatable {
+  public static func == (lhs: UserMemberFetchRequest, rhs: UserMemberFetchRequest) -> Bool {
     return lhs.requestId == rhs.requestId
   }
 }
 
-public struct MemberModifyRequest {
+public struct ChannelMemberFetchRequest {
   public let requestId: String = UUID().uuidString
-  public var channelMetadataId: String
-  public var userMembers: [PubNubMembershipMetadata]
-  public var include: PubNub.MemberInclude
+  public var userId: String
+  public var includeCustom: Bool
+  public var includeTotalCount: Bool
+  public var includeChannelFields: Bool
   public var limit: Int?
-  public var sort: [PubNub.MembershipSortField]
+  public var sort: [PubNub.SpaceMembershipSort]
   public var filter: String?
   public var page: PubNubHashedPage?
   
   public var config: PubNubConfiguration?
-
+  
   public init(
-    channelMetadataId: String,
-    userMembers: [PubNubMembershipMetadata],
-    include: PubNub.MemberInclude = .init(customFields: true, uuidFields: true, uuidCustomFields: true),
+    userId: String,
+    includeCustom: Bool = true,
+    includeTotalCount: Bool = true,
+    includeChannelFields: Bool = true,
     filter: String? = nil,
-    sort: [PubNub.MembershipSortField] = [],
+    sort: [PubNub.SpaceMembershipSort] = [],
     limit: Int? = 100,
-    page: PubNubHashedPage? = PubNub.Page(),
+    page: PubNubHashedPage? = nil,
     config: PubNubConfiguration? = nil
   ) {
-    self.channelMetadataId = channelMetadataId
-    self.userMembers = userMembers
-    self.include = include
+    self.userId = userId
+    self.includeCustom = includeCustom
+    self.includeTotalCount = includeTotalCount
+    self.includeChannelFields = includeChannelFields
     self.filter = filter
     self.sort = sort
     self.limit = limit
@@ -242,7 +347,7 @@ public struct MemberModifyRequest {
     self.config = config
   }
   
-  func next(page: PubNubHashedPage?) -> MemberModifyRequest? {
+  func next(page: PubNubHashedPage?) -> ChannelMemberFetchRequest? {
     guard let page = page, page.start != nil, page.start != self.page?.end else {
       return nil
     }
@@ -253,8 +358,40 @@ public struct MemberModifyRequest {
   }
 }
 
-extension MemberModifyRequest: Equatable {
-  public static func == (lhs: MemberModifyRequest, rhs: MemberModifyRequest) -> Bool {
+extension ChannelMemberFetchRequest: Equatable {
+  public static func == (lhs: ChannelMemberFetchRequest, rhs: ChannelMemberFetchRequest) -> Bool {
+    return lhs.requestId == rhs.requestId
+  }
+}
+
+public struct MembersModifyRequest<Custom: ChatCustomData> {
+  public let requestId: String = UUID().uuidString
+  public var members: [ChatMember<Custom>]
+
+  public var config: PubNubConfiguration?
+
+  public init(
+    members: [ChatMember<Custom>],
+    config: PubNubConfiguration? = nil
+  ) {
+    self.members = members
+    self.config = config
+  }
+  
+  var membershipPartials: (userId: String?, channelId: String?, partials: [PubNubMembership.MembershipPartial]) {
+    let channelId = members.first?.pubnubChannelId
+    let userId = members.first?.pubnubUserId
+    
+    if members.first(where: { $0.pubnubChannelId != channelId }) == nil {
+      return (userId, nil, members.map { ($0.pubnubChannelId, $0.status, $0.defaultPubnub) })
+    } else {
+      return (nil, channelId, members.map { ($0.pubnubUserId, $0.status, $0.defaultPubnub) })
+    }
+  }
+}
+
+extension MembersModifyRequest: Equatable {
+  public static func == (lhs: MembersModifyRequest, rhs: MembersModifyRequest) -> Bool {
     return lhs.requestId == rhs.requestId
   }
 }

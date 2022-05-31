@@ -32,7 +32,15 @@ import PubNub
 public typealias PubNubChatMember = ChatMember<VoidCustomData>
 
 @dynamicMemberLookup
-public struct ChatMember<CustomData: ChatCustomData>: Identifiable, Codable, Hashable {
+public struct ChatMember<CustomData: ChatCustomData>: Identifiable, Hashable {
+  
+  public struct PubNubDefault: Hashable {
+    public var custom: CustomData.Member
+    
+    public init(custom: CustomData.Member) {
+      self.custom = custom
+    }
+  }
   
   public var id: String {
     return "\(pubnubChannelId):\(pubnubUserId)"
@@ -41,14 +49,16 @@ public struct ChatMember<CustomData: ChatCustomData>: Identifiable, Codable, Has
   public var pubnubChannelId: String
   public var pubnubUserId: String
   
-  public var customMember: CustomData.Member
-  
+  public var status: String?
+
   public var updated: Date?
   public var eTag: String?
   
   // Not synced remotely
   public var chatChannel: ChatChannel<CustomData.Channel>?
   public var chatUser: ChatUser<CustomData.User>?
+  
+  public var defaultPubnub: PubNubDefault
   
   // Presence
   var presence: MembershipPresence?
@@ -58,6 +68,9 @@ public struct ChatMember<CustomData: ChatCustomData>: Identifiable, Codable, Has
     channel: ChatChannel<CustomData.Channel>? = nil,
     pubnubUserId: String,
     user: ChatUser<CustomData.User>? = nil,
+    status: String? = nil,
+    updated: Date? = nil,
+    eTag: String? = nil,
     isPresent: Bool? = nil,
     presenceState: JSONCodable? = nil,
     custom: CustomData.Member = CustomData.Member()
@@ -66,7 +79,11 @@ public struct ChatMember<CustomData: ChatCustomData>: Identifiable, Codable, Has
     self.chatChannel = channel
     self.pubnubUserId = pubnubUserId
     self.chatUser = user
-    self.customMember = custom
+    self.defaultPubnub = PubNubDefault(custom: custom)
+    
+    self.status = status
+    self.updated = updated
+    self.eTag = eTag
     
     self.presence = MembershipPresence(
       isPresent: isPresent,
@@ -77,15 +94,21 @@ public struct ChatMember<CustomData: ChatCustomData>: Identifiable, Codable, Has
   public init(
     channel: ChatChannel<CustomData.Channel>,
     member: ChatUser<CustomData.User>,
+    status: String? = nil,
+    updated: Date? = nil,
+    eTag: String? = nil,
     isPresent: Bool? = nil,
     presenceState: JSONCodable? = nil,
     custom: CustomData.Member = CustomData.Member()
   ) {
     self.init(
-      pubnubChannelId: channel.metadataId,
+      pubnubChannelId: channel.id,
       channel: channel,
-      pubnubUserId: member.metadataId,
+      pubnubUserId: member.id,
       user: member,
+      status: status,
+      updated: updated,
+      eTag: eTag,
       isPresent: isPresent,
       presenceState: presenceState,
       custom: custom
@@ -95,8 +118,13 @@ public struct ChatMember<CustomData: ChatCustomData>: Identifiable, Codable, Has
   // MARK: Dynamic Member Lookup
   
   public subscript<T>(dynamicMember keyPath: WritableKeyPath<CustomData.Member, T>) -> T {
-    get { customMember[keyPath: keyPath] }
-    set { customMember[keyPath: keyPath] = newValue }
+    get { defaultPubnub.custom[keyPath: keyPath] }
+    set { defaultPubnub.custom[keyPath: keyPath] = newValue }
+  }
+  
+  public subscript<T>(dynamicMember keyPath: WritableKeyPath<PubNubDefault, T>) -> T {
+    get { defaultPubnub[keyPath: keyPath] }
+    set { defaultPubnub[keyPath: keyPath] = newValue }
   }
   
   public subscript<T>(dynamicMember keyPath: WritableKeyPath<MembershipPresence, T>) -> T? {
@@ -181,54 +209,50 @@ public struct ChatMember<CustomData: ChatCustomData>: Identifiable, Codable, Has
   }
 }
 
-extension ChatMember: PubNubMembershipMetadata {
-  public var uuidMetadataId: String {
-    return pubnubUserId
+// TODO: This needs to be decoded from ChatChannel so custom can be converted into
+// [String: JSONCodableScalar] and then init(flatJSON: custom)
+extension ChatMember: Codable {
+  public init(from decoder: Decoder) throws {
+    self.init(pubnubChannelId: "TODO", pubnubUserId: "TODO")
   }
   
-  public var channelMetadataId: String {
-    return pubnubChannelId
+  public func encode(to encoder: Encoder) throws {
+    //    try custom.encode(to: encoder)
+  }
+}
+
+// MARK: PubNubDefault Extension
+
+extension ChatMember.PubNubDefault: MemberCustomData {
+  public init() {
+    self.custom = CustomData.Member()
   }
   
-  public var uuid: PubNubUUIDMetadata? {
-    get {
-      return chatUser
-    }
-    set(newValue) {
-      self.chatUser = try? newValue?.transcode()
-    }
+  public init(flatJSON: [String: JSONCodableScalar]) {
+    self.custom = CustomData.Member(flatJSON: flatJSON)
   }
   
-  public var channel: PubNubChannelMetadata? {
-    get {
-      return chatChannel
-    }
-    set(newValue) {
-      self.chatChannel = try? newValue?.transcode()
-    }
+  public var flatJSON: [String: JSONCodableScalar] {
+    return custom.flatJSON
   }
-  
-  public var custom: [String : JSONCodableScalar]? {
-    get {
-      customMember.flatJSON
-    }
-    set(newValue) {
-      self.customMember = CustomData.Member(flatJSON: newValue)
-    }
-  }
-  
-  public init(from other: PubNubMembershipMetadata) throws {
+}
+
+// MARK: PubNubMembership Extension
+
+extension ChatMember {
+  public init(pubnub: PubNubMembership) {
     self.init(
-      pubnubChannelId: other.channelMetadataId,
-      channel: try? other.channel?.transcode(),
-      pubnubUserId: other.uuidMetadataId,
-      user: try? other.uuid?.transcode(),
-      isPresent: nil,
-      presenceState: nil,
-      custom: CustomData.Member(flatJSON: other.custom)
+      channel: ChatChannel<CustomData.Channel>(pubnub: pubnub.space),
+      member: ChatUser<CustomData.User>(pubnub: pubnub.user),
+      status: pubnub.status,
+      updated: pubnub.updated,
+      eTag: pubnub.eTag,
+      custom: CustomData.Member(flatJSON: pubnub.custom?.flatJSON)
     )
   }
 }
+
+// MARK: - Presence
 
 public struct MembershipPresenceChange: Codable, Hashable {
   public let channelId: String

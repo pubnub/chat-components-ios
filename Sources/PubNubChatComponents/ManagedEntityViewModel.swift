@@ -120,9 +120,6 @@ public protocol ManagedUserViewModel {
   var userName: String? { get }
   var userNamePublisher: AnyPublisher<String?, Never> { get }
   
-  var userOccupation: String? { get }
-  var userOccupationPublisher: AnyPublisher<String?, Never> { get }
-  
   var userAvatarURL: URL? { get }
   var userAvatarUrlPublisher: AnyPublisher<URL?, Never> { get }
 }
@@ -138,13 +135,6 @@ extension PubNubManagedUser: ManagedUserViewModel {
   }
   public var userNamePublisher: AnyPublisher<String?, Never> {
     return publisher(for: \.name).eraseToAnyPublisher()
-  }
-  
-  public var userOccupation: String? {
-    return occupation
-  }
-  public var userOccupationPublisher: AnyPublisher<String?, Never> {
-    return publisher(for: \.occupation).eraseToAnyPublisher()
   }
   
   public var userAvatarURL: URL? {

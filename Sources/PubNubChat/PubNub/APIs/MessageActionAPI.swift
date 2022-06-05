@@ -29,6 +29,7 @@ import Foundation
 import Combine
 
 import PubNub
+import PubNubMembership
 
 public typealias ChatMessageActionHistoryClosure = (
   Result<(messagesByChannelId: [String: [PubNubMessage]], next: PubNubBoundedPage?), Error>

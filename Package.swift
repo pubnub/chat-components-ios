@@ -51,7 +51,7 @@ let package = Package(
   ],
   dependencies: [
     // Common
-    .package(name: "PubNub", url: "https://github.com/pubnub/swift.git", from: "4.1.2"),
+    .package(name: "PubNub", url: "https://github.com/pubnub/swift.git", from: "5.0.0"),
     
     // PubNubChat
     
@@ -63,7 +63,7 @@ let package = Package(
   targets: [
     .target(
       name: "PubNubChat",
-      dependencies: ["PubNub"],
+      dependencies: ["PubNub", "PubNubUser", "PubNubSpace", "PubNubMembership"],
       exclude: ["Info.plist"]
     ),
     .target(

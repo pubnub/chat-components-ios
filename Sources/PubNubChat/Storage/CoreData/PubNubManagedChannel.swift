@@ -122,6 +122,23 @@ extension PubNubManagedChannel: ManagedChannelEntity {
     }
   }
 
+  @discardableResult
+  public static func patch<Custom: ChannelCustomData>(
+    usingPatch patcher: ChatChannel<Custom>.Patcher,
+    into context: NSManagedObjectContext
+  ) throws -> PubNubManagedChannel {
+    if let existingChannel = try context.fetch(
+      channelBy(pubnubId: patcher.id)
+    ).first {
+      let chatChannel = existingChannel.convert().patch(patcher)
+      try existingChannel.update(from: chatChannel)
+      
+      return existingChannel
+    } else {
+      throw ChatError.missingRequiredData
+    }
+  }
+
   func update<Custom: ChannelCustomData>(
     from channel: ChatChannel<Custom>
   ) throws {
@@ -131,7 +148,7 @@ extension PubNubManagedChannel: ManagedChannelEntity {
     status = channel.status
     details = channel.details
     avatarURL = channel.avatarURL
-    custom = try channel.defaultChannel.custom.jsonDataResult.get()
+    custom = try channel.customDefault.custom.jsonDataResult.get()
     lastUpdated = channel.updated
     eTag = channel.eTag
   }

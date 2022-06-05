@@ -29,6 +29,7 @@ import Foundation
 import Combine
 
 import PubNub
+import PubNubSpace
 
 public struct PaginationError<Request>: Error {
   public var request: Request
@@ -109,14 +110,14 @@ extension PubNub: PubNubChannelAPI {
     into: Custom.Type,
     completion: @escaping ((Result<(channels: [ChatChannel<Custom>], next: ChannelsFetchRequest?), Error>) -> Void)
   ) {
-    Space.fetchSpaces(
+    fetchSpaces(
       includeCustom: request.includeCustom,
       includeTotalCount: request.includeTotalCount,
       filter: request.filter,
       sort: request.sort,
       limit: request.limit,
       page: request.page,
-      custom: .init(customConfiguration: request.config)
+      requestConfig: .init(customConfiguration: request.config)
     ) { result in
       completion(result.map { ($0.spaces.map { ChatChannel(pubnub: $0) }, request.next(page: $0.next)) })
     }
@@ -127,10 +128,10 @@ extension PubNub: PubNubChannelAPI {
     into: Custom.Type,
     completion: @escaping ((Result<ChatChannel<Custom>, Error>) -> Void)
   ) {
-    Space.fetchSpace(
+    fetchSpace(
       spaceId: request.channel.id,
       includeCustom: request.includeCustom,
-      custom: .init(customConfiguration: request.config)
+      requestConfig: .init(customConfiguration: request.config)
     ) { result in
       completion(result.map { ChatChannel(pubnub: $0) })
     }
@@ -141,15 +142,15 @@ extension PubNub: PubNubChannelAPI {
     into: Custom.Type,
     completion: ((Result<ChatChannel<Custom>, Error>) -> Void)?
   ) {
-    Space.createSpace(
+    createSpace(
       spaceId: request.channel.id,
       name: request.channel.name,
       type: request.channel.type,
       status: request.channel.status,
       description: request.channel.details,
-      custom: request.channel.defaultChannel,
+      custom: request.channel.customDefault,
       includeCustom: request.includeCustom,
-      custom: .init(customConfiguration: request.config)
+      requestConfig: .init(customConfiguration: request.config)
     ) { result in
       completion?(result.map { ChatChannel(pubnub: $0) })
     }
@@ -160,15 +161,15 @@ extension PubNub: PubNubChannelAPI {
     into: Custom.Type,
     completion: ((Result<ChatChannel<Custom>, Error>) -> Void)?
   ) {
-    Space.updateSpace(
+    updateSpace(
       spaceId: request.channel.id,
       name: request.channel.name,
       type: request.channel.type,
       status: request.channel.status,
       description: request.channel.details,
-      custom: request.channel.defaultChannel,
+      custom: request.channel.customDefault,
       includeCustom: request.includeCustom,
-      custom: .init(customConfiguration: request.config)
+      requestConfig: .init(customConfiguration: request.config)
     ) { result in
       completion?(result.map { ChatChannel(pubnub: $0) })
     }
@@ -178,9 +179,9 @@ extension PubNub: PubNubChannelAPI {
     channel request: ChatChannelRequest<Custom>,
     completion: ((Result<Void, Error>) -> Void)?
   ) {
-    Space.removeSpace(
+    removeSpace(
       spaceId: request.channel.id,
-      custom: .init(customConfiguration: request.config),
+      requestConfig: .init(customConfiguration: request.config),
       completion: completion
     )
   }

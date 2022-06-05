@@ -66,12 +66,11 @@ extension ChatDataProvider {
     
     listener.didReceiveBatchSubscription = { [weak self] events in
       guard let self = self else { return }
-      var users = [PubNubUUIDMetadataChangeset]()
-      var channels = [PubNubChannelMetadataChangeset]()
 
       var members = [ChatMember<ModelData>]()
       var messages = [ChatMessage<ModelData>]()
       var presenceChanges = [ChatMember<ModelData>]()
+      var messageActions = [ChatMessageAction<ModelData>]()
 
       for event in events {
         switch event {
@@ -112,40 +111,66 @@ extension ChatDataProvider {
             )
             presenceChanges.append(contentsOf: memberships)
           }
-        case .uuidMetadataSet(let userChangeset):
-          PubNub.log.debug("Listener: User Metadata set \(userChangeset)")
-          users.append(userChangeset)
+        case .userUpdated(let patcher):
+          PubNub.log.debug("Listener: User Updated \(patcher)")
+          self.patch(user: .init(pubnub: patcher))
         
-        case .uuidMetadataRemoved(metadataId: let metadataId):
-          PubNub.log.debug("Listener: User Metadata removed \(metadataId)")
-          self.removeStoredUser(userId: metadataId)
+        case .userRemoved(let user):
+          PubNub.log.debug("Listener: User Removed \(user)")
+          self.removeStoredUser(userId: user.id)
       
-        case .channelMetadataSet(let channelChangeset):
-          PubNub.log.debug("Listener: Channel Metadata set \(channelChangeset)")
-          channels.append(channelChangeset)
-          
-        case .channelMetadataRemoved(metadataId: let metadataId):
-          PubNub.log.debug("Listener: Channel Metadata removed \(metadataId)")
-          self.removeStoredChannel(channelId: metadataId)
+        case .spaceUpdated(let patcher):
+          PubNub.log.debug("Listener: Channel Updated \(patcher)")
+          self.patch(channel: .init(pubnub: patcher))
 
-        case .membershipMetadataSet(let membership):
-          PubNub.log.debug("Listener: Membership Metadata set \(membership)")
-          members.append(ChatMember<ModelData>(pubnub: membership.convert()))
+        case .spaceRemoved(let space):
+          PubNub.log.debug("Listener: Channel Removed \(space)")
+          self.removeStoredChannel(channelId: space.id)
 
-        case .membershipMetadataRemoved(let membership):
-          PubNub.log.debug("Listener: Membership Metadata removed \(membership)")
+        case .membershipUpdated(let membership):
+          PubNub.log.debug("Listener: Membership Updated \(membership)")
+          members.append(.init(pubnub: membership))
+
+        case .membershipRemoved(let membership):
+          PubNub.log.debug("Listener: Membership Removed \(membership)")
           self.removeStoredMember(
-            channelId: membership.channelMetadataId, userId: membership.uuidMetadataId
+            channelId: membership.space.id, userId: membership.user.id
           )
 
         case .messageActionAdded(let messageAction):
-          PubNub.log.debug("Listener no-op: Message Action added \(messageAction)")
+          PubNub.log.debug("Listener: Message Action added \(messageAction)")
+          do {
+            messageActions.append(try ChatMessageAction<ModelData>(from: messageAction))
+          } catch {
+            PubNub.log.error("Listener Message Action received conversion error \(error)")
+          }
         case .messageActionRemoved(let messageAction):
-          PubNub.log.debug("Listener no-op: Message Action removed \(messageAction)")
+          PubNub.log.debug("Listener: Message Action removed \(messageAction)")
+          self.removeStoredMessageAction(messageActionId: messageAction.pubnubId)
+          
         case .fileUploaded(let file):
           PubNub.log.debug("Listener no-op: File uploaded \(file)")
         case .subscribeError(let error):
           PubNub.log.error("Listener Subscribe error \(error)")
+        
+        case .uuidMetadataSet(_):
+          /* no-op for Object v2 */
+          break
+        case .uuidMetadataRemoved(metadataId: _):
+          /* no-op for Object v2 */
+          break
+        case .channelMetadataSet(_):
+          /* no-op for Object v2 */
+          break
+        case .channelMetadataRemoved(metadataId: _):
+          /* no-op for Object v2 */
+          break
+        case .membershipMetadataSet(_):
+          /* no-op for Object v2 */
+          break
+        case .membershipMetadataRemoved(_):
+          /* no-op for Object v2 */
+          break
         }
       }
 

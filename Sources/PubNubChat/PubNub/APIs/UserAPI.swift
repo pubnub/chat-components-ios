@@ -29,6 +29,7 @@ import Foundation
 import Combine
 
 import PubNub
+import PubNubUser
 
 // MARK: Protocol API
 
@@ -105,14 +106,14 @@ extension PubNub: PubNubUserAPI {
     into: Custom.Type,
     completion: @escaping ((Result<(users: [ChatUser<Custom>], next: UsersFetchRequest?), Error>) -> Void)
   ) {    
-    User.fetchUsers(
+    fetchUsers(
       includeCustom: request.includeCustom,
       includeTotalCount: request.includeTotalCount,
       filter: request.filter,
       sort: request.sort,
       limit: request.limit,
       page: request.page,
-      custom: .init(customConfiguration: request.config)
+      requestConfig: .init(customConfiguration: request.config)
     ) { result in
       completion(result.map { ($0.users.map { ChatUser(pubnub: $0) }, request.next(page: $0.next)) })
     }
@@ -123,10 +124,10 @@ extension PubNub: PubNubUserAPI {
     into: Custom.Type,
     completion: @escaping ((Result<ChatUser<Custom>, Error>) -> Void)
   ) {
-    User.fetchUser(
+    fetchUser(
       userId: request.user.id,
       includeCustom: request.includeCustom,
-      custom: .init(customConfiguration: request.config)
+      requestConfig: .init(customConfiguration: request.config)
     ) { result in
       completion(result.map { ChatUser(pubnub: $0) })
     }
@@ -137,7 +138,7 @@ extension PubNub: PubNubUserAPI {
     into: Custom.Type,
     completion: ((Result<ChatUser<Custom>, Error>) -> Void)?
   ) {
-    User.createUser(
+    createUser(
       userId: request.user.id,
       name: request.user.name,
       type: request.user.type,
@@ -145,9 +146,9 @@ extension PubNub: PubNubUserAPI {
       externalId:  request.user.externalId,
       profileUrl:  request.user.avatarURL,
       email:  request.user.email,
-      custom:  request.user.defaultPubnub,
+      custom:  request.user.customDefault,
       includeCustom: request.includeCustom,
-      custom: .init(customConfiguration: request.config)
+      requestConfig: .init(customConfiguration: request.config)
     ) { result in
       completion?(result.map { ChatUser(pubnub: $0) })
     }
@@ -158,7 +159,7 @@ extension PubNub: PubNubUserAPI {
     into: Custom.Type,
     completion: ((Result<ChatUser<Custom>, Error>) -> Void)?
   ) {
-    User.updateUser(
+    updateUser(
       userId: request.user.id,
       name: request.user.name,
       type: request.user.type,
@@ -166,9 +167,9 @@ extension PubNub: PubNubUserAPI {
       externalId:  request.user.externalId,
       profileUrl:  request.user.avatarURL,
       email:  request.user.email,
-      custom:  request.user.defaultPubnub,
+      custom:  request.user.customDefault,
       includeCustom: request.includeCustom,
-      custom: .init(customConfiguration: request.config)
+      requestConfig: .init(customConfiguration: request.config)
     ) { result in
       completion?(result.map { ChatUser(pubnub: $0) })
     }
@@ -178,9 +179,9 @@ extension PubNub: PubNubUserAPI {
     user request: ChatUserRequest<Custom>,
     completion: ((Result<Void, Error>) -> Void)?
   ) {
-    User.removeUser(
+    removeUser(
       userId: request.user.id,
-      custom: .init(customConfiguration: request.config),
+      requestConfig: .init(customConfiguration: request.config),
       completion: completion
     )
   }

@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		3501A587265D8BDF00063403 /* AppearanceTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3501A586265D8BDF00063403 /* AppearanceTemplate.swift */; };
 		35043BCD27B7056C00DA9A84 /* MessageActionAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35043BCC27B7056C00DA9A84 /* MessageActionAPI.swift */; };
-		35074ACC27161F9800462624 /* PubNub in Frameworks */ = {isa = PBXBuildFile; productRef = 35074ACB27161F9800462624 /* PubNub */; };
 		35074ACE271878DE00462624 /* MessageInputComponentTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35074ACD271878DE00462624 /* MessageInputComponentTheme.swift */; };
 		35074AD0272072C800462624 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 35074ACF272072C800462624 /* Kingfisher */; };
 		35074AD22720B52600462624 /* MessageInputComponentViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35074AD12720B52600462624 /* MessageInputComponentViewModel.swift */; };
@@ -57,6 +56,10 @@
 		357F2243272A388000A6FBF7 /* MessageListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 357F2242272A388000A6FBF7 /* MessageListViewController.swift */; };
 		3583AE5626F996C6006D74A3 /* TypingIndicatorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3583AE5526F996C6006D74A3 /* TypingIndicatorService.swift */; };
 		3583AE5A26FBD556006D74A3 /* DiffableData+PubNubChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3583AE5926FBD556006D74A3 /* DiffableData+PubNubChat.swift */; };
+		358B8982284D404B00DB0F3D /* PubNub in Frameworks */ = {isa = PBXBuildFile; productRef = 358B8981284D404B00DB0F3D /* PubNub */; };
+		358B8984284D404B00DB0F3D /* PubNubMembership in Frameworks */ = {isa = PBXBuildFile; productRef = 358B8983284D404B00DB0F3D /* PubNubMembership */; };
+		358B8986284D404B00DB0F3D /* PubNubSpace in Frameworks */ = {isa = PBXBuildFile; productRef = 358B8985284D404B00DB0F3D /* PubNubSpace */; };
+		358B8988284D404B00DB0F3D /* PubNubUser in Frameworks */ = {isa = PBXBuildFile; productRef = 358B8987284D404B00DB0F3D /* PubNubUser */; };
 		3598B1D32644A2D000878118 /* Bundle+PubNubChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3598B1D22644A2D000878118 /* Bundle+PubNubChat.swift */; };
 		3598B1E22644B0AE00878118 /* NSPersistentStoreDescription+PubNubChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3598B1E12644B0AE00878118 /* NSPersistentStoreDescription+PubNubChat.swift */; };
 		3598B2132645DB5700878118 /* StorageProvider_Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3598B1FC2645DB4800878118 /* StorageProvider_Tests.swift */; };
@@ -248,7 +251,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				35074ACC27161F9800462624 /* PubNub in Frameworks */,
+				358B8984284D404B00DB0F3D /* PubNubMembership in Frameworks */,
+				358B8988284D404B00DB0F3D /* PubNubUser in Frameworks */,
+				358B8986284D404B00DB0F3D /* PubNubSpace in Frameworks */,
+				358B8982284D404B00DB0F3D /* PubNub in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -728,7 +734,10 @@
 			);
 			name = PubNubChat;
 			packageProductDependencies = (
-				35074ACB27161F9800462624 /* PubNub */,
+				358B8981284D404B00DB0F3D /* PubNub */,
+				358B8983284D404B00DB0F3D /* PubNubMembership */,
+				358B8985284D404B00DB0F3D /* PubNubSpace */,
+				358B8987284D404B00DB0F3D /* PubNubUser */,
 			);
 			productName = PubNubChat;
 			productReference = 350AC6FD2643493C00C3D323 /* PubNubChat.framework */;
@@ -832,7 +841,7 @@
 				35B3B5952655D61300473120 /* XCRemoteSwiftPackageReference "Kingfisher" */,
 				35F46DF926C1D8DC0024FB67 /* XCRemoteSwiftPackageReference "ChatLayout" */,
 				35F46DFC26C1D90B0024FB67 /* XCRemoteSwiftPackageReference "InputBarAccessoryView" */,
-				35074ACA27161F9800462624 /* XCRemoteSwiftPackageReference "swift" */,
+				358B8980284D404B00DB0F3D /* XCRemoteSwiftPackageReference "swift" */,
 			);
 			productRefGroup = 350AC6D52643464F00C3D323 /* Products */;
 			projectDirPath = "";
@@ -1749,7 +1758,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		35074ACA27161F9800462624 /* XCRemoteSwiftPackageReference "swift" */ = {
+		358B8980284D404B00DB0F3D /* XCRemoteSwiftPackageReference "swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/pubnub/swift";
 			requirement = {
@@ -1784,15 +1793,30 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		35074ACB27161F9800462624 /* PubNub */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 35074ACA27161F9800462624 /* XCRemoteSwiftPackageReference "swift" */;
-			productName = PubNub;
-		};
 		35074ACF272072C800462624 /* Kingfisher */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 35B3B5952655D61300473120 /* XCRemoteSwiftPackageReference "Kingfisher" */;
 			productName = Kingfisher;
+		};
+		358B8981284D404B00DB0F3D /* PubNub */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 358B8980284D404B00DB0F3D /* XCRemoteSwiftPackageReference "swift" */;
+			productName = PubNub;
+		};
+		358B8983284D404B00DB0F3D /* PubNubMembership */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 358B8980284D404B00DB0F3D /* XCRemoteSwiftPackageReference "swift" */;
+			productName = PubNubMembership;
+		};
+		358B8985284D404B00DB0F3D /* PubNubSpace */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 358B8980284D404B00DB0F3D /* XCRemoteSwiftPackageReference "swift" */;
+			productName = PubNubSpace;
+		};
+		358B8987284D404B00DB0F3D /* PubNubUser */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 358B8980284D404B00DB0F3D /* XCRemoteSwiftPackageReference "swift" */;
+			productName = PubNubUser;
 		};
 		35F46DFA26C1D8DC0024FB67 /* ChatLayout */ = {
 			isa = XCSwiftPackageProductDependency;

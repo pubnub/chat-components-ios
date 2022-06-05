@@ -58,7 +58,7 @@ public struct ChatMember<CustomData: ChatCustomData>: Identifiable, Hashable {
   public var chatChannel: ChatChannel<CustomData.Channel>?
   public var chatUser: ChatUser<CustomData.User>?
   
-  public var defaultPubnub: PubNubDefault
+  public var customDefault: PubNubDefault
   
   // Presence
   var presence: MembershipPresence?
@@ -79,7 +79,7 @@ public struct ChatMember<CustomData: ChatCustomData>: Identifiable, Hashable {
     self.chatChannel = channel
     self.pubnubUserId = pubnubUserId
     self.chatUser = user
-    self.defaultPubnub = PubNubDefault(custom: custom)
+    self.customDefault = PubNubDefault(custom: custom)
     
     self.status = status
     self.updated = updated
@@ -118,13 +118,13 @@ public struct ChatMember<CustomData: ChatCustomData>: Identifiable, Hashable {
   // MARK: Dynamic Member Lookup
   
   public subscript<T>(dynamicMember keyPath: WritableKeyPath<CustomData.Member, T>) -> T {
-    get { defaultPubnub.custom[keyPath: keyPath] }
-    set { defaultPubnub.custom[keyPath: keyPath] = newValue }
+    get { customDefault.custom[keyPath: keyPath] }
+    set { customDefault.custom[keyPath: keyPath] = newValue }
   }
   
   public subscript<T>(dynamicMember keyPath: WritableKeyPath<PubNubDefault, T>) -> T {
-    get { defaultPubnub[keyPath: keyPath] }
-    set { defaultPubnub[keyPath: keyPath] = newValue }
+    get { customDefault[keyPath: keyPath] }
+    set { customDefault[keyPath: keyPath] = newValue }
   }
   
   public subscript<T>(dynamicMember keyPath: WritableKeyPath<MembershipPresence, T>) -> T? {

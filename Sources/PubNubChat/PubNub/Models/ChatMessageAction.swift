@@ -138,3 +138,9 @@ extension ChatMessageAction: PubNubMessageAction {
     )
   }
 }
+
+extension PubNubMessageAction {
+  var pubnubId: String {
+    return "\(messageTimetoken)-\(actionTimetoken)"
+  }
+}

@@ -52,14 +52,14 @@ public struct ChatChannel<Custom: ChannelCustomData>: Identifiable, Hashable {
   public let id: String
   public var name: String?
   
-  public let type: String
-  public let status: String?
+  public var type: String
+  public var status: String?
 
   public var details: String?
   public var updated: Date?
   public var eTag: String?
 
-  public var defaultChannel: ChatChannelDefault
+  public var customDefault: ChatChannelDefault
 
   public init(
     id: String ,
@@ -77,19 +77,19 @@ public struct ChatChannel<Custom: ChannelCustomData>: Identifiable, Hashable {
     self.type = type ?? "default"
     self.status = status
     self.details = details
-    self.defaultChannel = ChatChannelDefault(avatarURL: avatarURL, custom: custom)
+    self.customDefault = ChatChannelDefault(avatarURL: avatarURL, custom: custom)
   }
   
   // MARK: Dynamic Member Lookup
   
   public subscript<T>(dynamicMember keyPath: WritableKeyPath<Custom, T>) -> T {
-    get { defaultChannel.custom[keyPath: keyPath] }
-    set { defaultChannel.custom[keyPath: keyPath] = newValue }
+    get { customDefault.custom[keyPath: keyPath] }
+    set { customDefault.custom[keyPath: keyPath] = newValue }
   }
   
   public subscript<T>(dynamicMember keyPath: WritableKeyPath<ChatChannelDefault, T>) -> T {
-    get { defaultChannel[keyPath: keyPath] }
-    set { defaultChannel[keyPath: keyPath] = newValue }
+    get { customDefault[keyPath: keyPath] }
+    set { customDefault[keyPath: keyPath] = newValue }
   }
 
   // MARK: Codable
@@ -208,5 +208,37 @@ extension ChatChannel {
       eTag: pubnub.eTag,
       custom: channelCustom.custom
     )
+  }
+  
+  public struct Patcher {
+    public var pubnub: PubNubSpace.Patcher
+    
+    public var id: String { pubnub.id }
+    public var eTag: String { pubnub.eTag }
+    public var updated: Date { pubnub.updated }
+    
+    public init(pubnub: PubNubSpace.Patcher) {
+      self.pubnub = pubnub
+    }
+  }
+  
+  public func patch(_ patcher: Patcher) -> ChatChannel<Custom> {
+    guard patcher.pubnub.shouldUpdate(spaceId: id, eTag: eTag, lastUpdated: updated) else {
+      return self
+    }
+    
+    var mutableSelf = self
+    
+    patcher.pubnub.apply(
+      name: { mutableSelf.name = $0 },
+      type: { if let value = $0 { mutableSelf.type = value } },
+      status: { mutableSelf.status = $0 },
+      description: { mutableSelf.details = $0 },
+      custom: { mutableSelf.customDefault = ChatChannelDefault(flatJSON: $0?.flatJSON) },
+      updated: { mutableSelf.updated = $0 },
+      eTag: { mutableSelf.eTag = $0 }
+    )
+    
+    return mutableSelf
   }
 }

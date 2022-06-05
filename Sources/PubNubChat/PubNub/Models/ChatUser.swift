@@ -42,7 +42,7 @@ public struct ChatUser<Custom: UserCustomData>: Identifiable, Hashable {
     }
   }
   
-  public var id: String
+  public let id: String
   public var name: String?
 
   public var type: String
@@ -56,7 +56,7 @@ public struct ChatUser<Custom: UserCustomData>: Identifiable, Hashable {
   public var eTag: String?
 
   // `Custom` data required by PubNubCHat
-  public var defaultPubnub: PubNubDefault
+  public var customDefault: PubNubDefault
   
   public init(
     id: String,
@@ -79,19 +79,19 @@ public struct ChatUser<Custom: UserCustomData>: Identifiable, Hashable {
     self.email = email
     self.updated = updated
     self.eTag = eTag
-    self.defaultPubnub = PubNubDefault(custom: customUser)
+    self.customDefault = PubNubDefault(custom: customUser)
   }
   
   // MARK: Dynamic Member Lookup
   
   public subscript<T>(dynamicMember keyPath: WritableKeyPath<Custom, T>) -> T {
-    get { defaultPubnub.custom[keyPath: keyPath] }
-    set { defaultPubnub.custom[keyPath: keyPath] = newValue }
+    get { customDefault.custom[keyPath: keyPath] }
+    set { customDefault.custom[keyPath: keyPath] = newValue }
   }
   
   public subscript<T>(dynamicMember keyPath: WritableKeyPath<PubNubDefault, T>) -> T {
-    get { defaultPubnub[keyPath: keyPath] }
-    set { defaultPubnub[keyPath: keyPath] = newValue }
+    get { customDefault[keyPath: keyPath] }
+    set { customDefault[keyPath: keyPath] = newValue }
   }
 }
 
@@ -139,5 +139,39 @@ extension ChatUser {
       eTag: pubnub.eTag,
       customUser: Custom(flatJSON: pubnub.custom?.flatJSON)
     )
+  }
+  
+  public struct Patcher {
+    public var pubnub: PubNubUser.Patcher
+    
+    public var id: String { pubnub.id }
+    public var eTag: String { pubnub.eTag }
+    public var updated: Date { pubnub.updated }
+    
+    public init(pubnub: PubNubUser.Patcher) {
+      self.pubnub = pubnub
+    }
+  }
+  
+  public func patch(_ patcher: Patcher) -> ChatUser<Custom> {
+    guard patcher.pubnub.shouldUpdate(userId: id, eTag: eTag, lastUpdated: updated) else {
+      return self
+    }
+
+    var mutableSelf = self
+    
+    patcher.pubnub.apply(
+      name: { mutableSelf.name = $0 },
+      type: { if let value = $0 { mutableSelf.type = value } },
+      status: { mutableSelf.status = $0 },
+      externalId: { mutableSelf.externalId = $0 },
+      profileURL: { mutableSelf.avatarURL = $0 },
+      email: { mutableSelf.email = $0 },
+      custom: { mutableSelf.customDefault = PubNubDefault(flatJSON: $0?.flatJSON) },
+      updated: { mutableSelf.updated = $0 },
+      eTag: { mutableSelf.eTag = $0 }
+    )
+    
+    return mutableSelf
   }
 }

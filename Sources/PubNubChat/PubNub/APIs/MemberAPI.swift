@@ -29,6 +29,7 @@ import Foundation
 import Combine
 
 import PubNub
+import PubNubMembership
 
 public protocol PubNubMemberAPI {
   func fetch<Custom: ChatCustomData>(
@@ -136,17 +137,17 @@ extension PubNub: PubNubMemberAPI {
     into: Custom.Type,
     completion: @escaping ((Result<(members: [ChatMember<Custom>], next: UserMemberFetchRequest?), Error>) -> Void)
   ) {
-    Membership.fetchMemberships(
+    fetchMemberships(
       spaceId: request.channelId,
       includeCustom: request.includeCustom,
-      includeTotalCount: request.includeTotalCount,
       includeUserFields: request.includeUserFields,
       includeUserCustomFields: request.includeUserFields,
+      includeTotalCount: request.includeTotalCount,
       filter: request.filter,
       sort: request.sort,
       limit: request.limit,
       page: request.page,
-      custom: .init(customConfiguration: request.config)
+      requestConfig: .init(customConfiguration: request.config)
     ) { result in
       completion(result.map { ($0.memberships.map { ChatMember(pubnub: $0) }, request.next(page: $0.next)) })
     }
@@ -157,17 +158,17 @@ extension PubNub: PubNubMemberAPI {
     into: Custom.Type,
     completion: @escaping ((Result<(members: [ChatMember<Custom>], next: ChannelMemberFetchRequest?), Error>) -> Void)
   ) {
-    Membership.fetchMemberships(
+    fetchMemberships(
       userId: request.userId,
       includeCustom: request.includeCustom,
-      includeTotalCount: request.includeTotalCount,
       includeSpaceFields: request.includeChannelFields,
       includeSpaceCustomFields: request.includeChannelFields,
+      includeTotalCount: request.includeTotalCount,
       filter: request.filter,
       sort: request.sort,
       limit: request.limit,
       page: request.page,
-      custom: .init(customConfiguration: request.config)
+      requestConfig: .init(customConfiguration: request.config)
     ) { result in
       completion(result.map { ($0.memberships.map { ChatMember(pubnub: $0) }, request.next(page: $0.next)) })
     }
@@ -182,18 +183,18 @@ extension PubNub: PubNubMemberAPI {
     switch(request.membershipPartials) {
     case let (.some(userId), .none, partials):
       // Call the appropriate method
-      Membership.addMemberships(
+      addMemberships(
         spaces: partials,
         to: userId,
-        custom: .init(customConfiguration: request.config),
+        requestConfig: .init(customConfiguration: request.config),
         completion: completion
       )
     case let (.none, .some(channelId), partials):
       // Call the appropriate method
-      Membership.addMemberships(
+      addMemberships(
         users: partials,
         to: channelId,
-        custom: .init(customConfiguration: request.config),
+        requestConfig: .init(customConfiguration: request.config),
         completion: completion
       )
     default:
@@ -210,18 +211,18 @@ extension PubNub: PubNubMemberAPI {
     switch(request.membershipPartials) {
     case let (.some(userId), .none, partials):
       // Call the appropriate method
-      Membership.updateMemberships(
+      updateMemberships(
         spaces: partials,
         on: userId,
-        custom: .init(customConfiguration: request.config),
+        requestConfig: .init(customConfiguration: request.config),
         completion: completion
       )
     case let (.none, .some(channelId), partials):
       // Call the appropriate method
-      Membership.updateMemberships(
+      updateMemberships(
         users: partials,
         on: channelId,
-        custom: .init(customConfiguration: request.config),
+        requestConfig: .init(customConfiguration: request.config),
         completion: completion
       )
     default:
@@ -238,18 +239,18 @@ extension PubNub: PubNubMemberAPI {
     switch(request.membershipPartials) {
     case let (.some(userId), .none, partials):
       // Call the appropriate method
-      Membership.removeMemberships(
+      removeMemberships(
         spaceIds: partials.map { $0.id },
         from: userId,
-        custom: .init(customConfiguration: request.config),
+        requestConfig: .init(customConfiguration: request.config),
         completion: completion
       )
     case let (.none, .some(channelId), partials):
       // Call the appropriate method
-      Membership.removeMemberships(
+      removeMemberships(
         userIds: partials.map { $0.id },
         from: channelId,
-        custom: .init(customConfiguration: request.config),
+        requestConfig: .init(customConfiguration: request.config),
         completion: completion
       )
     default:
@@ -378,14 +379,14 @@ public struct MembersModifyRequest<Custom: ChatCustomData> {
     self.config = config
   }
   
-  var membershipPartials: (userId: String?, channelId: String?, partials: [PubNubMembership.MembershipPartial]) {
+  var membershipPartials: (userId: String?, channelId: String?, partials: [PubNubMembership.Partial]) {
     let channelId = members.first?.pubnubChannelId
     let userId = members.first?.pubnubUserId
     
     if members.first(where: { $0.pubnubChannelId != channelId }) == nil {
-      return (userId, nil, members.map { ($0.pubnubChannelId, $0.status, $0.defaultPubnub) })
+      return (userId, nil, members.map { ($0.pubnubChannelId, $0.status, $0.customDefault) })
     } else {
-      return (nil, channelId, members.map { ($0.pubnubUserId, $0.status, $0.defaultPubnub) })
+      return (nil, channelId, members.map { ($0.pubnubUserId, $0.status, $0.customDefault) })
     }
   }
 }

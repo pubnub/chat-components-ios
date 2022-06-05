@@ -61,7 +61,13 @@ public protocol ManagedChannelEntity: ManagedEntity {
     channel: ChatChannel<Custom>,
     into context: NSManagedObjectContext
   ) throws -> Self
-  
+
+  @discardableResult
+  static func patch<Custom: ChannelCustomData>(
+    usingPatch patcher: ChatChannel<Custom>.Patcher,
+    into context: NSManagedObjectContext
+  ) throws -> Self
+
   @discardableResult
   static func remove(
     channelId: String,
@@ -100,6 +106,12 @@ public protocol ManagedUserEntity: ManagedEntity {
   @discardableResult
   static func insertOrUpdate<Custom: UserCustomData>(
     user: ChatUser<Custom>,
+    into context: NSManagedObjectContext
+  ) throws -> Self
+  
+  @discardableResult
+  static func patch<Custom: UserCustomData>(
+    usingPatch patcher: ChatUser<Custom>.Patcher,
     into context: NSManagedObjectContext
   ) throws -> Self
   

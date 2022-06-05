@@ -113,6 +113,22 @@ extension PubNubManagedUser: ManagedUserEntity {
       try object.update(from: user)
     }
   }
+
+  public static func patch<Custom: UserCustomData>(
+    usingPatch patcher: ChatUser<Custom>.Patcher,
+    into context: NSManagedObjectContext
+  ) throws -> PubNubManagedUser {
+    if let existingUser = try context.fetch(
+      userBy(userId: patcher.id)
+    ).first {
+      let chatUser = existingUser.convert().patch(patcher)
+      try existingUser.update(from: chatUser)
+      
+      return existingUser
+    } else {
+      throw ChatError.missingRequiredData
+    }
+  }
   
   func update<Custom>(
     from user: ChatUser<Custom>
@@ -124,7 +140,7 @@ extension PubNubManagedUser: ManagedUserEntity {
     self.externalId = user.externalId
     self.avatarURL = user.avatarURL
     self.email = user.email
-    self.custom = try user.defaultPubnub.custom.jsonDataResult.get()
+    self.custom = try user.customDefault.custom.jsonDataResult.get()
     self.lastUpdated = user.updated
     self.eTag = user.eTag
   }

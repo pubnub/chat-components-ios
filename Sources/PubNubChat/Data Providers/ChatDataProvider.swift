@@ -140,8 +140,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
       DispatchQueue.main.async { completion?() }
     }
   }
-  
-  
+
   public func load(
     messages: [ChatMessage<ModelData>],
     batchSize: Int = 256,
@@ -199,6 +198,41 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
       }
       
       DispatchQueue.main.async { completion?() }
+    }
+  }
+  
+  // MARK: Patch Model Data
+  public func patch(
+    user patch: ChatUser<ModelData.User>.Patcher,
+    completion: ((Error?) -> Void)? = nil
+  ) {
+    datastoreQueue.async { [weak self] in
+      self?.provider.coreDataContainer.write({ context in
+        try ManagedEntities.User.patch(
+          usingPatch: patch, into: context
+        )
+      }, errorHandler: { error in
+        PubNub.log.error("Error patching user \(error)")
+        
+        DispatchQueue.main.async { completion?(error) }
+      })
+    }
+  }
+
+  public func patch(
+    channel patch: ChatChannel<ModelData.Channel>.Patcher,
+    completion: ((Error?) -> Void)? = nil
+  ) {
+    datastoreQueue.async { [weak self] in
+      self?.provider.coreDataContainer.write({ context in
+        try ManagedEntities.Channel.patch(
+          usingPatch: patch, into: context
+        )
+      }, errorHandler: { error in
+        PubNub.log.error("Error patching channel \(error)")
+        
+        DispatchQueue.main.async { completion?(error) }
+      })
     }
   }
   

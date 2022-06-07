@@ -28,6 +28,7 @@
 import Foundation
 
 import PubNub
+import PubNubMembership
 
 public typealias PubNubChatMember = ChatMember<VoidCustomData>
 

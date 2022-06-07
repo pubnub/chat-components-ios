@@ -31,6 +31,9 @@ import UIKit
 import Combine
 
 import PubNub
+import PubNubUser
+import PubNubSpace
+import PubNubMembership
 
 // MARK: - Data Provider
 
@@ -38,7 +41,10 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
  
   var provider: ChatProvider<ModelData, ManagedEntities>
   
-  public var pubnubListner = SubscriptionListener()
+  public var coreListener = CoreListener()
+  public var userListener = PubNubUserListener()
+  public var spaceListener = PubNubSpaceListener()
+  public var membershipListener = PubNubMembershipListener()
 
   let datastoreQueue = DispatchQueue(label: "Datastore Write Queue", qos: .userInitiated)
   var cancellations = Set<AnyCancellable>()
@@ -46,7 +52,12 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
   init(provider: ChatProvider<ModelData, ManagedEntities>) {
     self.provider = provider
     
-    syncPubnubSubscribeListener(pubnubListner)
+    syncPubnubListeners(
+      coreListener: coreListener,
+      userListener: userListener,
+      spaceListener: spaceListener,
+      membershipListener: membershipListener
+    )
   }
 
   // MARK: Load Model Data

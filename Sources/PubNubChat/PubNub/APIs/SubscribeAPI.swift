@@ -76,7 +76,7 @@ public protocol SubscribeAPI {
   func unsubscribe(_ request: UnsubscribeRequest)
   func unsubscribeAll()
 
-  func add(_ listener: SubscriptionListener)
+  func add(_ listener: BaseSubscriptionListener)
 }
 
 // MARK: - PubNub Ext

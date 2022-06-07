@@ -43,7 +43,7 @@ open class ChatProvider<ModelData, ManagedEntities> where ModelData: ChatCustomD
   }
   public var pubnubProvider: PubNubAPI {
     didSet {
-      pubnubProvider.add(dataProvider.pubnubListner)
+      addDefaultPubNubListeners()
     }
   }
 
@@ -104,8 +104,15 @@ open class ChatProvider<ModelData, ManagedEntities> where ModelData: ChatCustomD
     // Update the cache with the current user
     self.cacheProvider.cache(currentUserId: pubnubProvider.configuration.uuid)
     
-    // Add default listener
-    self.pubnubProvider.add(dataProvider.pubnubListner)
+    // Add default listeners
+    addDefaultPubNubListeners()
+  }
+  
+  public func addDefaultPubNubListeners() {
+    self.pubnubProvider.add(dataProvider.coreListener)
+    self.pubnubProvider.add(dataProvider.userListener)
+    self.pubnubProvider.add(dataProvider.spaceListener)
+    self.pubnubProvider.add(dataProvider.membershipListener)
   }
 }
 

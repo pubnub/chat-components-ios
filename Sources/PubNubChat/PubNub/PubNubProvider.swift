@@ -29,6 +29,9 @@ import Foundation
 import Combine
 
 import PubNub
+import PubNubUser
+import PubNubSpace
+import PubNubMembership
 
 // MARK: - Protocol Wrapper
 public typealias PubNubObjectAPI = PubNubUserAPI & PubNubChannelAPI & PubNubMemberAPI
@@ -62,12 +65,70 @@ public protocol PubNubKeySetProvider {
 
 extension ChatDataProvider {
   
-  open func syncPubnubSubscribeListener(_ listener: SubscriptionListener) {
+  open func syncPubnubListeners(
+    coreListener: CoreListener,
+    userListener: PubNubUserListener,
+    spaceListener: PubNubSpaceListener,
+    membershipListener: PubNubMembershipListener
+  ) {
     
-    listener.didReceiveBatchSubscription = { [weak self] events in
+    userListener.didReceiveUserEvents  = { [weak self] events in
+      guard let self = self else { return }
+      
+      for event in events {
+        switch event {
+        case .userUpdated(let patcher):
+          PubNub.log.debug("Listener: User Updated \(patcher)")
+          self.patch(user: .init(pubnub: patcher))
+          
+        case .userRemoved(let user):
+          PubNub.log.debug("Listener: User Removed \(user)")
+          self.removeStoredUser(userId: user.id)
+        }
+      }
+    }
+    
+    spaceListener.didReceiveSpaceEvents  = { [weak self] events in
+      guard let self = self else { return }
+      
+      for event in events {
+        switch event {
+        case .spaceUpdated(let patcher):
+          PubNub.log.debug("Listener: Channel Updated \(patcher)")
+          self.patch(channel: .init(pubnub: patcher))
+          
+        case .spaceRemoved(let space):
+          PubNub.log.debug("Listener: Channel Removed \(space)")
+          self.removeStoredChannel(channelId: space.id)
+        }
+      }
+    }
+
+    membershipListener.didReceiveMembershipEvents  = { [weak self] events in
       guard let self = self else { return }
 
       var members = [ChatMember<ModelData>]()
+
+      for event in events {
+        switch event {
+        case .membershipUpdated(let membership):
+          PubNub.log.debug("Listener: Membership Updated \(membership)")
+          members.append(ChatMember(pubnub: membership))
+          
+        case .membershipRemoved(let membership):
+          PubNub.log.debug("Listener: Membership Removed \(membership)")
+          self.removeStoredMember(
+            channelId: membership.space.id, userId: membership.user.id
+          )
+        }
+      }
+      
+      self.load(members: members)
+    }
+     
+    coreListener.didReceiveBatchSubscription = { [weak self] events in
+      guard let self = self else { return }
+
       var messages = [ChatMessage<ModelData>]()
       var presenceChanges = [ChatMember<ModelData>]()
       var messageActions = [ChatMessageAction<ModelData>]()
@@ -111,31 +172,6 @@ extension ChatDataProvider {
             )
             presenceChanges.append(contentsOf: memberships)
           }
-        case .userUpdated(let patcher):
-          PubNub.log.debug("Listener: User Updated \(patcher)")
-          self.patch(user: .init(pubnub: patcher))
-        
-        case .userRemoved(let user):
-          PubNub.log.debug("Listener: User Removed \(user)")
-          self.removeStoredUser(userId: user.id)
-      
-        case .spaceUpdated(let patcher):
-          PubNub.log.debug("Listener: Channel Updated \(patcher)")
-          self.patch(channel: .init(pubnub: patcher))
-
-        case .spaceRemoved(let space):
-          PubNub.log.debug("Listener: Channel Removed \(space)")
-          self.removeStoredChannel(channelId: space.id)
-
-        case .membershipUpdated(let membership):
-          PubNub.log.debug("Listener: Membership Updated \(membership)")
-          members.append(.init(pubnub: membership))
-
-        case .membershipRemoved(let membership):
-          PubNub.log.debug("Listener: Membership Removed \(membership)")
-          self.removeStoredMember(
-            channelId: membership.space.id, userId: membership.user.id
-          )
 
         case .messageActionAdded(let messageAction):
           PubNub.log.debug("Listener: Message Action added \(messageAction)")
@@ -177,7 +213,6 @@ extension ChatDataProvider {
       // Process the batch updates
       self.load(messages: messages)
       self.load(members: presenceChanges)
-      self.load(members: members)
     }
   }
 }

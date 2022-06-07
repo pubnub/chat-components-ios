@@ -29,6 +29,7 @@ import Foundation
 import CoreData
 
 import PubNub
+import PubNubSpace
 
 public typealias PubNubChatChannel = ChatChannel<VoidCustomData>
 

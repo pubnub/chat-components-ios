@@ -33,29 +33,30 @@ import PubNub
 public typealias PubNubChatMessage = ChatMessage<VoidCustomData>
 
 @dynamicMemberLookup
-public struct ChatMessage<CustomData: ChatCustomData>: Identifiable, Codable {
+public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
   
   public struct Content: JSONCodable {
     public var id: String
-    
-    public var dateCreated: Date
-    
-    public var contentType: String
-    public var contentPayload: MessageContent
-    
-    public var custom: CustomData.Message
+    public var text: String
+    public var contentType: String?
+    public var content: AnyJSON?
+    public var custom: Custom.Message
+    public var createdAt: Date
     
     public init(
       id: String = UUID().uuidString,
-      dateCreated: Date = Date(),
-      content: MessageContent,
-      custom: CustomData.Message
+      text: String = String(),
+      contentType: String? = nil,
+      content: AnyJSON? = nil,
+      custom: Custom.Message = Custom.Message(),
+      createdAt: Date = Date()
     ) {
       self.id = id
-      self.dateCreated = dateCreated
-      self.contentType = content.contentType.rawValue
-      self.contentPayload = content
+      self.text = text
+      self.contentType = contentType
+      self.content = content
       self.custom = custom
+      self.createdAt = createdAt
     }
     
     public init(
@@ -65,9 +66,11 @@ public struct ChatMessage<CustomData: ChatCustomData>: Identifiable, Codable {
 
       self.init(
         id: content.id,
-        dateCreated: content.dateCreated,
-        content: content.contentPayload,
-        custom: content.custom
+        text: content.text,
+        contentType: content.contentType,
+        content: content.content,
+        custom: content.custom,
+        createdAt: content.createdAt
       )
     }
   }
@@ -84,24 +87,22 @@ public struct ChatMessage<CustomData: ChatCustomData>: Identifiable, Codable {
   public var content: Content
   
   public var pubnubUserId: String
-  public var userModel: ChatUser<CustomData.User>?
+  public var userModel: ChatUser<Custom.User>?
   
   public var pubnubChannelId: String
-  public var channelModel: ChatChannel<CustomData.Channel>?
+  public var channelModel: ChatChannel<Custom.Channel>?
   
   public init(
     content: Content,
     timetoken: Timetoken = 0,
-    //    sentStatus: String = "pending",
     dateSent: Date? = nil,
     dateReceived: Date? = nil,
     pubnubUserId: String,
-    user: ChatUser<CustomData.User>? = nil,
+    user: ChatUser<Custom.User>? = nil,
     pubnubChannelId: String,
-    channel: ChatChannel<CustomData.Channel>? = nil
+    channel: ChatChannel<Custom.Channel>? = nil
   ) {
     self.timetoken = timetoken
-    //    self.sentStatus = sentStatus
     self.dateSent = dateSent
     self.dateReceived = dateReceived
     
@@ -117,23 +118,26 @@ public struct ChatMessage<CustomData: ChatCustomData>: Identifiable, Codable {
   public init(
     id: String = UUID().uuidString,
     timetoken: Timetoken = 0,
-//    sentStatus: String = "pending",
     dateCreated: Date = Date(),
     dateSent: Date? = nil,
     dateReceived: Date? = nil,
-    content: MessageContent,
-    custom: CustomData.Message = CustomData.Message(),
+    text: String,
+    contentType: String? = nil,
+    content: AnyJSON? = nil,
+    custom: Custom.Message = Custom.Message(),
     pubnubUserId: String,
-    user: ChatUser<CustomData.User>? = nil,
+    user: ChatUser<Custom.User>? = nil,
     pubnubChannelId: String,
-    channel: ChatChannel<CustomData.Channel>? = nil
+    channel: ChatChannel<Custom.Channel>? = nil
   ) {
     self.init(
       content: Content(
         id: id,
-        dateCreated: dateCreated,
+        text: text,
+        contentType: contentType,
         content: content,
-        custom: custom
+        custom: custom,
+        createdAt: dateCreated
       ),
       timetoken: timetoken,
       dateSent: dateSent,
@@ -147,7 +151,7 @@ public struct ChatMessage<CustomData: ChatCustomData>: Identifiable, Codable {
   
   // MARK: Dynamic Member Lookup
   
-  public subscript<T>(dynamicMember keyPath: WritableKeyPath<CustomData.Message, T>) -> T {
+  public subscript<T>(dynamicMember keyPath: WritableKeyPath<Custom.Message, T>) -> T {
     get { content.custom[keyPath: keyPath] }
     set { content.custom[keyPath: keyPath] = newValue }
   }

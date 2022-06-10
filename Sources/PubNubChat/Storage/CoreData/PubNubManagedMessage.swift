@@ -38,17 +38,19 @@ public final class PubNubManagedMessage: NSManagedObject {
   @NSManaged public var timetoken: Timetoken
 
   @NSManaged public var dateCreated: Date
+  
   // Should match published timetoken
   @NSManaged public var dateSent: Date?
   @NSManaged public var dateReceived: Date?
 
+  @NSManaged public var text: String
+  
   @NSManaged public var contentType: String
   @NSManaged public var content: Data
 
   @NSManaged public var custom: Data
   
   // Derived Attributes
-
   @NSManaged public var pubnubUserId: String
   @NSManaged public var pubnubChannelId: String
 
@@ -94,7 +96,8 @@ extension PubNubManagedMessage: ManagedMessageEntity {
       dateCreated: self.dateCreated,
       dateSent: self.dateSent,
       dateReceived: self.dateReceived,
-      content: try Constant.jsonDecoder.decode(MessageContent.self, from: self.content),
+      text: self.text,
+      content: try Constant.jsonDecoder.decode(AnyJSON.self, from: self.content),
       custom: (try? Constant.jsonDecoder.decode(Custom.Message.self, from: custom)) ?? Custom.Message(),
       pubnubUserId: self.author.pubnubUserID,
       user: self.author.convert(),
@@ -167,11 +170,12 @@ extension PubNubManagedMessage: ManagedMessageEntity {
   ) throws {
     id = message.id
     timetoken = message.timetoken
-    dateCreated = message.dateCreated
+    dateCreated = message.createdAt
     dateSent = message.dateSent
     dateReceived = message.dateReceived
-    contentType = message.contentType
-    content = try message.contentPayload.jsonContent.jsonDataResult.get()
+    text = message.text
+    contentType = message.contentType ?? String()
+    content = try message.content.jsonDataResult.get()
     custom = try message.custom.jsonDataResult.get()
   }
   

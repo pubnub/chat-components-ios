@@ -180,25 +180,31 @@ extension PubNub: PubNubMemberAPI {
     completion: ((Result<Void, Error>) -> Void)?
   ) {
     // Determine PubNub directionality
-    switch(request.membershipPartials) {
-    case let (.some(userId), .none, partials):
+    switch(request.modificationDirection) {
+    case .modifyChannelsByUser:
       // Call the appropriate method
+      guard let (userId, channels) = request.channelPartials else {
+        completion?(.failure(ChatError.missingRequiredData))
+        return
+      }
       addMemberships(
-        spaces: partials,
+        spaces: channels,
         to: userId,
         requestConfig: .init(customConfiguration: request.config),
         completion: completion
       )
-    case let (.none, .some(channelId), partials):
+    case .modifyUsersByChannel:
       // Call the appropriate method
+      guard let (channelId, users) = request.userPartials else {
+        completion?(.failure(ChatError.missingRequiredData))
+        return
+      }
       addMemberships(
-        users: partials,
+        users: users,
         to: channelId,
         requestConfig: .init(customConfiguration: request.config),
         completion: completion
       )
-    default:
-      completion?(.failure(ChatError.missingRequiredData))
     }
   }
   
@@ -208,25 +214,31 @@ extension PubNub: PubNubMemberAPI {
     completion: ((Result<Void, Error>) -> Void)?
   ) {
     // Determine PubNub directionality
-    switch(request.membershipPartials) {
-    case let (.some(userId), .none, partials):
+    switch(request.modificationDirection) {
+    case .modifyChannelsByUser:
       // Call the appropriate method
+      guard let (userId, channels) = request.channelPartials else {
+        completion?(.failure(ChatError.missingRequiredData))
+        return
+      }
       updateMemberships(
-        spaces: partials,
+        spaces: channels,
         on: userId,
         requestConfig: .init(customConfiguration: request.config),
         completion: completion
       )
-    case let (.none, .some(channelId), partials):
+    case .modifyUsersByChannel:
       // Call the appropriate method
+      guard let (channelId, users) = request.userPartials else {
+        completion?(.failure(ChatError.missingRequiredData))
+        return
+      }
       updateMemberships(
-        users: partials,
+        users: users,
         on: channelId,
         requestConfig: .init(customConfiguration: request.config),
         completion: completion
       )
-    default:
-      completion?(.failure(ChatError.missingRequiredData))
     }
   }
   
@@ -236,25 +248,30 @@ extension PubNub: PubNubMemberAPI {
     completion: ((Result<Void, Error>) -> Void)?
   ) {
     // Determine PubNub directionality
-    switch(request.membershipPartials) {
-    case let (.some(userId), .none, partials):
-      // Call the appropriate method
+    switch(request.modificationDirection) {
+    case .modifyChannelsByUser:
+      guard let (userId, channels) = request.channelPartials else {
+        completion?(.failure(ChatError.missingRequiredData))
+        return
+      }
       removeMemberships(
-        spaceIds: partials.map { $0.id },
+        spaceIds: channels.map { $0.space.id },
         from: userId,
         requestConfig: .init(customConfiguration: request.config),
         completion: completion
       )
-    case let (.none, .some(channelId), partials):
+    case .modifyUsersByChannel:
       // Call the appropriate method
+      guard let (channelId, users) = request.userPartials else {
+        completion?(.failure(ChatError.missingRequiredData))
+        return
+      }
       removeMemberships(
-        userIds: partials.map { $0.id },
+        userIds: users.map { $0.user.id },
         from: channelId,
         requestConfig: .init(customConfiguration: request.config),
         completion: completion
       )
-    default:
-      completion?(.failure(ChatError.missingRequiredData))
     }
   }
 }
@@ -366,28 +383,43 @@ extension ChannelMemberFetchRequest: Equatable {
 }
 
 public struct MembersModifyRequest<Custom: ChatCustomData> {
+
+  public enum ModificationDirection {
+    case modifyChannelsByUser
+    case modifyUsersByChannel
+  }
+  
   public let requestId: String = UUID().uuidString
   public var members: [ChatMember<Custom>]
+
+  public var modificationDirection: ModificationDirection
 
   public var config: PubNubConfiguration?
 
   public init(
     members: [ChatMember<Custom>],
+    modificationDirection: ModificationDirection,
     config: PubNubConfiguration? = nil
   ) {
     self.members = members
+    self.modificationDirection = modificationDirection
     self.config = config
   }
-  
-  var membershipPartials: (userId: String?, channelId: String?, partials: [PubNubMembership.Partial]) {
-    let channelId = members.first?.pubnubChannelId
-    let userId = members.first?.pubnubUserId
-    
-    if members.first(where: { $0.pubnubChannelId != channelId }) == nil {
-      return (userId, nil, members.map { ($0.pubnubChannelId, $0.status, $0.customDefault) })
-    } else {
-      return (nil, channelId, members.map { ($0.pubnubUserId, $0.status, $0.customDefault) })
+
+  var channelPartials: (userId: String, partials: [PubNubMembership.PartialSpace])? {
+    guard let userId = members.first?.pubnubUserId else {
+      return nil
     }
+    
+    return (userId, members.map { .init(spaceId: $0.pubnubChannelId, status: $0.status, custom: $0.customDefault) })
+  }
+
+  var userPartials: (channelId: String, partials: [PubNubMembership.PartialUser])? {
+    guard let channelId = members.first?.pubnubChannelId else {
+      return nil
+    }
+    
+    return (channelId, members.map { .init(userId: $0.pubnubUserId, status: $0.status, custom: $0.customDefault) })
   }
 }
 

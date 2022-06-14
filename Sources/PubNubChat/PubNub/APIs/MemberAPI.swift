@@ -411,7 +411,7 @@ public struct MembersModifyRequest<Custom: ChatCustomData> {
       return nil
     }
     
-    return (userId, members.map { .init(spaceId: $0.pubnubChannelId, status: $0.status, custom: $0.customDefault) })
+    return (userId, members.map { .init(spaceId: $0.pubnubChannelId, status: $0.status, custom: $0.custom) })
   }
 
   var userPartials: (channelId: String, partials: [PubNubMembership.PartialUser])? {
@@ -419,7 +419,7 @@ public struct MembersModifyRequest<Custom: ChatCustomData> {
       return nil
     }
     
-    return (channelId, members.map { .init(userId: $0.pubnubUserId, status: $0.status, custom: $0.customDefault) })
+    return (channelId, members.map { .init(userId: $0.pubnubUserId, status: $0.status, custom: $0.custom) })
   }
 }
 

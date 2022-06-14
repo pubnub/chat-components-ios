@@ -37,6 +37,9 @@ public final class PubNubManagedMember: NSManagedObject {
   @NSManaged public var custom: Data
   @NSManaged public var status: String?
 
+  @NSManaged public var lastUpdated: Date?
+  @NSManaged public var eTag: String?
+
   // Presence Attributes
   @NSManaged public var isPresent: Bool
   @NSManaged public var presenceState: Data?
@@ -44,7 +47,7 @@ public final class PubNubManagedMember: NSManagedObject {
   // Derived Attributes
   @NSManaged public var channelId: String
   @NSManaged public var userId: String
-  
+
   // Relationships
   @NSManaged public var user: PubNubManagedUser
   @NSManaged public var channel: PubNubManagedChannel
@@ -65,11 +68,11 @@ extension PubNubManagedMember: ManagedMemberEntity {
   
   public func convert<Custom>() -> ChatMember<Custom> where Custom : ChatCustomData {
     return ChatMember<Custom>(
-      pubnubChannelId: channelId,
       channel: channel.convert(),
-      pubnubUserId: userId,
       user: user.convert(),
       status: status,
+      updated: lastUpdated,
+      eTag: eTag,
       isPresent: isPresent
     )
   }
@@ -77,6 +80,7 @@ extension PubNubManagedMember: ManagedMemberEntity {
   @discardableResult
   public static func insertOrUpdate<Custom: ChatCustomData>(
     member: ChatMember<Custom>,
+    forceWrite: Bool = false,
     into context: NSManagedObjectContext
   ) throws -> PubNubManagedMember {
     if let existingMember = try? context.fetch(
@@ -84,29 +88,31 @@ extension PubNubManagedMember: ManagedMemberEntity {
     ).first {
       try existingMember.update(from: member)
       
-      if let channelModel = member.chatChannel {
-        try PubNubManagedChannel.insertOrUpdate(channel: channelModel, into: context)
+      // Write the value if it has server-set properties or if force write was specified
+      if member.chatChannel.isSynced || forceWrite {
+        try PubNubManagedChannel.insertOrUpdate(channel: member.chatChannel, into: context)
       }
-      if let userModel = member.chatUser {
-        try PubNubManagedUser.insertOrUpdate(user: userModel, into: context)
+      if member.chatUser.isSynced || forceWrite {
+        try PubNubManagedUser.insertOrUpdate(user: member.chatUser, into: context)
       }
       
       return existingMember
     } else {
       // Create new object from context
-      return try insert(member: member, into: context)
+      return try insert(member: member, forceWrite: forceWrite, into: context)
     }
   }
 
   static func insert<Custom: ChatCustomData>(
     member: ChatMember<Custom>,
+    forceWrite: Bool,
     into context: NSManagedObjectContext
   ) throws -> PubNubManagedMember {
     
     // Insert or update Channel
     let managedChannel: PubNubManagedChannel
-    if let channelModel = member.chatChannel {
-      managedChannel = try PubNubManagedChannel.insertOrUpdate(channel: channelModel, into: context)
+    if member.chatChannel.isSynced || forceWrite {
+      managedChannel = try PubNubManagedChannel.insertOrUpdate(channel: member.chatChannel, into: context)
     } else if let existingChannel = try context.fetch(PubNubManagedChannel.channelBy(pubnubId: member.pubnubChannelId)).first {
       managedChannel = existingChannel
     } else {
@@ -116,8 +122,8 @@ extension PubNubManagedMember: ManagedMemberEntity {
     
     // Insert or update User
     let managedUser: PubNubManagedUser
-    if let userModel = member.chatUser {
-      managedUser = try PubNubManagedUser.insertOrUpdate(user: userModel, into: context)
+    if member.chatUser.isSynced || forceWrite {
+      managedUser = try PubNubManagedUser.insertOrUpdate(user:  member.chatUser, into: context)
     } else if let existingUser = try context.fetch(PubNubManagedUser.userBy(pubnubId: member.pubnubUserId)).first {
       managedUser = existingUser
     } else {

@@ -84,7 +84,7 @@ extension PubNubManagedUser: ManagedUserEntity {
       email: email,
       updated: lastUpdated,
       eTag: eTag,
-      customUser: (try? Constant.jsonDecoder.decode(Custom.self, from: custom)) ?? Custom()
+      custom: (try? Constant.jsonDecoder.decode(Custom.self, from: custom)) ?? Custom()
     )
   }
   
@@ -140,19 +140,11 @@ extension PubNubManagedUser: ManagedUserEntity {
     self.externalId = user.externalId
     self.avatarURL = user.avatarURL
     self.email = user.email
-    self.custom = try user.customDefault.custom.jsonDataResult.get()
+    self.custom = try user.custom.custom.jsonDataResult.get()
     self.lastUpdated = user.updated
     self.eTag = user.eTag
   }
-  
-  func upgrade<Custom>(
-    from membership: ChatMember<Custom>
-  ) throws where Custom : ChatCustomData {
-    if let memberModel = membership.chatUser {
-      try update(from: memberModel)
-    }
-  }
-  
+
   @discardableResult
   public static func remove(
     userId: String,

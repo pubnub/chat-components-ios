@@ -148,7 +148,7 @@ extension PubNub: PubNubChannelAPI {
       type: request.channel.type,
       status: request.channel.status,
       description: request.channel.details,
-      custom: request.channel.customDefault,
+      custom: request.channel.custom,
       includeCustom: request.includeCustom,
       requestConfig: .init(customConfiguration: request.config)
     ) { result in
@@ -167,7 +167,7 @@ extension PubNub: PubNubChannelAPI {
       type: request.channel.type,
       status: request.channel.status,
       description: request.channel.details,
-      custom: request.channel.customDefault,
+      custom: request.channel.custom,
       includeCustom: request.includeCustom,
       requestConfig: .init(customConfiguration: request.config)
     ) { result in

@@ -95,8 +95,8 @@ extension PubNub: PresenceAPI {
         let memberships = stateByChannel
           .map { channelId, state in
             ChatMember<Custom>(
-              pubnubChannelId: channelId,
-              pubnubUserId: memberId,
+              channelId: channelId,
+              userId: memberId,
               isPresent: true,
               presenceState: state
             )
@@ -122,8 +122,8 @@ extension PubNub: PresenceAPI {
     ) { result in
       switch result {
       case .success(let state):
-        let channelMembers = request.channels.map { ChatMember<Custom>(pubnubChannelId: $0, pubnubUserId: request.currentUserId, presenceState: state) }
-        let groupMembers = request.groups.map { ChatMember<Custom>(pubnubChannelId: $0, pubnubUserId: request.currentUserId, presenceState: state) }
+        let channelMembers = request.channels.map { ChatMember<Custom>(channelId: $0, userId: request.currentUserId, presenceState: state) }
+        let groupMembers = request.groups.map { ChatMember<Custom>(channelId: $0, userId: request.currentUserId, presenceState: state) }
         
         completion?(.success(channelMembers + groupMembers))
       case .failure(let error):

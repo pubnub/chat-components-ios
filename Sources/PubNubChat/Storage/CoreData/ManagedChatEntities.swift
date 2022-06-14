@@ -153,6 +153,7 @@ public protocol ManagedMemberEntity: ManagedEntity {
   @discardableResult
   static func insertOrUpdate<Custom: ChatCustomData>(
     member: ChatMember<Custom>,
+    forceWrite: Bool,
     into context: NSManagedObjectContext
   ) throws -> Self
   

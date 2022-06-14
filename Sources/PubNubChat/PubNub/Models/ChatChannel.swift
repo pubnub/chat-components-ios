@@ -34,11 +34,12 @@ import PubNubSpace
 public typealias PubNubChatChannel = ChatChannel<VoidCustomData>
 
 @dynamicMemberLookup
-public struct ChatChannel<Custom: ChannelCustomData>: Identifiable, Hashable {
+public struct ChatChannel<Custom: ChannelCustomData>: Identifiable, Hashable, ServerSynced {
   
-  public struct ChatChannelDefault: Hashable {
-
+  public struct CustomProperties: Hashable {
+    // PubNub owned Custom Property accessed via a dynamicMember property
     public var avatarURL: URL?
+    // User owned Custom Property accessed via a dynamicMember property
     public var custom: Custom
 
     public init(
@@ -60,7 +61,7 @@ public struct ChatChannel<Custom: ChannelCustomData>: Identifiable, Hashable {
   public var updated: Date?
   public var eTag: String?
 
-  public var customDefault: ChatChannelDefault
+  public var custom: CustomProperties
 
   public init(
     id: String ,
@@ -78,96 +79,61 @@ public struct ChatChannel<Custom: ChannelCustomData>: Identifiable, Hashable {
     self.type = type ?? "default"
     self.status = status
     self.details = details
-    self.customDefault = ChatChannelDefault(avatarURL: avatarURL, custom: custom)
+    self.updated = updated
+    self.eTag = eTag
+    self.custom = CustomProperties(avatarURL: avatarURL, custom: custom)
   }
   
   // MARK: Dynamic Member Lookup
   
   public subscript<T>(dynamicMember keyPath: WritableKeyPath<Custom, T>) -> T {
-    get { customDefault.custom[keyPath: keyPath] }
-    set { customDefault.custom[keyPath: keyPath] = newValue }
+    get { custom.custom[keyPath: keyPath] }
+    set { custom.custom[keyPath: keyPath] = newValue }
   }
   
-  public subscript<T>(dynamicMember keyPath: WritableKeyPath<ChatChannelDefault, T>) -> T {
-    get { customDefault[keyPath: keyPath] }
-    set { customDefault[keyPath: keyPath] = newValue }
-  }
-
-  // MARK: Codable
-
-  public enum CodingKeys: String, CodingKey {
-    case id, name, updated, eTag
-    case details = "description"
-    case custom
-  }
-  
-//  public init(from decoder: Decoder) throws {
-//    let container = try decoder.container(keyedBy: CodingKeys.self)
-//
-//    let defaultChannel = try container.decode(ChatChannelDefault.self, forKey: .custom)
-//
-//    self.init(
-//      id: try container.decode(String.self, forKey: .id),
-//      name: try container.decode(String.self, forKey: .name),
-//      type: defaultChannel.type,
-//      details: try container.decodeIfPresent(String.self, forKey: .details),
-//      avatarURL: defaultChannel.avatarURL,
-//      updated: try container.decodeIfPresent(Date.self, forKey: .updated),
-//      eTag: try container.decodeIfPresent(String.self, forKey: .eTag),
-//      custom: try container.decode(Custom.self, forKey: .custom)
-//    )
-//  }
-//
-//  public func encode(to encoder: Encoder) throws {
-//    var container = encoder.container(keyedBy: CodingKeys.self)
-//
-//    try container.encode(id, forKey: .id)
-//    try container.encode(name, forKey: .name)
-//
-//    try container.encodeIfPresent(details, forKey: .details)
-//    try container.encodeIfPresent(updated, forKey: .updated)
-//    try container.encodeIfPresent(eTag, forKey: .eTag)
-//
-//    let customJSON = defaultChannel.flatJSON.merging(customChannel.flatJSON) { _, new in new }
-//
-//    try container.encode(customJSON.mapValues { $0.codableValue }, forKey: .custom)
-//  }
-}
-
-// TODO: This needs to be decoded from ChatChannel so custom can be converted into
-// [String: JSONCodableScalar] and then init(flatJSON: custom)
-extension ChatChannel.ChatChannelDefault: Codable {
-  public enum CodingKeys: String, CodingKey {
-    case avatarURL = "profileUrl"
-  }
-  
-  public init(from decoder: Decoder) throws {
-    let container = try decoder.container(keyedBy: CodingKeys.self)
-    
-    self.avatarURL = try container.decodeIfPresent(URL.self, forKey: .avatarURL)
-    self.custom = try Custom(from: decoder)
-  }
-  
-  public func encode(to encoder: Encoder) throws {
-    var container = encoder.container(keyedBy: CodingKeys.self)
-    try container.encodeIfPresent(avatarURL, forKey: .avatarURL)
-    try custom.encode(to: encoder)
+  public subscript<T>(dynamicMember keyPath: WritableKeyPath<CustomProperties, T>) -> T {
+    get { custom[keyPath: keyPath] }
+    set { custom[keyPath: keyPath] = newValue }
   }
 }
 
 extension ChatChannel: Codable {
   public init(from decoder: Decoder) throws {
-    self.init(id: "TODO")
+    let container = try decoder.container(keyedBy: PubNubSpace.CodingKeys.self)
+
+    let customProperties = try container
+      .decodeIfPresent(CustomProperties.self, forKey: .custom)
+
+    self.init(
+      id: try container.decode(String.self, forKey: .id),
+      name: try container.decodeIfPresent(String.self, forKey: .name),
+      type: try container.decodeIfPresent(String.self, forKey: .type),
+      status: try container.decodeIfPresent(String.self, forKey: .status),
+      details: try container.decodeIfPresent(String.self, forKey: .spaceDescription),
+      avatarURL: customProperties?.avatarURL,
+      updated: try container.decodeIfPresent(Date.self, forKey: .updated),
+      eTag: try container.decodeIfPresent(String.self, forKey: .eTag),
+      custom: customProperties?.custom ?? Custom()
+    )
   }
   
   public func encode(to encoder: Encoder) throws {
-    //    try custom.encode(to: encoder)
+    var container = encoder.container(keyedBy: PubNubSpace.CodingKeys.self)
+
+    try container.encode(id, forKey: .id)
+    try container.encodeIfPresent(name, forKey: .name)
+    try container.encode(type, forKey: .type)
+    try container.encodeIfPresent(status, forKey: .status)
+    try container.encodeIfPresent(details, forKey: .spaceDescription)
+    try container.encodeIfPresent(updated, forKey: .updated)
+    try container.encodeIfPresent(eTag, forKey: .eTag)
+    try container.encode(custom, forKey: .custom)
   }
 }
 
-// MARK: ChatChannelDefault Extension
+// MARK: CustomProperties Extension
 
-extension ChatChannel.ChatChannelDefault: ChannelCustomData {
+extension ChatChannel.CustomProperties: ChannelCustomData {
   public init() {
     self.init(avatarURL: nil, custom: .init())
   }
@@ -190,14 +156,33 @@ extension ChatChannel.ChatChannelDefault: ChannelCustomData {
   }
 }
 
+extension ChatChannel.CustomProperties: Codable {
+  public enum CodingKeys: String, CodingKey {
+    case avatarURL = "profileUrl"
+  }
+  
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    
+    self.avatarURL = try container.decodeIfPresent(URL.self, forKey: .avatarURL)
+    self.custom = try Custom(from: decoder)
+  }
+  
+  public func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encodeIfPresent(avatarURL, forKey: .avatarURL)
+    try custom.encode(to: encoder)
+  }
+}
+
 // MARK: PubNubSpace Extension
 
 extension ChatChannel {
   public init(pubnub: PubNubSpace) {
     
-    let channelCustom = ChatChannelDefault(flatJSON: pubnub.custom?.flatJSON)
+    let channelCustom = CustomProperties(flatJSON: pubnub.custom?.flatJSON)
 
-    // Type was previously located inside the custom, so we check to a certain point
+    // Type was previously located inside the custom, so check in custom
     self.init(
       id: pubnub.id,
       name: pubnub.name,
@@ -235,7 +220,7 @@ extension ChatChannel {
       type: { if let value = $0 { mutableSelf.type = value } },
       status: { mutableSelf.status = $0 },
       description: { mutableSelf.details = $0 },
-      custom: { mutableSelf.customDefault = ChatChannelDefault(flatJSON: $0?.flatJSON) },
+      custom: { mutableSelf.custom = CustomProperties(flatJSON: $0?.flatJSON) },
       updated: { mutableSelf.updated = $0 },
       eTag: { mutableSelf.eTag = $0 }
     )

@@ -146,7 +146,7 @@ extension PubNub: PubNubUserAPI {
       externalId:  request.user.externalId,
       profileUrl:  request.user.avatarURL,
       email:  request.user.email,
-      custom:  request.user.customDefault,
+      custom:  request.user.custom,
       includeCustom: request.includeCustom,
       requestConfig: .init(customConfiguration: request.config)
     ) { result in
@@ -167,7 +167,7 @@ extension PubNub: PubNubUserAPI {
       externalId:  request.user.externalId,
       profileUrl:  request.user.avatarURL,
       email:  request.user.email,
-      custom:  request.user.customDefault,
+      custom:  request.user.custom,
       includeCustom: request.includeCustom,
       requestConfig: .init(customConfiguration: request.config)
     ) { result in

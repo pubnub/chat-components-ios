@@ -26,8 +26,10 @@
     <entity name="PubNubManagedMember" representedClassName="PubNubManagedMember" syncable="YES">
         <attribute name="channelId" optional="YES" attributeType="String" derived="YES" derivationExpression="channel.id"/>
         <attribute name="custom" optional="YES" attributeType="Binary"/>
+        <attribute name="eTag" optional="YES" attributeType="String"/>
         <attribute name="id" attributeType="String"/>
         <attribute name="isPresent" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="lastUpdated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="presenceState" optional="YES" attributeType="Binary"/>
         <attribute name="status" optional="YES" attributeType="String"/>
         <attribute name="userId" optional="YES" attributeType="String" derived="YES" derivationExpression="user.id"/>
@@ -114,7 +116,7 @@
     </entity>
     <elements>
         <element name="PubNubManagedChannel" positionX="-78.437255859375" positionY="268.0662231445312" width="128" height="224"/>
-        <element name="PubNubManagedMember" positionX="160" positionY="192" width="128" height="164"/>
+        <element name="PubNubManagedMember" positionX="160" positionY="192" width="128" height="194"/>
         <element name="PubNubManagedMessage" positionX="54" positionY="441" width="128" height="224"/>
         <element name="PubNubManagedMessageAction" positionX="45" positionY="351" width="128" height="179"/>
         <element name="PubNubManagedUser" positionX="-76.082275390625" positionY="465.6267700195312" width="128" height="224"/>

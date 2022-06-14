@@ -148,17 +148,9 @@ extension PubNubManagedChannel: ManagedChannelEntity {
     status = channel.status
     details = channel.details
     avatarURL = channel.avatarURL
-    custom = try channel.customDefault.custom.jsonDataResult.get()
+    custom = try channel.custom.custom.jsonDataResult.get()
     lastUpdated = channel.updated
     eTag = channel.eTag
-  }
-
-  func update<Custom: ChatCustomData>(
-    from member: ChatMember<Custom>
-  ) throws {
-    if let channelModel = member.chatChannel {
-      try update(from: channelModel)
-    }
   }
 
   @discardableResult

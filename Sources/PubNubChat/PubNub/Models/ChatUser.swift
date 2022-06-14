@@ -33,9 +33,14 @@ import PubNubUser
 public typealias PubNubChatUser = ChatUser<VoidCustomData>
 
 @dynamicMemberLookup
-public struct ChatUser<Custom: UserCustomData>: Identifiable, Hashable {
+public struct ChatUser<Custom: UserCustomData>: Identifiable, Hashable, ServerSynced {
   
-  public struct PubNubDefault: Hashable {
+  public struct CustomProperties: Hashable {
+    // PubNub owned Custom Property accessed via a dynamicMember property
+    // User doesn't have PubNub defaults, if some are added
+    // then an additional dynamicMember should be added for access
+    
+    // User owned Custom Property accessed via a dynamicMember property
     public var custom: Custom
     
     public init(custom: Custom) {
@@ -57,7 +62,7 @@ public struct ChatUser<Custom: UserCustomData>: Identifiable, Hashable {
   public var eTag: String?
 
   // `Custom` data required by PubNubCHat
-  public var customDefault: PubNubDefault
+  public var custom: CustomProperties
   
   public init(
     id: String,
@@ -69,7 +74,7 @@ public struct ChatUser<Custom: UserCustomData>: Identifiable, Hashable {
     email: String? = nil,
     updated: Date? = nil,
     eTag: String? = nil,
-    customUser: Custom = Custom()
+    custom: Custom = Custom()
   ) {
     self.id = id
     self.name = name
@@ -80,37 +85,57 @@ public struct ChatUser<Custom: UserCustomData>: Identifiable, Hashable {
     self.email = email
     self.updated = updated
     self.eTag = eTag
-    self.customDefault = PubNubDefault(custom: customUser)
+    self.custom = CustomProperties(custom: custom)
   }
   
   // MARK: Dynamic Member Lookup
   
   public subscript<T>(dynamicMember keyPath: WritableKeyPath<Custom, T>) -> T {
-    get { customDefault.custom[keyPath: keyPath] }
-    set { customDefault.custom[keyPath: keyPath] = newValue }
-  }
-  
-  public subscript<T>(dynamicMember keyPath: WritableKeyPath<PubNubDefault, T>) -> T {
-    get { customDefault[keyPath: keyPath] }
-    set { customDefault[keyPath: keyPath] = newValue }
+    get { custom.custom[keyPath: keyPath] }
+    set { custom.custom[keyPath: keyPath] = newValue }
   }
 }
 
-// TODO: This needs to be decoded from ChatChannel so custom can be converted into
-// [String: JSONCodableScalar] and then init(flatJSON: custom)
 extension ChatUser: Codable {
   public init(from decoder: Decoder) throws {
-    self.init(id: "TODO")
+    let container = try decoder.container(keyedBy: PubNubUser.CodingKeys.self)
+    
+    let customProperties = try container
+      .decodeIfPresent(CustomProperties.self, forKey: .custom)
+
+    self.init(
+      id: try container.decode(String.self, forKey: .id),
+      name: try container.decodeIfPresent(String.self, forKey: .name),
+      type: try container.decodeIfPresent(String.self, forKey: .type),
+      status: try container.decodeIfPresent(String.self, forKey: .status),
+      externalId: try container.decodeIfPresent(String.self, forKey: .externalId),
+      avatarURL: try container.decodeIfPresent(URL.self, forKey: .profileUrl),
+      email: try container.decodeIfPresent(String.self, forKey: .email),
+      updated: try container.decodeIfPresent(Date.self, forKey: .updated),
+      eTag: try container.decodeIfPresent(String.self, forKey: .eTag),
+      custom: customProperties?.custom ?? Custom()
+    )
   }
   
   public func encode(to encoder: Encoder) throws {
-//    try custom.encode(to: encoder)
+    var container = encoder.container(keyedBy: PubNubUser.CodingKeys.self)
+    
+    try container.encode(id, forKey: .id)
+    try container.encodeIfPresent(name, forKey: .name)
+    try container.encode(type, forKey: .type)
+    try container.encodeIfPresent(status, forKey: .status)
+    try container.encodeIfPresent(externalId, forKey: .externalId)
+    try container.encodeIfPresent(avatarURL, forKey: .profileUrl)
+    try container.encodeIfPresent(email, forKey: .email)
+    try container.encodeIfPresent(updated, forKey: .updated)
+    try container.encodeIfPresent(eTag, forKey: .eTag)
+    try container.encode(custom, forKey: .custom)
   }
 }
 
-// MARK: PubNubDefault Extension
+// MARK: CustomProperties Extension
 
-extension ChatUser.PubNubDefault: UserCustomData {
+extension ChatUser.CustomProperties: UserCustomData {
   public init() {
     self.custom = Custom()
   }
@@ -121,6 +146,16 @@ extension ChatUser.PubNubDefault: UserCustomData {
   
   public var flatJSON: [String: JSONCodableScalar] {
     return custom.flatJSON
+  }
+}
+
+extension ChatUser.CustomProperties: Codable {
+  public init(from decoder: Decoder) throws {
+    self.custom = try Custom(from: decoder)
+  }
+  
+  public func encode(to encoder: Encoder) throws {
+    try custom.encode(to: encoder)
   }
 }
 
@@ -138,7 +173,7 @@ extension ChatUser {
       email: pubnub.email,
       updated: pubnub.updated,
       eTag: pubnub.eTag,
-      customUser: Custom(flatJSON: pubnub.custom?.flatJSON)
+      custom: Custom(flatJSON: pubnub.custom?.flatJSON)
     )
   }
   
@@ -168,7 +203,7 @@ extension ChatUser {
       externalId: { mutableSelf.externalId = $0 },
       profileURL: { mutableSelf.avatarURL = $0 },
       email: { mutableSelf.email = $0 },
-      custom: { mutableSelf.customDefault = PubNubDefault(flatJSON: $0?.flatJSON) },
+      custom: { mutableSelf.custom = CustomProperties(flatJSON: $0?.flatJSON) },
       updated: { mutableSelf.updated = $0 },
       eTag: { mutableSelf.eTag = $0 }
     )

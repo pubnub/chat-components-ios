@@ -137,7 +137,9 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
       for batch in members.chunked(into: batchSize) {
         if let error = self?.provider.coreDataContainer.syncWrite({ context in
           for item in batch {
-            try ManagedEntities.Member.insertOrUpdate(member: item, into: context)
+            try ManagedEntities.Member.insertOrUpdate(
+              member: item, forceWrite: false, into: context
+            )
           }
         }) {
           PubNub.log.error("Error saving member batch \(error)")

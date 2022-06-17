@@ -77,8 +77,8 @@ extension PubNubManagedMessage: ManagedMessageEntity {
     return timetoken
   }
   
-  public var messageContentType: MessageContentType {
-    return MessageContentType(rawValue: contentType)
+  public var messageContentType: String {
+    return contentType
   }
   
   public var managedUser: UserEntity {

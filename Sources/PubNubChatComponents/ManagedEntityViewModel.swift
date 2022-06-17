@@ -198,14 +198,10 @@ public protocol ManagedMessageViewModel {
   var pubnubId: Timetoken { get }
   var managedObjectId: NSManagedObjectID { get }
   
-  var messageContentTypePublisher: AnyPublisher<MessageContentType, Never> { get }
-  var messageContentPublisher: AnyPublisher<MessageContent, Error> { get }
+  var messageContentTypePublisher: AnyPublisher<String, Never> { get }
+  var messageContentPublisher: AnyPublisher<Data, Never> { get }
   
-  var messageTextContentPublisher: AnyPublisher<String?, Never> { get }
-  var messageLinkContentPublisher: AnyPublisher<URL?, Never> { get }
-  var messageImageContentPublisher: AnyPublisher<URL?, Never> { get }
-  var messageJSONContentPublisher: AnyPublisher<AnyJSON?, Never> { get }
-  
+  var messageTextPublisher: AnyPublisher<String, Never> { get }
   var messageCustomPublisher: AnyPublisher<Data, Never> { get }
   
   var messageDateCreatedPublisher: AnyPublisher<Date, Never> { get }
@@ -224,68 +220,18 @@ extension PubNubManagedMessage: ManagedMessageViewModel {
     return try JSONDecoder().decode(T.self, from: content)
   }
   
-  public var messageContentTypePublisher: AnyPublisher<MessageContentType, Never> {
+  public var messageContentTypePublisher: AnyPublisher<String, Never> {
     return publisher(for: \.contentType)
-      .map { MessageContentType(rawValue: $0) }
       .eraseToAnyPublisher()
   }
   
-  public var messageContentPublisher: AnyPublisher<MessageContent, Error> {
+  public var messageContentPublisher: AnyPublisher<Data, Never> {
     return publisher(for: \.content)
-      .decode(type: MessageContent.self, decoder: Constant.jsonDecoder)
       .eraseToAnyPublisher()
   }
-
-  public var messageTextContentPublisher: AnyPublisher<String?, Never> {
-    return messageContentPublisher
-    .map { content -> String? in
-      switch content {
-      case .text(let content):
-        return content
-      default:
-        return nil
-      }
-    }
-    .replaceError(with: nil)
-    .eraseToAnyPublisher()
-  }
-  public var messageLinkContentPublisher: AnyPublisher<URL?, Never> {
-    return messageContentPublisher
-      .map { content -> URL? in
-        switch content {
-        case .link(let content):
-          return content
-        default:
-          return nil
-        }
-      }
-      .replaceError(with: nil)
-      .eraseToAnyPublisher()
-  }
-  public var messageImageContentPublisher: AnyPublisher<URL?, Never> {
-    return messageContentPublisher
-      .map { content -> URL? in
-        switch content {
-        case .imageRemote(let content):
-          return content
-        default:
-          return nil
-        }
-      }
-      .replaceError(with: nil)
-      .eraseToAnyPublisher()
-  }
-  public var messageJSONContentPublisher: AnyPublisher<AnyJSON?, Never> {
-    return messageContentPublisher
-      .map { content -> AnyJSON? in
-        switch content {
-        case .custom(let content):
-          return content
-        default:
-          return nil
-        }
-      }
-      .replaceError(with: nil)
+  
+  public var messageTextPublisher: AnyPublisher<String, Never> {
+    return publisher(for: \.text)
       .eraseToAnyPublisher()
   }
   

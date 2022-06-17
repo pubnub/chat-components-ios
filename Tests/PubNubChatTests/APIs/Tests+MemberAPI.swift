@@ -1,8 +1,8 @@
 //
-//  PubNub+PubNubChat.swift
+//  Tests+MemberAPI.swift
 //
 //  PubNub Real-time Cloud-Hosted Push API and Push Notification Client Frameworks
-//  Copyright © 2021 PubNub Inc.
+//  Copyright © 2022 PubNub Inc.
 //  https://www.pubnub.com/
 //  https://www.pubnub.com/terms
 //
@@ -25,47 +25,42 @@
 //  THE SOFTWARE.
 //
 
-import Foundation
+import XCTest
+import Combine
 
+@testable import PubNubChat
 import PubNub
+import PubNubUser
+import PubNubSpace
+import PubNubMembership
 
-extension URL: JSONCodableScalar {
-  public var scalarValue: JSONCodableScalarType {
-    return JSONCodableScalarType(stringValue: self.absoluteString)
-  }
-}
-
-extension Optional: JSONCodableScalar, JSONCodable where Wrapped: JSONCodableScalar {
-  public var scalarValue: JSONCodableScalarType {
-    switch self {
-    case .some(let value):
-      return value.scalarValue
-    default:
-      return JSONCodableScalarType(stringValue: nil)
-    }
-  }
-}
-
-extension JSONCodableScalar {
-  public var urlOptional: URL? {
-    if let urlString = stringOptional {
-      return URL(string: urlString)
-    }
-    
-    return nil
-  }
-}
-
-extension PubNubConfiguration {
-  static var pubnubChatCID: [String: String] {
-    return [ENV.frameworkIdentifier: "\(ENV.frameworkIdentifier)/\(ENV.currentVersion)"]
-  }
+class MemberAPITests: XCTestCase {
   
-  func mergeChatConsumerID() -> PubNubConfiguration {
-    var config = self
-    config.consumerIdentifiers
-      .merge(PubNubConfiguration.pubnubChatCID) { (old, _) in old }
-    
-    return config
+  var mockPubNub = PubNubMock()
+  
+  lazy var provider = ChatProvider<ChatMockCustom, PubNubManagedChatEntities>(
+    pubnubProvider: mockPubNub
+  ).pubnubProvider
+
+  var testMembership = PubNubMembership(
+    user: .init(id: "testUserId"),
+    space: .init(id: "testSpaceId"),
+    status: "testStatus",
+    custom: ChatMockCustom.Member(location: "testLocl", isHidden: true),
+    updated: .distantPast,
+    eTag: "testUserId"
+  )
+
+  private var cancellables: Set<AnyCancellable>!
+  
+  override func setUp() {
+    super.setUp()
+    cancellables = []
   }
+
+  // MARK: - Member Requests
+
+  // MARK: - PubNub Member API Default Impl.
+
+  // MARK: - PubNub Member API Combine Impl.
 }

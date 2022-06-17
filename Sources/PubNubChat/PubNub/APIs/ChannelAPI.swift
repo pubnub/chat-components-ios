@@ -63,6 +63,7 @@ public protocol PubNubChannelAPI {
 
   func remove<Custom: ChannelCustomData>(
     channel request: ChatChannelRequest<Custom>,
+    into: Custom.Type,
     completion: ((Result<Void, Error>) -> Void)?
   )
 }
@@ -104,13 +105,13 @@ extension PubNubChannelAPI {
 
 // MARK: - PubNub Ext
 
-extension PubNub: PubNubChannelAPI {
+extension PubNubProvider {
   public func fetch<Custom: ChannelCustomData>(
     channels request: ChannelsFetchRequest,
     into: Custom.Type,
     completion: @escaping ((Result<(channels: [ChatChannel<Custom>], next: ChannelsFetchRequest?), Error>) -> Void)
   ) {
-    fetchSpaces(
+    spaceInterface.fetchSpaces(
       includeCustom: request.includeCustom,
       includeTotalCount: request.includeTotalCount,
       filter: request.filter,
@@ -128,7 +129,7 @@ extension PubNub: PubNubChannelAPI {
     into: Custom.Type,
     completion: @escaping ((Result<ChatChannel<Custom>, Error>) -> Void)
   ) {
-    fetchSpace(
+    spaceInterface.fetchSpace(
       spaceId: request.channel.id,
       includeCustom: request.includeCustom,
       requestConfig: .init(customConfiguration: request.config)
@@ -142,7 +143,7 @@ extension PubNub: PubNubChannelAPI {
     into: Custom.Type,
     completion: ((Result<ChatChannel<Custom>, Error>) -> Void)?
   ) {
-    createSpace(
+    spaceInterface.createSpace(
       spaceId: request.channel.id,
       name: request.channel.name,
       type: request.channel.type,
@@ -161,7 +162,7 @@ extension PubNub: PubNubChannelAPI {
     into: Custom.Type,
     completion: ((Result<ChatChannel<Custom>, Error>) -> Void)?
   ) {
-    updateSpace(
+    spaceInterface.updateSpace(
       spaceId: request.channel.id,
       name: request.channel.name,
       type: request.channel.type,
@@ -177,9 +178,10 @@ extension PubNub: PubNubChannelAPI {
   
   public func remove<Custom: ChannelCustomData>(
     channel request: ChatChannelRequest<Custom>,
+    into: Custom.Type,
     completion: ((Result<Void, Error>) -> Void)?
   ) {
-    removeSpace(
+    spaceInterface.removeSpace(
       spaceId: request.channel.id,
       requestConfig: .init(customConfiguration: request.config),
       completion: completion
@@ -191,7 +193,7 @@ extension PubNub: PubNubChannelAPI {
 
 public typealias ChannelsFetchRequest = FetchEntitiesRequest<PubNub.SpaceSort>
 
-public struct ChatChannelRequest<Custom: ChannelCustomData> {
+public struct ChatChannelRequest<Custom: ChannelCustomData>: Equatable {
   public let requestId: String = UUID().uuidString
 
   public var channel: ChatChannel<Custom>
@@ -209,18 +211,3 @@ public struct ChatChannelRequest<Custom: ChannelCustomData> {
     self.config = config
   }
 }
-
-extension ChatChannelRequest: Equatable {
-  public static func == (lhs: ChatChannelRequest, rhs: ChatChannelRequest) -> Bool {
-    return lhs.requestId == rhs.requestId
-  }
-}
-
-// MARK: - Extensions
-
-extension PubNubChannelMetadataChangeset {
-  func apply<T: PubNubChannelMetadata>(to object: PubNubChannelMetadata, into _: T.Type) -> T? {
-    return apply(to: object) as? T
-  }
-}
-

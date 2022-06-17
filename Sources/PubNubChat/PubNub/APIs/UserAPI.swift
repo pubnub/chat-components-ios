@@ -60,6 +60,7 @@ public protocol PubNubUserAPI {
 
   func remove<Custom: UserCustomData>(
     user request: ChatUserRequest<Custom>,
+    into: Custom.Type,
     completion: ((Result<Void, Error>) -> Void)?
   )
 }
@@ -100,13 +101,13 @@ extension PubNubUserAPI {
   }
 }
 
-extension PubNub: PubNubUserAPI {
+extension PubNubProvider {
   public func fetch<Custom: UserCustomData>(
     users request: UsersFetchRequest,
     into: Custom.Type,
     completion: @escaping ((Result<(users: [ChatUser<Custom>], next: UsersFetchRequest?), Error>) -> Void)
   ) {    
-    fetchUsers(
+    userInterface.fetchUsers(
       includeCustom: request.includeCustom,
       includeTotalCount: request.includeTotalCount,
       filter: request.filter,
@@ -124,7 +125,7 @@ extension PubNub: PubNubUserAPI {
     into: Custom.Type,
     completion: @escaping ((Result<ChatUser<Custom>, Error>) -> Void)
   ) {
-    fetchUser(
+    userInterface.fetchUser(
       userId: request.user.id,
       includeCustom: request.includeCustom,
       requestConfig: .init(customConfiguration: request.config)
@@ -138,7 +139,7 @@ extension PubNub: PubNubUserAPI {
     into: Custom.Type,
     completion: ((Result<ChatUser<Custom>, Error>) -> Void)?
   ) {
-    createUser(
+    userInterface.createUser(
       userId: request.user.id,
       name: request.user.name,
       type: request.user.type,
@@ -159,7 +160,7 @@ extension PubNub: PubNubUserAPI {
     into: Custom.Type,
     completion: ((Result<ChatUser<Custom>, Error>) -> Void)?
   ) {
-    updateUser(
+    userInterface.updateUser(
       userId: request.user.id,
       name: request.user.name,
       type: request.user.type,
@@ -177,9 +178,10 @@ extension PubNub: PubNubUserAPI {
 
   public func remove<Custom: UserCustomData>(
     user request: ChatUserRequest<Custom>,
+    into: Custom.Type,
     completion: ((Result<Void, Error>) -> Void)?
   ) {
-    removeUser(
+    userInterface.removeUser(
       userId: request.user.id,
       requestConfig: .init(customConfiguration: request.config),
       completion: completion
@@ -202,7 +204,7 @@ public struct FetchEntitiesRequest<Sort> {
   public var limit: Int?
   public var filter: String?
   public var sort: [Sort]
-  public var page: PubNubHashedPage?
+  public var page: PubNub.Page?
   
   public var config: PubNubConfiguration?
 
@@ -212,7 +214,7 @@ public struct FetchEntitiesRequest<Sort> {
     limit: Int? = 100,
     filter: String? = nil,
     sort: [Sort] = [],
-    page: PubNubHashedPage? = nil,
+    page: PubNub.Page? = nil,
     config: PubNubConfiguration? = nil
   ) {
     self.includeCustom = includeCustom
@@ -230,18 +232,14 @@ public struct FetchEntitiesRequest<Sort> {
     }
     
     var request = self
-    request.page = page
+    request.page = .init(next: page.next, prev: page.prev, totalCount: page.totalCount)
     return request
   }
 }
 
-extension FetchEntitiesRequest: Equatable {
-  public static func == (lhs: FetchEntitiesRequest<Sort>, rhs: FetchEntitiesRequest<Sort>) -> Bool {
-    return lhs.requestId == rhs.requestId
-  }
-}
+extension FetchEntitiesRequest: Equatable, Hashable where Sort: Hashable {}
 
-public struct ChatUserRequest<Custom: UserCustomData> {
+public struct ChatUserRequest<Custom: UserCustomData>: Hashable {
   public let requestId: String = UUID().uuidString
 
   public var user: ChatUser<Custom>
@@ -257,19 +255,5 @@ public struct ChatUserRequest<Custom: UserCustomData> {
     self.user = user
     self.includeCustom = includeCustom
     self.config = config
-  }
-}
-
-extension ChatUserRequest: Equatable {
-  public static func == (lhs: ChatUserRequest, rhs: ChatUserRequest) -> Bool {
-    return lhs.requestId == rhs.requestId
-  }
-}
-
-// MARK: - Extensions
-
-extension PubNubUUIDMetadataChangeset {
-  func apply<T: PubNubUUIDMetadata>(to object: PubNubUUIDMetadata, into _: T.Type) -> T? {
-    return apply(to: object) as? T
   }
 }

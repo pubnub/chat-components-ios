@@ -89,13 +89,13 @@ extension MessageActionAPI {
 
 // MARK: - PubNub Ext
 
-extension PubNub: MessageActionAPI {
+extension PubNubProvider {
   public func fetchMessageActions<Custom: ChatCustomData>(
     _ request: MessageActionFetchRequest,
     into: Custom.Type,
     completion: ((Result<(actions: [ChatMessageAction<Custom>], next: MessageActionFetchRequest?), Error>) -> Void)?
   ) {
-    fetchMessageActions(
+    pubnub.fetchMessageActions(
       channel: request.channel,
       page: request.page,
       custom: .init(customConfiguration: request.config?.mergeChatConsumerID())
@@ -113,7 +113,7 @@ extension PubNub: MessageActionAPI {
     _ request: MessageActionSendRequest<Custom>,
     completion: ((Result<ChatMessageAction<Custom>, Error>) -> Void)?
   ) {
-    addMessageAction(
+    pubnub.addMessageAction(
       channel: request.parent.pubnubChannelId,
       type: request.actionType,
       value: request.actionValue,
@@ -138,7 +138,7 @@ extension PubNub: MessageActionAPI {
     _ request: MessageActionRequest<Custom>,
     completion: ((Result<ChatMessageAction<Custom>, Error>) -> Void)?
   ) {
-    removeMessageActions(
+    pubnub.removeMessageActions(
       channel: request.messageAction.pubnubChannelId,
       message: request.messageAction.messageTimetoken,
       action: request.messageAction.actionTimetoken,

@@ -32,36 +32,6 @@ import PubNubMembership
 import PubNubUser
 import PubNubSpace
 
-struct MemberMockCustom: MemberCustomData {
-  var location: String = "here"
-  var isHidden: Bool = false
-  
-  init() {
-    self.init(location: nil, isHidden: nil)
-  }
-  
-  init(
-    location: String? = nil,
-    isHidden: Bool? = nil
-  ) {
-    self.location = location ?? "here"
-    self.isHidden = isHidden ?? false
-  }
-  
-  init(flatJSON: [String : JSONCodableScalar]) {
-    self.init(
-      location: flatJSON["location"]?.stringOptional,
-      isHidden: flatJSON["isHidden"]?.boolOptional
-    )
-  }
-}
-
-struct ChatMockCustom: ChatCustomData {
-  typealias User = UserMockCustom
-  typealias Channel = ChannelMockCustom
-  typealias Member = MemberMockCustom
-}
-
 class ChatMemberTests: XCTestCase {
   func testMember_Codable() throws {
     let user = ChatUser<ChatMockCustom.User>(id: "Test User ID")
@@ -198,6 +168,61 @@ class ChatMemberTests: XCTestCase {
     )
 
     XCTAssertEqual(member, ChatMember<ChatMockCustom>(pubnub: membership))
+  }
+
+  func testMemberPatcher_patch_shouldUpdate_false() {
+    let membershipPatch = PubNubMembership.Patcher(
+      userId: "patch-userId", spaceId: "patch-spaceId",
+      updated: .distantPast, eTag: "patch-eTag", status: .some("newStatus")
+    )
+    let memberPatch = ChatMember<ChatMockCustom>.Patcher(pubnub: membershipPatch)
+    
+    let member = ChatMember<ChatMockCustom>(
+      channel: .init(id: "patch-spaceId"),
+      user: .init(id: "patch-userId"),
+      status: "testStatus",
+      updated: .distantPast,
+      eTag: "testETag",
+      custom: ChatMockCustom.Member(location: "testLoc", isHidden: true)
+    )
+    
+    XCTAssertEqual(member, member.patch(memberPatch))
+  }
+  
+  func testMemberPatcher_patch_shouldUpdate_true() {
+    let member = ChatMember<ChatMockCustom>(
+      channel: .init(id: "patch-spaceId"),
+      user: .init(id: "patch-userId"),
+      status: "testStatus",
+      updated: .distantPast,
+      eTag: "testETag",
+      custom: ChatMockCustom.Member(location: "testLoc", isHidden: true)
+    )
+    
+    let patchedMember = ChatMember<ChatMockCustom>(
+      channel: .init(id: "patch-spaceId"),
+      user: .init(id: "patch-userId"),
+      status: "patchedStatus",
+      updated: .distantFuture,
+      eTag: "patchedETag",
+      custom: ChatMockCustom.Member(location: "patchedLoc", isHidden: false)
+    )
+    
+    let membershipPatch = PubNubMembership.Patcher(
+      userId: patchedMember.pubnubUserId,
+      spaceId: patchedMember.pubnubChannelId,
+      updated: patchedMember.updated  ?? .distantPast,
+      eTag: patchedMember.eTag ?? "",
+      status: .some(patchedMember.status ?? ""),
+      custom: .some(patchedMember.custom)
+    )
+    let memberPatch = ChatMember<ChatMockCustom>.Patcher(pubnub: membershipPatch)
+    
+    XCTAssertEqual(memberPatch.userId, patchedMember.pubnubUserId)
+    XCTAssertEqual(memberPatch.channelId, patchedMember.pubnubChannelId)
+    XCTAssertEqual(memberPatch.updated, patchedMember.updated)
+    XCTAssertEqual(memberPatch.eTag, patchedMember.eTag)
+    XCTAssertEqual(patchedMember, member.patch(memberPatch))
   }
 
   func testPresenceChange_init() {

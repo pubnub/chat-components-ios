@@ -40,6 +40,8 @@
 		352A5D24270B953F00B521A9 /* MemberListComponentTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 352A5D23270B953F00B521A9 /* MemberListComponentTheme.swift */; };
 		352A5D26270B954900B521A9 /* MessageListComponentTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 352A5D25270B954900B521A9 /* MessageListComponentTheme.swift */; };
 		352FA63726F7F5C20074D75C /* MessageListComponentViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 352FA63626F7F5C20074D75C /* MessageListComponentViewModel.swift */; };
+		353E75FE285D2E4E00451EC8 /* Tests+ChannelAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 353E75FD285D2E4E00451EC8 /* Tests+ChannelAPI.swift */; };
+		353E7600285D30C200451EC8 /* Tests+MemberAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 353E75FF285D30C200451EC8 /* Tests+MemberAPI.swift */; };
 		3544C60C268939510047DBB7 /* KeychainWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3544C60B268939510047DBB7 /* KeychainWrapper.swift */; };
 		3544C60E268A14F50047DBB7 /* NSSortDescriptor+PubNubChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3544C60D268A14F50047DBB7 /* NSSortDescriptor+PubNubChat.swift */; };
 		3544C611268AF0FB0047DBB7 /* UIKit+Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3544C60F268AF0B40047DBB7 /* UIKit+Components.swift */; };
@@ -55,10 +57,6 @@
 		357F2243272A388000A6FBF7 /* MessageListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 357F2242272A388000A6FBF7 /* MessageListViewController.swift */; };
 		3583AE5626F996C6006D74A3 /* TypingIndicatorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3583AE5526F996C6006D74A3 /* TypingIndicatorService.swift */; };
 		3583AE5A26FBD556006D74A3 /* DiffableData+PubNubChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3583AE5926FBD556006D74A3 /* DiffableData+PubNubChat.swift */; };
-		358B8982284D404B00DB0F3D /* PubNub in Frameworks */ = {isa = PBXBuildFile; productRef = 358B8981284D404B00DB0F3D /* PubNub */; };
-		358B8984284D404B00DB0F3D /* PubNubMembership in Frameworks */ = {isa = PBXBuildFile; productRef = 358B8983284D404B00DB0F3D /* PubNubMembership */; };
-		358B8986284D404B00DB0F3D /* PubNubSpace in Frameworks */ = {isa = PBXBuildFile; productRef = 358B8985284D404B00DB0F3D /* PubNubSpace */; };
-		358B8988284D404B00DB0F3D /* PubNubUser in Frameworks */ = {isa = PBXBuildFile; productRef = 358B8987284D404B00DB0F3D /* PubNubUser */; };
 		3598B1D32644A2D000878118 /* Bundle+PubNubChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3598B1D22644A2D000878118 /* Bundle+PubNubChat.swift */; };
 		3598B1E22644B0AE00878118 /* NSPersistentStoreDescription+PubNubChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3598B1E12644B0AE00878118 /* NSPersistentStoreDescription+PubNubChat.swift */; };
 		3598B27D2645DCB000878118 /* Tests+ChatChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3598B27C2645DCB000878118 /* Tests+ChatChannel.swift */; };
@@ -79,6 +77,10 @@
 		35B3B5BA2656C21C00473120 /* ImageComponentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B3B5B92656C21C00473120 /* ImageComponentView.swift */; };
 		35B418BB26DE82D100DB49A7 /* LabelComponentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B418BA26DE82D100DB49A7 /* LabelComponentView.swift */; };
 		35C1A75C267AA9E10087241C /* PubNub+PubNubChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35C1A75B267AA9E10087241C /* PubNub+PubNubChat.swift */; };
+		35CA8FEE285A5192007C2F65 /* PubNubMembership in Frameworks */ = {isa = PBXBuildFile; productRef = 35CA8FED285A5191007C2F65 /* PubNubMembership */; };
+		35CA9033285BC1AD007C2F65 /* Tests+UserAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35CA9031285BC188007C2F65 /* Tests+UserAPI.swift */; };
+		35CA9035285BC1D1007C2F65 /* TestCustoms.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35CA9034285BC1D1007C2F65 /* TestCustoms.swift */; };
+		35CA9037285BC976007C2F65 /* MockPubNubAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35CA9036285BC976007C2F65 /* MockPubNubAPI.swift */; };
 		35ECD9B427148198000E17AF /* ENV.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35ECD9B327148198000E17AF /* ENV.swift */; };
 		35F436BC26FEB0CB00033720 /* ManagedEntityListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35F436BA26FEB08500033720 /* ManagedEntityListViewModel.swift */; };
 		35F436BE2700F81800033720 /* ChannelListComponentViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35F436BD2700F81800033720 /* ChannelListComponentViewModel.swift */; };
@@ -159,6 +161,8 @@
 		352A5D25270B954900B521A9 /* MessageListComponentTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageListComponentTheme.swift; sourceTree = "<group>"; };
 		352FA63426F7AC740074D75C /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/iOSSupport/System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		352FA63626F7F5C20074D75C /* MessageListComponentViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageListComponentViewModel.swift; sourceTree = "<group>"; };
+		353E75FD285D2E4E00451EC8 /* Tests+ChannelAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tests+ChannelAPI.swift"; sourceTree = "<group>"; };
+		353E75FF285D30C200451EC8 /* Tests+MemberAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tests+MemberAPI.swift"; sourceTree = "<group>"; };
 		3544C60B268939510047DBB7 /* KeychainWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainWrapper.swift; sourceTree = "<group>"; };
 		3544C60D268A14F50047DBB7 /* NSSortDescriptor+PubNubChat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSSortDescriptor+PubNubChat.swift"; sourceTree = "<group>"; };
 		3544C60F268AF0B40047DBB7 /* UIKit+Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIKit+Components.swift"; sourceTree = "<group>"; };
@@ -195,6 +199,9 @@
 		35B3B5B92656C21C00473120 /* ImageComponentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageComponentView.swift; sourceTree = "<group>"; };
 		35B418BA26DE82D100DB49A7 /* LabelComponentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabelComponentView.swift; sourceTree = "<group>"; };
 		35C1A75B267AA9E10087241C /* PubNub+PubNubChat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PubNub+PubNubChat.swift"; sourceTree = "<group>"; };
+		35CA9031285BC188007C2F65 /* Tests+UserAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tests+UserAPI.swift"; sourceTree = "<group>"; };
+		35CA9034285BC1D1007C2F65 /* TestCustoms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestCustoms.swift; sourceTree = "<group>"; };
+		35CA9036285BC976007C2F65 /* MockPubNubAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockPubNubAPI.swift; sourceTree = "<group>"; };
 		35ECD9B327148198000E17AF /* ENV.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ENV.swift; sourceTree = "<group>"; };
 		35F436BA26FEB08500033720 /* ManagedEntityListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedEntityListViewModel.swift; sourceTree = "<group>"; };
 		35F436BD2700F81800033720 /* ChannelListComponentViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelListComponentViewModel.swift; sourceTree = "<group>"; };
@@ -213,10 +220,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				358B8984284D404B00DB0F3D /* PubNubMembership in Frameworks */,
-				358B8988284D404B00DB0F3D /* PubNubUser in Frameworks */,
-				358B8986284D404B00DB0F3D /* PubNubSpace in Frameworks */,
-				358B8982284D404B00DB0F3D /* PubNub in Frameworks */,
+				35CA8FEE285A5192007C2F65 /* PubNubMembership in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -307,6 +311,9 @@
 		350AC7092643493C00C3D323 /* PubNubChatTests */ = {
 			isa = PBXGroup;
 			children = (
+				35CA9034285BC1D1007C2F65 /* TestCustoms.swift */,
+				35CA9036285BC976007C2F65 /* MockPubNubAPI.swift */,
+				35CA9030285BC176007C2F65 /* APIs */,
 				3598B23D2645DBB500878118 /* Models */,
 				350AC70C2643493C00C3D323 /* Info.plist */,
 			);
@@ -556,6 +563,16 @@
 			path = "Channel List";
 			sourceTree = "<group>";
 		};
+		35CA9030285BC176007C2F65 /* APIs */ = {
+			isa = PBXGroup;
+			children = (
+				35CA9031285BC188007C2F65 /* Tests+UserAPI.swift */,
+				353E75FD285D2E4E00451EC8 /* Tests+ChannelAPI.swift */,
+				353E75FF285D30C200451EC8 /* Tests+MemberAPI.swift */,
+			);
+			path = APIs;
+			sourceTree = "<group>";
+		};
 		35F436D227069C3D00033720 /* CollectionView Layout */ = {
 			isa = PBXGroup;
 			children = (
@@ -637,10 +654,7 @@
 			);
 			name = PubNubChat;
 			packageProductDependencies = (
-				358B8981284D404B00DB0F3D /* PubNub */,
-				358B8983284D404B00DB0F3D /* PubNubMembership */,
-				358B8985284D404B00DB0F3D /* PubNubSpace */,
-				358B8987284D404B00DB0F3D /* PubNubUser */,
+				35CA8FED285A5191007C2F65 /* PubNubMembership */,
 			);
 			productName = PubNubChat;
 			productReference = 350AC6FD2643493C00C3D323 /* PubNubChat.framework */;
@@ -744,7 +758,7 @@
 				35B3B5952655D61300473120 /* XCRemoteSwiftPackageReference "Kingfisher" */,
 				35F46DF926C1D8DC0024FB67 /* XCRemoteSwiftPackageReference "ChatLayout" */,
 				35F46DFC26C1D90B0024FB67 /* XCRemoteSwiftPackageReference "InputBarAccessoryView" */,
-				358B8980284D404B00DB0F3D /* XCRemoteSwiftPackageReference "swift" */,
+				35CA8FEC285A5191007C2F65 /* XCRemoteSwiftPackageReference "swift" */,
 			);
 			productRefGroup = 350AC6D52643464F00C3D323 /* Products */;
 			projectDirPath = "";
@@ -840,7 +854,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				3598B28B2645DCCC00878118 /* Tests+ChatMember.swift in Sources */,
+				35CA9035285BC1D1007C2F65 /* TestCustoms.swift in Sources */,
+				353E75FE285D2E4E00451EC8 /* Tests+ChannelAPI.swift in Sources */,
+				35CA9033285BC1AD007C2F65 /* Tests+UserAPI.swift in Sources */,
+				353E7600285D30C200451EC8 /* Tests+MemberAPI.swift in Sources */,
 				3598B27D2645DCB000878118 /* Tests+ChatChannel.swift in Sources */,
+				35CA9037285BC976007C2F65 /* MockPubNubAPI.swift in Sources */,
 				3598B2A72645DCF100878118 /* Tests+ChatUser.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1642,20 +1661,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		358B8980284D404B00DB0F3D /* XCRemoteSwiftPackageReference "swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/pubnub/swift";
-			requirement = {
-				branch = "features/CLEN-351_VSP-modules";
-				kind = branch;
-			};
-		};
 		35B3B5952655D61300473120 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 6.3.0;
+			};
+		};
+		35CA8FEC285A5191007C2F65 /* XCRemoteSwiftPackageReference "swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pubnub/swift";
+			requirement = {
+				branch = "features/CLEN-351_VSP-modules";
+				kind = branch;
 			};
 		};
 		35F46DF926C1D8DC0024FB67 /* XCRemoteSwiftPackageReference "ChatLayout" */ = {
@@ -1682,25 +1701,10 @@
 			package = 35B3B5952655D61300473120 /* XCRemoteSwiftPackageReference "Kingfisher" */;
 			productName = Kingfisher;
 		};
-		358B8981284D404B00DB0F3D /* PubNub */ = {
+		35CA8FED285A5191007C2F65 /* PubNubMembership */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 358B8980284D404B00DB0F3D /* XCRemoteSwiftPackageReference "swift" */;
-			productName = PubNub;
-		};
-		358B8983284D404B00DB0F3D /* PubNubMembership */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 358B8980284D404B00DB0F3D /* XCRemoteSwiftPackageReference "swift" */;
+			package = 35CA8FEC285A5191007C2F65 /* XCRemoteSwiftPackageReference "swift" */;
 			productName = PubNubMembership;
-		};
-		358B8985284D404B00DB0F3D /* PubNubSpace */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 358B8980284D404B00DB0F3D /* XCRemoteSwiftPackageReference "swift" */;
-			productName = PubNubSpace;
-		};
-		358B8987284D404B00DB0F3D /* PubNubUser */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 358B8980284D404B00DB0F3D /* XCRemoteSwiftPackageReference "swift" */;
-			productName = PubNubUser;
 		};
 		35F46DFA26C1D8DC0024FB67 /* ChatLayout */ = {
 			isa = XCSwiftPackageProductDependency;

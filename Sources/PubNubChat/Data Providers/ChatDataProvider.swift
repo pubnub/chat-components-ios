@@ -248,6 +248,23 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
       })
     }
   }
+
+  public func patch(
+    member patch: ChatMember<ModelData>.Patcher,
+    completion: ((Error?) -> Void)? = nil
+  ) {
+    datastoreQueue.async { [weak self] in
+      self?.provider.coreDataContainer.write({ context in
+        try ManagedEntities.Member.patch(
+          usingPatch: patch, into: context
+        )
+      }, errorHandler: { error in
+        PubNub.log.error("Error patching channel \(error)")
+        
+        DispatchQueue.main.async { completion?(error) }
+      })
+    }
+  }
   
   // MARK: Remove Model Data
   
@@ -620,7 +637,10 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     _ request: ChatChannelRequest<ModelData.Channel>,
     completion: ((Result<Void, Error>) -> Void)?
   ) {
-    provider.pubnubProvider.remove(channel: request) { [weak self] result in
+    provider.pubnubProvider.remove(
+      channel: request,
+      into: ModelData.Channel.self
+    ) { [weak self] result in
       switch result {
       case .success:
         self?.removeStoredChannel(channelId: request.channel.id) { error in
@@ -743,7 +763,10 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     _ request: ChatUserRequest<ModelData.User>,
     completion: ((Result<Void, Error>) -> Void)?
   ) {
-    provider.pubnubProvider.remove(user: request) { [weak self] result in
+    provider.pubnubProvider.remove(
+      user: request,
+      into: ModelData.User.self
+    ) { [weak self] result in
       switch result {
       case .success:
         self?.removeStoredUser(userId: request.user.id) { error in

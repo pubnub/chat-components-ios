@@ -30,30 +30,6 @@ import XCTest
 @testable import PubNub
 import PubNubUser
 
-struct UserMockCustom: UserCustomData {
-  var location: String = "here"
-  var isHidden: Bool = false
-  
-  init() {
-    self.init(location: nil, isHidden: nil)
-  }
-  
-  init(
-    location: String? = nil,
-    isHidden: Bool? = nil
-  ) {
-    self.location = location ?? "here"
-    self.isHidden = isHidden ?? false
-  }
-  
-  init(flatJSON: [String : JSONCodableScalar]) {
-    self.init(
-      location: flatJSON["location"]?.stringOptional,
-      isHidden: flatJSON["isHidden"]?.boolOptional
-    )
-  }
-}
-
 class ChatUserTests: XCTestCase {
   func testUser_Codable() throws {
     let user = ChatUser(

@@ -156,7 +156,13 @@ public protocol ManagedMemberEntity: ManagedEntity {
     forceWrite: Bool,
     into context: NSManagedObjectContext
   ) throws -> Self
-  
+
+  @discardableResult
+  static func patch<Custom: ChatCustomData>(
+    usingPatch patcher: ChatMember<Custom>.Patcher,
+    into context: NSManagedObjectContext
+  ) throws -> Self
+
   @discardableResult
   static func remove(
     channelId: String,

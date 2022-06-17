@@ -137,7 +137,23 @@ extension PubNubManagedMember: ManagedMemberEntity {
       managed.channel = managedChannel
       managed.user = managedUser
     }
+  }
 
+  @discardableResult
+  public static func patch<Custom: ChatCustomData>(
+    usingPatch patcher: ChatMember<Custom>.Patcher,
+    into context: NSManagedObjectContext
+  ) throws -> PubNubManagedMember {
+    if let existingMember = try? context.fetch(
+      memberBy(pubnubChannelId: patcher.channelId, pubnubUserId: patcher.userId)
+    ).first {
+      let chatMember = existingMember.convert().patch(patcher)
+      try existingMember.update(from: chatMember)
+      
+      return existingMember
+    } else {
+      throw ChatError.missingRequiredData
+    }
   }
   
   func update<Custom>(

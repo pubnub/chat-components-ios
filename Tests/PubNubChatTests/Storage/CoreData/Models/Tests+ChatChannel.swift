@@ -30,50 +30,6 @@ import XCTest
 @testable import PubNub
 import PubNubSpace
 
-struct ChannelMockCustom: ChannelCustomData {
-  var location: String = "here"
-  var isHidden: Bool = false
-
-  init() {
-    self.init(location: nil, isHidden: nil)
-  }
-  
-  init(
-    location: String? = nil,
-    isHidden: Bool? = nil
-  ) {
-    self.location = location ?? "here"
-    self.isHidden = isHidden ?? false
-  }
-
-  init(flatJSON: [String : JSONCodableScalar]) {
-    self.init(
-      location: flatJSON["location"]?.stringOptional,
-      isHidden: flatJSON["isHidden"]?.boolOptional
-    )
-  }
-}
-
-struct ChannelDuplicateMockCustom: ChannelCustomData {
-  var profileUrl: URL?
-  
-  init() {
-    self.init(profileUrl: nil)
-  }
-  
-  init(
-    profileUrl: URL? = nil
-  ) {
-    self.profileUrl = profileUrl
-  }
-  
-  init(flatJSON: [String : JSONCodableScalar]) {
-    self.init(
-      profileUrl: flatJSON["profileUrl"]?.urlOptional
-    )
-  }
-}
-
 class ChatChannelTests: XCTestCase {
   func testChannel_Codable() throws {
     let channel = ChatChannel(

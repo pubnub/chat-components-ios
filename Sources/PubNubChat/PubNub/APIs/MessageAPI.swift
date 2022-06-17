@@ -89,13 +89,13 @@ extension MessageAPI {
 
 // MARK: - PubNub Ext
 
-extension PubNub: MessageAPI {
+extension PubNubProvider {
   public func fetchMessageHistory<Custom: ChatCustomData>(
     _ request: MessageHistoryRequest,
     into: Custom.Type,
     completion: ((Result<(messageByChannelId: [String: [ChatMessage<Custom>]], next: MessageHistoryRequest?), Error>) -> Void)?
   ) {
-    fetchMessageHistory(
+    pubnub.fetchMessageHistory(
       for: request.channels,
       includeActions: request.actionsInResponse,
       includeMeta: request.metaInResponse,
@@ -118,14 +118,14 @@ extension PubNub: MessageAPI {
     payload: JSONCodable,
     completion: ((Result<Timetoken, Error>) -> Void)?
   ) {
-    signal(channel: channelId, message: payload, completion: completion)
+    pubnub.signal(channel: channelId, message: payload, completion: completion)
   }
 
   public func sendMessage<Custom: ChatCustomData>(
     _ request: SendMessageRequest<Custom>,
     completion: ((Result<ChatMessage<Custom>, Error>) -> Void)?
   ) {
-    publish(
+    pubnub.publish(
       channel: request.message.pubnubChannelId,
       message: request.message.content,
       shouldStore: request.storeInHistory,

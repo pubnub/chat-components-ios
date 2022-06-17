@@ -41,7 +41,7 @@ open class ChatProvider<ModelData, ManagedEntities> where ModelData: ChatCustomD
   public var pubnubConfig: PubNubConfiguration {
     return pubnubProvider.configuration
   }
-  public var pubnubProvider: PubNubAPI {
+  public var pubnubProvider: PubNubProvider {
     didSet {
       addDefaultPubNubListeners()
     }
@@ -52,7 +52,7 @@ open class ChatProvider<ModelData, ManagedEntities> where ModelData: ChatCustomD
   }()
 
   public convenience init(
-    pubnubProvider: PubNub,
+    pubnubProvider: PubNubProvider,
     datastoreConfiguration: DatastoreConfiguration = .pubnubDefault,
     cacheProvider: CacheProvider = UserDefaults.standard
   ) {
@@ -86,7 +86,7 @@ open class ChatProvider<ModelData, ManagedEntities> where ModelData: ChatCustomD
   }
   
   public init(
-    pubnubProvider: PubNub,
+    pubnubProvider: PubNubProvider,
     coreDataProvider: CoreDataProvider,
     cacheProvider: CacheProvider
   ) {

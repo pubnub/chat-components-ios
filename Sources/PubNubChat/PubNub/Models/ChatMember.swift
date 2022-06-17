@@ -219,6 +219,39 @@ extension ChatMember {
       custom: Custom.Member(flatJSON: pubnub.custom?.flatJSON)
     )
   }
+
+  public struct Patcher {
+    public var pubnub: PubNubMembership.Patcher
+    
+    public var userId: String { pubnub.userId }
+    public var channelId: String { pubnub.spaceId }
+
+    public var eTag: String { pubnub.eTag }
+    public var updated: Date { pubnub.updated }
+    
+    public init(pubnub: PubNubMembership.Patcher) {
+      self.pubnub = pubnub
+    }
+  }
+  
+  public func patch(_ patcher: Patcher) -> ChatMember<Custom> {
+    guard patcher.pubnub.shouldUpdate(
+      userId: pubnubUserId, spaceId: pubnubChannelId, eTag: eTag, lastUpdated: updated
+    ) else {
+      return self
+    }
+    
+    var mutableSelf = self
+    
+    patcher.pubnub.apply(
+      status: { mutableSelf.status = $0 },
+      custom: { mutableSelf.custom = CustomProperties(flatJSON: $0?.flatJSON) },
+      updated: { mutableSelf.updated = $0 },
+      eTag: { mutableSelf.eTag = $0 }
+    )
+    
+    return mutableSelf
+  }
 }
 
 // MARK: - Presence

@@ -34,31 +34,59 @@ import PubNubSpace
 import PubNubMembership
 
 // MARK: - Protocol Wrapper
-public typealias PubNubObjectAPI = PubNubUserAPI & PubNubChannelAPI & PubNubMemberAPI
-public typealias PubNubAPI = SubscribeAPI & PubNubObjectAPI & MessageAPI & MessageActionAPI & PresenceAPI & PubNubConfigurable & PubNubBase
+public protocol PubNubProvider: SubscribeAPI, PubNubUserAPI, PubNubChannelAPI, PubNubMemberAPI, MessageAPI, MessageActionAPI, PresenceAPI, PubNubConfigurable, PubNubUserBase, PubNubSpaceBase, PubNubMembershipBase {}
+
+extension PubNub: PubNubProvider {}
 
 // MARK: - Configuration Provider
+
 public protocol PubNubConfigurable {
   var configuration: PubNubConfiguration { get }
   mutating func setConsumer(identifier: String, value: String)
 }
 
-public protocol PubNubBase {
-  var pubnub: PubNub? { get }
-}
+public extension PubNubProvider {
+  var configuration: PubNubConfiguration {
+    return pubnub.configuration
+  }
 
-extension PubNub: PubNubConfigurable {}
-
-extension PubNub: PubNubBase {
-  public var pubnub: PubNub? {
-    return self
+  mutating func setConsumer(identifier: String, value: String) {
+    pubnub.setConsumer(identifier: identifier, value: value)
   }
 }
 
-// MARK: - KeySet Provider
-public protocol PubNubKeySetProvider {
-  var subscribeKey: String { get set }
-  var publishKey: String? { get set }
+// MARK: - Base Providers
+
+public protocol PubNubBase {
+  var pubnub: PubNub { get }
+}
+
+public protocol PubNubUserBase: PubNubBase {
+  var userInterface: PubNubUserInterface { get }
+}
+public protocol PubNubSpaceBase: PubNubBase {
+  var spaceInterface: PubNubSpaceInterface { get }
+}
+public protocol PubNubMembershipBase: PubNubBase {
+  var membershipInterface: PubNubMembershipInterface { get }
+}
+
+extension PubNub: PubNubUserBase, PubNubSpaceBase, PubNubMembershipBase {
+  public var userInterface: PubNubUserInterface {
+    return self
+  }
+  
+  public var spaceInterface: PubNubSpaceInterface {
+    return self
+  }
+  
+  public var membershipInterface: PubNubMembershipInterface {
+    return self
+  }
+  
+  public var pubnub: PubNub {
+    return self
+  }
 }
 
 // MARK: Subscribe/Data Listener
@@ -107,13 +135,11 @@ extension ChatDataProvider {
     membershipListener.didReceiveMembershipEvents  = { [weak self] events in
       guard let self = self else { return }
 
-      var members = [ChatMember<ModelData>]()
-
       for event in events {
         switch event {
-        case .membershipUpdated(let membership):
-          PubNub.log.debug("Listener: Membership Updated \(membership)")
-          members.append(ChatMember(pubnub: membership))
+        case .membershipUpdated(let patcher):
+          PubNub.log.debug("Listener: Membership Updated \(patcher)")
+          self.patch(member: .init(pubnub: patcher))
           
         case .membershipRemoved(let membership):
           PubNub.log.debug("Listener: Membership Removed \(membership)")
@@ -122,8 +148,6 @@ extension ChatDataProvider {
           )
         }
       }
-      
-      self.load(members: members)
     }
      
     coreListener.didReceiveBatchSubscription = { [weak self] events in
@@ -172,7 +196,6 @@ extension ChatDataProvider {
             )
             presenceChanges.append(contentsOf: memberships)
           }
-
         case .messageActionAdded(let messageAction):
           PubNub.log.debug("Listener: Message Action added \(messageAction)")
           do {

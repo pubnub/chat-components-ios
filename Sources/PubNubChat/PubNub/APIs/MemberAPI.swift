@@ -130,14 +130,14 @@ extension PubNubMemberAPI {
 
 // MARK: - PubNub Ext
 
-extension PubNub: PubNubMemberAPI {
+extension PubNubProvider {
 
   public func fetch<Custom: ChatCustomData>(
     userMembers request: UserMemberFetchRequest,
     into: Custom.Type,
     completion: @escaping ((Result<(members: [ChatMember<Custom>], next: UserMemberFetchRequest?), Error>) -> Void)
   ) {
-    fetchMemberships(
+    membershipInterface.fetchMemberships(
       spaceId: request.channelId,
       includeCustom: request.includeCustom,
       includeUserFields: request.includeUserFields,
@@ -158,7 +158,7 @@ extension PubNub: PubNubMemberAPI {
     into: Custom.Type,
     completion: @escaping ((Result<(members: [ChatMember<Custom>], next: ChannelMemberFetchRequest?), Error>) -> Void)
   ) {
-    fetchMemberships(
+    membershipInterface.fetchMemberships(
       userId: request.userId,
       includeCustom: request.includeCustom,
       includeSpaceFields: request.includeChannelFields,
@@ -187,7 +187,7 @@ extension PubNub: PubNubMemberAPI {
         completion?(.failure(ChatError.missingRequiredData))
         return
       }
-      addMemberships(
+      membershipInterface.addMemberships(
         spaces: channels,
         to: userId,
         requestConfig: .init(customConfiguration: request.config),
@@ -199,7 +199,7 @@ extension PubNub: PubNubMemberAPI {
         completion?(.failure(ChatError.missingRequiredData))
         return
       }
-      addMemberships(
+      membershipInterface.addMemberships(
         users: users,
         to: channelId,
         requestConfig: .init(customConfiguration: request.config),
@@ -221,7 +221,7 @@ extension PubNub: PubNubMemberAPI {
         completion?(.failure(ChatError.missingRequiredData))
         return
       }
-      updateMemberships(
+      membershipInterface.updateMemberships(
         spaces: channels,
         on: userId,
         requestConfig: .init(customConfiguration: request.config),
@@ -233,7 +233,7 @@ extension PubNub: PubNubMemberAPI {
         completion?(.failure(ChatError.missingRequiredData))
         return
       }
-      updateMemberships(
+      membershipInterface.updateMemberships(
         users: users,
         on: channelId,
         requestConfig: .init(customConfiguration: request.config),
@@ -254,7 +254,7 @@ extension PubNub: PubNubMemberAPI {
         completion?(.failure(ChatError.missingRequiredData))
         return
       }
-      removeMemberships(
+      membershipInterface.removeMemberships(
         spaceIds: channels.map { $0.space.id },
         from: userId,
         requestConfig: .init(customConfiguration: request.config),
@@ -266,7 +266,7 @@ extension PubNub: PubNubMemberAPI {
         completion?(.failure(ChatError.missingRequiredData))
         return
       }
-      removeMemberships(
+      membershipInterface.removeMemberships(
         userIds: users.map { $0.user.id },
         from: channelId,
         requestConfig: .init(customConfiguration: request.config),
@@ -278,7 +278,7 @@ extension PubNub: PubNubMemberAPI {
 
 // MARK: - Requests
 
-public struct UserMemberFetchRequest {
+public struct UserMemberFetchRequest: Hashable {
   public let requestId: String = UUID().uuidString
   public var channelId: String
   public var includeCustom: Bool
@@ -287,7 +287,7 @@ public struct UserMemberFetchRequest {
   public var limit: Int?
   public var sort: [PubNub.UserMembershipSort]
   public var filter: String?
-  public var page: PubNubHashedPage?
+  public var page: PubNub.Page?
   
   public var config: PubNubConfiguration?
 
@@ -299,7 +299,7 @@ public struct UserMemberFetchRequest {
     filter: String? = nil,
     sort: [PubNub.UserMembershipSort] = [],
     limit: Int? = 100,
-    page: PubNubHashedPage? = nil,
+    page: PubNub.Page? = nil,
     config: PubNubConfiguration? = nil
   ) {
     self.channelId = channelId
@@ -319,18 +319,12 @@ public struct UserMemberFetchRequest {
     }
     
     var request = self
-    request.page = page
+    request.page = .init(next: page.next, prev: page.prev, totalCount: page.totalCount)
     return request
   }
 }
 
-extension UserMemberFetchRequest: Equatable {
-  public static func == (lhs: UserMemberFetchRequest, rhs: UserMemberFetchRequest) -> Bool {
-    return lhs.requestId == rhs.requestId
-  }
-}
-
-public struct ChannelMemberFetchRequest {
+public struct ChannelMemberFetchRequest: Hashable {
   public let requestId: String = UUID().uuidString
   public var userId: String
   public var includeCustom: Bool
@@ -339,7 +333,7 @@ public struct ChannelMemberFetchRequest {
   public var limit: Int?
   public var sort: [PubNub.SpaceMembershipSort]
   public var filter: String?
-  public var page: PubNubHashedPage?
+  public var page: PubNub.Page?
   
   public var config: PubNubConfiguration?
   
@@ -351,7 +345,7 @@ public struct ChannelMemberFetchRequest {
     filter: String? = nil,
     sort: [PubNub.SpaceMembershipSort] = [],
     limit: Int? = 100,
-    page: PubNubHashedPage? = nil,
+    page: PubNub.Page? = nil,
     config: PubNubConfiguration? = nil
   ) {
     self.userId = userId
@@ -371,18 +365,12 @@ public struct ChannelMemberFetchRequest {
     }
     
     var request = self
-    request.page = page
+    request.page = .init(next: page.next, prev: page.prev, totalCount: page.totalCount)
     return request
   }
 }
 
-extension ChannelMemberFetchRequest: Equatable {
-  public static func == (lhs: ChannelMemberFetchRequest, rhs: ChannelMemberFetchRequest) -> Bool {
-    return lhs.requestId == rhs.requestId
-  }
-}
-
-public struct MembersModifyRequest<Custom: ChatCustomData> {
+public struct MembersModifyRequest<Custom: ChatCustomData>: Hashable {
 
   public enum ModificationDirection {
     case modifyChannelsByUser
@@ -420,11 +408,5 @@ public struct MembersModifyRequest<Custom: ChatCustomData> {
     }
     
     return (channelId, members.map { .init(userId: $0.pubnubUserId, status: $0.status, custom: $0.custom) })
-  }
-}
-
-extension MembersModifyRequest: Equatable {
-  public static func == (lhs: MembersModifyRequest, rhs: MembersModifyRequest) -> Bool {
-    return lhs.requestId == rhs.requestId
   }
 }

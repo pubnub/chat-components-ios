@@ -30,38 +30,47 @@ import Foundation
 import PubNub
 import PubNubUser
 
+/// The default ``ChatUser`` class not containing any Custom Properties
 public typealias PubNubChatUser = ChatUser<VoidCustomData>
 
+/// The generic `User` class is used whenever a Swift PubNub API requires a `User` object.
 @dynamicMemberLookup
 public struct ChatUser<Custom: UserCustomData>: Identifiable, Hashable, ServerSynced {
   
+  /// Custom properties that can be stored alongside the server specified User fields
   public struct CustomProperties: Hashable {
     // PubNub owned Custom Property accessed via a dynamicMember property
     // User doesn't have PubNub defaults, if some are added
     // then an additional dynamicMember should be added for access
     
-    // User owned Custom Property accessed via a dynamicMember property
+    /// Developer owned generic UserCustomData
+    ///  Its properties can be accessed directly from the ChatUser instance
     public var custom: Custom
     
     public init(custom: Custom) {
       self.custom = custom
     }
   }
-  
+
+  /// Unique identifier for the User.
   public let id: String
+  /// Name of the User.
   public var name: String?
-
+  /// Functional type of the User.
   public var type: String
+  /// The current state of the User
   public var status: String?
-  
+  /// The external identifier for the User
   public var externalId: String?
+  /// The profile URL for the User
   public var avatarURL: URL?
+  /// The email address of the User
   public var email: String?
-  
+  /// Last time the remote object was changed.
   public var updated: Date?
+  /// Caching value that changes whenever the remote object changes.
   public var eTag: String?
-
-  // `Custom` data required by PubNubCHat
+  /// Custom object that can be stored with the User.
   public var custom: CustomProperties
   
   public init(
@@ -90,6 +99,10 @@ public struct ChatUser<Custom: UserCustomData>: Identifiable, Hashable, ServerSy
   
   // MARK: Dynamic Member Lookup
   
+  // MARK: Dynamic Member Lookup
+  /// Returns a binding to the resulting value of a given key path.
+  /// - Parameter dynamicMember: A key path to a specific resulting value.
+  /// - Returns: A new binding.
   public subscript<T>(dynamicMember keyPath: WritableKeyPath<Custom, T>) -> T {
     get { custom.custom[keyPath: keyPath] }
     set { custom.custom[keyPath: keyPath] = newValue }
@@ -162,6 +175,7 @@ extension ChatUser.CustomProperties: Codable {
 // MARK: PubNubUser Extension
 
 extension ChatUser {
+  /// Create a ``ChatUser`` from the provided `PubNubUser`
   public init(pubnub: PubNubUser) {
     self.init(
       id: pubnub.id,
@@ -177,11 +191,15 @@ extension ChatUser {
     )
   }
   
+  /// Object that can be used to apply an update to another ``ChatUser``
   public struct Patcher {
+    /// The underlying PubNubUser Patcher object
     public var pubnub: PubNubUser.Patcher
-    
+    /// The unique identifier of the object that was changed
     public var id: String { pubnub.id }
+    /// The cache identifier of the change
     public var eTag: String { pubnub.eTag }
+    /// The timestamp of the change
     public var updated: Date { pubnub.updated }
     
     public init(pubnub: PubNubUser.Patcher) {
@@ -189,6 +207,9 @@ extension ChatUser {
     }
   }
   
+  /// Apply the patch to this ``ChatUser`` instance
+  /// - Parameter patcher: The patching changeset to apply
+  /// - Returns: The patched ``ChatUser`` with updated fields or a copy of this instance if no change was able to be applied
   public func patch(_ patcher: Patcher) -> ChatUser<Custom> {
     guard patcher.pubnub.shouldUpdate(userId: id, eTag: eTag, lastUpdated: updated) else {
       return self

@@ -32,58 +32,50 @@ import PubNubMembership
 import PubNubSpace
 import PubNubUser
 
+/// The default ``ChatMember`` class not containing any Custom Properties
 public typealias PubNubChatMember = ChatMember<VoidCustomData>
 
-public protocol ServerSynced {
-  var eTag: String? { get set }
-  var updated: Date? { get set }
-}
-
-extension ServerSynced {
-  var isSynced: Bool {
-    return eTag != nil && updated != nil
-  }
-}
-
+/// The generic `Member` class is used whenever a Swift PubNub API requires a `Membership` object.
 @dynamicMemberLookup
 public struct ChatMember<Custom: ChatCustomData>: Identifiable, Hashable, ServerSynced {
   
+  /// Custom properties that can be stored alongside the server specified Member fields
   public struct CustomProperties: Hashable {
     // PubNub owned Custom Property accessed via a dynamicMember property
     // Member doesn't have PubNub defaults, if some are added
     // then an additional dynamicMember should be added for access
 
-    // User owned Custom Property accessed via a dynamicMember property
+    /// Developer owned generic MemberCustomData
+    ///  Its properties can be accessed directly from the ChatMember instance
     public var custom: Custom.Member
     
     public init(custom: Custom.Member) {
       self.custom = custom
     }
   }
-  
-  public var id: String {
-    return "\(pubnubChannelId):\(pubnubUserId)"
-  }
-  public var pubnubChannelId: String {
-    return chatChannel.id
-  }
-  public var pubnubUserId: String {
-    chatUser.id
-  }
-  
-  public var status: String?
 
-  public var updated: Date?
-  public var eTag: String?
-  
-  // Not synced remotely
+  /// Unique identifier for the Member.
+  ///  Computed from the `chatChannel.id` and `chatUser.id`
+  public var id: String {
+    return "\(chatChannel.id):\(chatUser.id)"
+  }
+  /// The associated `ChatChannel` for this Member
+  /// - Important:Only the identifier is used when interacting with PubNub Membership APIs.  To perform operations on this object you will need to call the corresponding PubNub Channel API.
   public var chatChannel: ChatChannel<Custom.Channel>
+  /// The associated `ChatUser` for this Member
+  /// - Important:Only the identifier is used when interacting with PubNub Membership APIs.  To perform operations on this object you will need to call the corresponding PubNub User API.
   public var chatUser: ChatUser<Custom.User>
-  
+  /// The current state of the Member
+  public var status: String?
+  /// Last time the remote object was changed.
+  public var updated: Date?
+  /// Caching value that changes whenever the remote object changes.
+  public var eTag: String?
+  /// Custom object that can be stored with the Channel.
   public var custom: CustomProperties
-  
-  // Presence
-  var presence: MembershipPresence?
+
+  /// Presence data for the ``chatUser`` on the connected ``chatChannel``
+  public var presence: MembershipPresence?
   
   public init(
     channel: ChatChannel<Custom.Channel>,
@@ -91,22 +83,16 @@ public struct ChatMember<Custom: ChatCustomData>: Identifiable, Hashable, Server
     status: String? = nil,
     updated: Date? = nil,
     eTag: String? = nil,
-    isPresent: Bool? = nil,
-    presenceState: JSONCodable? = nil,
+    presence: MembershipPresence? = nil,
     custom: Custom.Member = Custom.Member()
   ) {
     self.chatChannel = channel
     self.chatUser = user
     self.custom = CustomProperties(custom: custom)
-    
     self.status = status
     self.updated = updated
     self.eTag = eTag
-    
-    self.presence = MembershipPresence(
-      isPresent: isPresent,
-      presenceState: presenceState
-    )
+    self.presence = presence
   }
   
   public init(
@@ -115,8 +101,7 @@ public struct ChatMember<Custom: ChatCustomData>: Identifiable, Hashable, Server
     status: String? = nil,
     updated: Date? = nil,
     eTag: String? = nil,
-    isPresent: Bool? = nil,
-    presenceState: JSONCodable? = nil,
+    presence: MembershipPresence? = nil,
     custom: Custom.Member = Custom.Member()
   ) {
     self.init(
@@ -125,26 +110,19 @@ public struct ChatMember<Custom: ChatCustomData>: Identifiable, Hashable, Server
       status: status,
       updated: updated,
       eTag: eTag,
-      isPresent: isPresent,
-      presenceState: presenceState,
+      presence: presence,
       custom: custom
     )
   }
   
   // MARK: Dynamic Member Lookup
   
+  /// Returns a binding to the resulting value of a given key path.
+  /// - Parameter dynamicMember: A key path to a specific resulting value.
+  /// - Returns: A new binding.
   public subscript<T>(dynamicMember keyPath: WritableKeyPath<Custom.Member, T>) -> T {
     get { custom.custom[keyPath: keyPath] }
     set { custom.custom[keyPath: keyPath] = newValue }
-  }
-  
-  public subscript<T>(dynamicMember keyPath: WritableKeyPath<MembershipPresence, T>) -> T? {
-    get { presence?[keyPath: keyPath] }
-    set {
-      if let value = newValue {
-        presence?[keyPath: keyPath] = value
-      }
-    }
   }
 }
 
@@ -209,6 +187,7 @@ extension ChatMember.CustomProperties: Codable {
 // MARK: PubNubMembership Extension
 
 extension ChatMember {
+  /// Create a ``ChatMember`` from the provided `PubNubMembership`
   public init(pubnub: PubNubMembership) {
     self.init(
       channel: ChatChannel<Custom.Channel>(pubnub: pubnub.space),
@@ -220,13 +199,17 @@ extension ChatMember {
     )
   }
 
+  /// Object that can be used to apply an update to another ``ChatMember``
   public struct Patcher {
+    /// The underlying `PubNubMembership` Patcher object
     public var pubnub: PubNubMembership.Patcher
-    
+    /// The unique identifier of the User associated with the Member
     public var userId: String { pubnub.userId }
+    /// The unique identifier of the Channel associated with the Member
     public var channelId: String { pubnub.spaceId }
-
+    /// The cache identifier of the change
     public var eTag: String { pubnub.eTag }
+    /// The timestamp of the change
     public var updated: Date { pubnub.updated }
     
     public init(pubnub: PubNubMembership.Patcher) {
@@ -234,9 +217,12 @@ extension ChatMember {
     }
   }
   
+  /// Apply the patch to this ``ChatMember`` instance
+  /// - Parameter patcher: The patching changeset to apply
+  /// - Returns: The patched ``ChatMember`` with updated fields or a copy of this instance if no change was able to be applied
   public func patch(_ patcher: Patcher) -> ChatMember<Custom> {
     guard patcher.pubnub.shouldUpdate(
-      userId: pubnubUserId, spaceId: pubnubChannelId, eTag: eTag, lastUpdated: updated
+      userId: chatUser.id, spaceId: chatChannel.id, eTag: eTag, lastUpdated: updated
     ) else {
       return self
     }
@@ -256,61 +242,37 @@ extension ChatMember {
 
 // MARK: - Presence
 
-public struct MembershipPresenceChange: Codable, Hashable {
-  public let channelId: String
-  public let userId: String
-  public let isPresent: Bool?
-  public let presenceState: Data?
+/// Presence information for a specific User on a specific Channel
+public struct MembershipPresence: Hashable {
+  /// Whether the User is "Active" on a given Chanel
+  public var isPresent: Bool
+  // TODO: Does this need to be a custom property Chat.Presence?
+  /// State information associated with a User on a given Channel
+  public var presenceState: OptionalChange<AnyJSON>
 
-  public init?(
-    channelId: String,
-    userId: String,
-    isPresent: Bool?,
-    presenceState: Data?
-  ) {
-    guard isPresent != nil || presenceState != nil else { return nil }
-    
-    self.channelId = channelId
-    self.userId = userId
-    self.isPresent = isPresent
-    self.presenceState = presenceState
-  }
-
-  public init?(
-    channelId: String,
-    userId: String,
-    presenceChange: MembershipPresence?
-  ) {
-    self.init(
-      channelId: channelId,
-      userId: userId,
-      isPresent: presenceChange?.isPresent,
-      presenceState: presenceChange?.presenceState?.jsonData
-    )
-  }
-}
-
-public struct MembershipPresence: Codable, Hashable {
-
-  public var isPresent: Bool?
-  public var presenceState: AnyJSON?
-
+  /// Create an object that updates both the `isPresent` flag and `presenceState`
   public init(
-    isPresent: Bool? = nil,
-    presenceState: JSONCodable? = nil
+    isPresent: Bool,
+    presenceState: JSONCodable?
   ) {
     self.isPresent = isPresent
-    self.presenceState = presenceState?.codableValue
+    if let presenceState = presenceState {
+      self.presenceState = .some(presenceState.codableValue)
+    } else {
+      self.presenceState = .none
+    }
   }
 
-  public var isEmpty: Bool {
-    return isPresent == nil && presenceState == nil
+  /// Create an object that only updates the `isPresent` flag and ignores `presenceState`
+  public init(
+    isPresent: Bool
+  ) {
+    self.isPresent = isPresent
+    self.presenceState = .noChange
   }
 }
 
 extension ChatMember {
-  // Presence Helper
-  
   static func presenceMemberships(
     channelId: String, presence: PubNubPresence
   ) -> [ChatMember] {
@@ -321,18 +283,22 @@ extension ChatMember {
       memberships.append(ChatMember(
         channelId: channelId,
         userId: memberId,
-        isPresent: true,
-        presenceState: presence.occupantsState[memberId]
+        presence: .init(
+          isPresent: true,
+          presenceState: presence.occupantsState[memberId]
+        )
       ))
     }
-    
+
     // Determine if there are any UUIDs in `occupantsState` not in `occupants`
     for (memberId, state) in presence.occupantsState where !presence.occupants.contains(memberId) {
       memberships.append(ChatMember(
         channelId: channelId,
         userId: memberId,
-        isPresent: true,
-        presenceState: state
+        presence: .init(
+          isPresent: true,
+          presenceState: state
+        )
       ))
     }
     
@@ -349,12 +315,16 @@ extension ChatMember {
       switch action {
       case .join(uuids: let uuids):
         let joins = uuids.map {
-          ChatMember(channelId: channelId, userId: $0, isPresent: true)
+          ChatMember(
+            channelId: channelId,
+            userId: $0,
+            presence: .init(isPresent: true)
+          )
         }
         memberships.append(contentsOf: joins)
       case .leave(uuids: let uuids), .timeout(uuids: let uuids):
         let leaves = uuids.map {
-          ChatMember(channelId: channelId, userId: $0, isPresent: false)
+          ChatMember(channelId: channelId, userId: $0, presence: .init(isPresent: false))
         }
         memberships.append(contentsOf: leaves)
       case .stateChange(uuid: let uuid, state: let state):
@@ -362,8 +332,10 @@ extension ChatMember {
           ChatMember(
             channelId: channelId,
             userId: uuid,
-            isPresent: true,
-            presenceState: state
+            presence: .init(
+              isPresent: true,
+              presenceState: state
+            )
           )
         )
       }

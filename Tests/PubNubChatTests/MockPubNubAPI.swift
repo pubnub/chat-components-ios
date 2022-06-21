@@ -302,7 +302,7 @@ class PubNubMock: PubNubProvider, PubNubUserInterface, PubNubSpaceInterface, Pub
   }
 
   // Add Memberships
-  var createSpaceMembershipsRequest: ((
+  var addUsersBySpaceMembershipsRequest: ((
     _ users: [PubNubMembership.PartialUser],
     _ spaceId: String,
     _ requestConfig: PubNub.RequestConfiguration
@@ -314,11 +314,11 @@ class PubNubMock: PubNubProvider, PubNubUserInterface, PubNubSpaceInterface, Pub
     requestConfig: PubNub.RequestConfiguration,
     completion: ((Result<Void, Error>) -> Void)?
   ) {
-    createSpaceMembershipsRequest?(users, spaceId, requestConfig)
+    addUsersBySpaceMembershipsRequest?(users, spaceId, requestConfig)
     if let response = voidResponse?() { completion?(response) }
   }
 
-  var createUserMembershipsRequest: ((
+  var addSpacesByUserMembershipsRequest: ((
     _ spaces: [PubNubMembership.PartialSpace],
     _ userId: String?,
     _ requestConfig: PubNub.RequestConfiguration
@@ -330,12 +330,12 @@ class PubNubMock: PubNubProvider, PubNubUserInterface, PubNubSpaceInterface, Pub
     requestConfig: PubNub.RequestConfiguration,
     completion: ((Result<Void, Error>) -> Void)?
   ) {
-    createUserMembershipsRequest?(spaces, userId, requestConfig)
+    addSpacesByUserMembershipsRequest?(spaces, userId, requestConfig)
     if let response = voidResponse?() { completion?(response) }
   }
 
   // Remove Memberships
-  var removeSpaceMembershipsRequest: ((
+  var removeUsersFromSpaceMembershipsRequest: ((
     _ userIds: [String],
     _ spaceId: String,
     _ requestConfig: PubNub.RequestConfiguration
@@ -347,11 +347,11 @@ class PubNubMock: PubNubProvider, PubNubUserInterface, PubNubSpaceInterface, Pub
     requestConfig: PubNub.RequestConfiguration,
     completion: ((Result<Void, Error>) -> Void)?
   ) {
-    removeSpaceMembershipsRequest?(userIds, spaceId, requestConfig)
+    removeUsersFromSpaceMembershipsRequest?(userIds, spaceId, requestConfig)
     if let response = voidResponse?() { completion?(response) }
   }
 
-  var removeUserMembershipsRequest: ((
+  var removeSpacesFromUserMembershipsRequest: ((
     _ spaceIds: [String],
     _ userId: String?,
     _ requestConfig: PubNub.RequestConfiguration
@@ -363,7 +363,7 @@ class PubNubMock: PubNubProvider, PubNubUserInterface, PubNubSpaceInterface, Pub
     requestConfig: PubNub.RequestConfiguration,
     completion: ((Result<Void, Error>) -> Void)?
   ) {
-    removeUserMembershipsRequest?(spaceIds, userId, requestConfig)
+    removeSpacesFromUserMembershipsRequest?(spaceIds, userId, requestConfig)
     if let response = voidResponse?() { completion?(response) }
   }
 }

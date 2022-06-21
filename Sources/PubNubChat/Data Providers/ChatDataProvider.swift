@@ -333,7 +333,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
         if let error = self?.provider.coreDataContainer.syncWrite({ context in
           for item in batch {
             ManagedEntities.Member.remove(
-              channelId: item.pubnubChannelId, userId: item.pubnubUserId, from: context
+              channelId: item.chatChannel.id, userId: item.chatUser.id, from: context
             )
           }
         }) {

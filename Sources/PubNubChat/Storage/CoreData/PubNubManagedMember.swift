@@ -67,13 +67,18 @@ extension PubNubManagedMember: ManagedMemberEntity {
   }
   
   public func convert<Custom>() -> ChatMember<Custom> where Custom : ChatCustomData {
+    var state: AnyJSON? = nil
+    if let presenceState = presenceState {
+      state = try? Constant.jsonDecoder.decode(AnyJSON.self, from: presenceState)
+    }
+
     return ChatMember<Custom>(
       channel: channel.convert(),
       user: user.convert(),
       status: status,
       updated: lastUpdated,
       eTag: eTag,
-      isPresent: isPresent
+      presence: .init(isPresent: isPresent, presenceState: state)
     )
   }
   
@@ -84,7 +89,7 @@ extension PubNubManagedMember: ManagedMemberEntity {
     into context: NSManagedObjectContext
   ) throws -> PubNubManagedMember {
     if let existingMember = try? context.fetch(
-      memberBy(pubnubChannelId: member.pubnubChannelId, pubnubUserId: member.pubnubUserId)
+      memberBy(pubnubChannelId: member.chatChannel.id, pubnubUserId: member.chatUser.id)
     ).first {
       try existingMember.update(from: member)
       
@@ -113,10 +118,10 @@ extension PubNubManagedMember: ManagedMemberEntity {
     let managedChannel: PubNubManagedChannel
     if member.chatChannel.isSynced || forceWrite {
       managedChannel = try PubNubManagedChannel.insertOrUpdate(channel: member.chatChannel, into: context)
-    } else if let existingChannel = try context.fetch(PubNubManagedChannel.channelBy(pubnubId: member.pubnubChannelId)).first {
+    } else if let existingChannel = try context.fetch(PubNubManagedChannel.channelBy(pubnubId: member.chatChannel.id)).first {
       managedChannel = existingChannel
     } else {
-      PubNub.log.error("Member failed to save due to missing stored channel \(member.pubnubChannelId)")
+      PubNub.log.error("Member failed to save due to missing stored channel \(member.chatChannel.id)")
       throw ChatError.missingRequiredData
     }
     
@@ -124,10 +129,10 @@ extension PubNubManagedMember: ManagedMemberEntity {
     let managedUser: PubNubManagedUser
     if member.chatUser.isSynced || forceWrite {
       managedUser = try PubNubManagedUser.insertOrUpdate(user:  member.chatUser, into: context)
-    } else if let existingUser = try context.fetch(PubNubManagedUser.userBy(pubnubId: member.pubnubUserId)).first {
+    } else if let existingUser = try context.fetch(PubNubManagedUser.userBy(pubnubId: member.chatUser.id)).first {
       managedUser = existingUser
     } else {
-      PubNub.log.error("Member failed to save due to missing stored user \(member.pubnubUserId)")
+      PubNub.log.error("Member failed to save due to missing stored user \(member.chatUser.id)")
       throw ChatError.missingRequiredData
     }
     
@@ -163,11 +168,16 @@ extension PubNubManagedMember: ManagedMemberEntity {
     
     self.status = member.status
     
-    if let isPresent = member.presence?.isPresent {
+    if let presence = member.presence {
       self.isPresent = isPresent
-    }
-    if let presenceState = member.presence?.presenceState?.jsonData {
-      self.presenceState = presenceState
+      switch presence.presenceState {
+      case .noChange:
+        break
+      case .none:
+        self.presenceState = nil
+      case let .some(state):
+        self.presenceState = try state.jsonDataResult.get()
+      }
     }
   }
   

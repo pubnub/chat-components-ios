@@ -65,7 +65,7 @@ public protocol PubNubMemberAPI {
 
 extension PubNubMemberAPI {
 
-  public func fetchPublisher<Custom: ChatCustomData>(
+  func fetchPublisher<Custom: ChatCustomData>(
     userMembers request: UserMemberFetchRequest,
     into customType: Custom.Type
   ) -> AnyPublisher<(members: [ChatMember<Custom>], next: UserMemberFetchRequest?), Error> {
@@ -96,7 +96,7 @@ extension PubNubMemberAPI {
       .eraseToAnyPublisher()
   }
   
-  public func fetchPublisher<Custom: ChatCustomData>(
+  func fetchPublisher<Custom: ChatCustomData>(
     channelMembers request: ChannelMemberFetchRequest,
     into customType: Custom.Type
   ) -> AnyPublisher<(members: [ChatMember<Custom>], next: ChannelMemberFetchRequest?), Error> {
@@ -395,18 +395,18 @@ public struct MembersModifyRequest<Custom: ChatCustomData>: Hashable {
   }
 
   var channelPartials: (userId: String, partials: [PubNubMembership.PartialSpace])? {
-    guard let userId = members.first?.pubnubUserId else {
+    guard let userId = members.first?.chatUser.id else {
       return nil
     }
     
-    return (userId, members.map { .init(spaceId: $0.pubnubChannelId, status: $0.status, custom: $0.custom) })
+    return (userId, members.map { .init(spaceId: $0.chatChannel.id, status: $0.status, custom: $0.custom) })
   }
 
   var userPartials: (channelId: String, partials: [PubNubMembership.PartialUser])? {
-    guard let channelId = members.first?.pubnubChannelId else {
+    guard let channelId = members.first?.chatChannel.id else {
       return nil
     }
     
-    return (channelId, members.map { .init(userId: $0.pubnubUserId, status: $0.status, custom: $0.custom) })
+    return (channelId, members.map { .init(userId: $0.chatUser.id, status: $0.status, custom: $0.custom) })
   }
 }

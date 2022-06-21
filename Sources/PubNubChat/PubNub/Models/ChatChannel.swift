@@ -31,15 +31,21 @@ import CoreData
 import PubNub
 import PubNubSpace
 
+/// The default ``ChatChannel`` class not containing any Custom Properties
 public typealias PubNubChatChannel = ChatChannel<VoidCustomData>
 
+/// The generic `Channel` class is used whenever a Swift PubNub API requires a `Space` object.
 @dynamicMemberLookup
 public struct ChatChannel<Custom: ChannelCustomData>: Identifiable, Hashable, ServerSynced {
   
+  /// Custom properties that can be stored alongside the server specified Channel fields
   public struct CustomProperties: Hashable {
     // PubNub owned Custom Property accessed via a dynamicMember property
+    /// Image you can use to visually represent the channel.
     public var avatarURL: URL?
-    // User owned Custom Property accessed via a dynamicMember property
+
+    /// Developer owned generic ChannelCustomData
+    ///  Its properties can be accessed directly from the ChatChannel instance
     public var custom: Custom
 
     public init(
@@ -51,16 +57,21 @@ public struct ChatChannel<Custom: ChannelCustomData>: Identifiable, Hashable, Se
     }
   }
   
+  /// Unique identifier for the Channel.
   public let id: String
+  /// Name of the Channel.
   public var name: String?
-  
+  /// Functional type of the Channel.
   public var type: String
+  /// The current state of the Channel
   public var status: String?
-
+  /// Channel details you can display alongside the name.
   public var details: String?
+  /// Last time the remote object was changed.
   public var updated: Date?
+  /// Caching value that changes whenever the remote object changes.
   public var eTag: String?
-
+  /// Custom object that can be stored with the Channel.
   public var custom: CustomProperties
 
   public init(
@@ -85,12 +96,17 @@ public struct ChatChannel<Custom: ChannelCustomData>: Identifiable, Hashable, Se
   }
   
   // MARK: Dynamic Member Lookup
-  
+  /// Returns a binding to the resulting value of a given key path.
+  /// - Parameter dynamicMember: A key path to a specific resulting value.
+  /// - Returns: A new binding.
   public subscript<T>(dynamicMember keyPath: WritableKeyPath<Custom, T>) -> T {
     get { custom.custom[keyPath: keyPath] }
     set { custom.custom[keyPath: keyPath] = newValue }
   }
   
+  /// Returns a binding to the resulting value of a given key path.
+  /// - Parameter dynamicMember: A key path to a specific resulting value.
+  /// - Returns: A new binding.
   public subscript<T>(dynamicMember keyPath: WritableKeyPath<CustomProperties, T>) -> T {
     get { custom[keyPath: keyPath] }
     set { custom[keyPath: keyPath] = newValue }
@@ -140,7 +156,7 @@ extension ChatChannel.CustomProperties: ChannelCustomData {
 
   public init(flatJSON: [String: JSONCodableScalar]) {
     self.init(
-      avatarURL: flatJSON["profileUrl"]?.urlOptional,
+      avatarURL: flatJSON[CodingKeys.avatarURL.stringValue]?.urlOptional,
       custom: Custom(flatJSON: flatJSON)
     )
   }
@@ -149,7 +165,7 @@ extension ChatChannel.CustomProperties: ChannelCustomData {
     var json = [String: JSONCodableScalar]()
     
     if let url = avatarURL {
-      json.updateValue(url, forKey: "profileUrl")
+      json.updateValue(url, forKey: CodingKeys.avatarURL.stringValue)
     }
 
     return json.merging(custom.flatJSON, uniquingKeysWith: { _, new in new })
@@ -178,6 +194,7 @@ extension ChatChannel.CustomProperties: Codable {
 // MARK: PubNubSpace Extension
 
 extension ChatChannel {
+  /// Create a ``ChatChannel`` from the provided `PubNubSpace`
   public init(pubnub: PubNubSpace) {
     
     let channelCustom = CustomProperties(flatJSON: pubnub.custom?.flatJSON)
@@ -196,11 +213,15 @@ extension ChatChannel {
     )
   }
   
+  /// Object that can be used to apply an update to another ``ChatChannel``
   public struct Patcher {
+    /// The underlying `PubNubSpace` Patcher object
     public var pubnub: PubNubSpace.Patcher
-    
+    /// The unique identifier of the object that was changed
     public var id: String { pubnub.id }
+    /// The cache identifier of the change
     public var eTag: String { pubnub.eTag }
+    /// The timestamp of the change
     public var updated: Date { pubnub.updated }
     
     public init(pubnub: PubNubSpace.Patcher) {
@@ -208,6 +229,9 @@ extension ChatChannel {
     }
   }
   
+  /// Apply the patch to this ``ChatChannel`` instance
+  /// - Parameter patcher: The patching changeset to apply
+  /// - Returns: The patched ``ChatChannel`` with updated fields or a copy of this instance if no change was able to be applied
   public func patch(_ patcher: Patcher) -> ChatChannel<Custom> {
     guard patcher.pubnub.shouldUpdate(spaceId: id, eTag: eTag, lastUpdated: updated) else {
       return self

@@ -97,8 +97,7 @@ extension PubNubProvider {
             ChatMember<Custom>(
               channelId: channelId,
               userId: memberId,
-              isPresent: true,
-              presenceState: state
+              presence: .init(isPresent: true, presenceState: state)
             )
           }
         
@@ -122,9 +121,17 @@ extension PubNubProvider {
     ) { result in
       switch result {
       case .success(let state):
-        let channelMembers = request.channels.map { ChatMember<Custom>(channelId: $0, userId: request.currentUserId, presenceState: state) }
-        let groupMembers = request.groups.map { ChatMember<Custom>(channelId: $0, userId: request.currentUserId, presenceState: state) }
-        
+        let channelMembers = request.channels.map {
+          ChatMember<Custom>(
+            channelId: $0, userId: request.currentUserId,
+            presence: .init(isPresent: true, presenceState: state))
+        }
+        let groupMembers = request.groups.map {
+          ChatMember<Custom>(
+            channelId: $0, userId: request.currentUserId,
+            presence: .init(isPresent: true, presenceState: state))
+        }
+
         completion?(.success(channelMembers + groupMembers))
       case .failure(let error):
         completion?(.failure(error))

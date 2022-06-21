@@ -95,7 +95,7 @@ class ChatMemberTests: XCTestCase {
       userId: "Test User Id"
     )
 
-    XCTAssertEqual(member.id, "\(member.pubnubChannelId):\(member.pubnubUserId)")
+    XCTAssertEqual(member.id, "\(member.chatChannel.id):\(member.chatUser.id)")
   }
 
   func testUser_DynamicMemberLookup_CustomFields() throws {
@@ -108,18 +108,6 @@ class ChatMemberTests: XCTestCase {
     XCTAssertEqual(member.location, "here")
     member.location = "new-loc"
     XCTAssertEqual(member.location, "new-loc")
-  }
-
-  func testUser_DynamicMemberLookup_Presence() throws {
-    var member = ChatMember<ChatMockCustom>(
-      channelId: "Test Channel Id",
-      userId: "Test User Id",
-      isPresent: true
-    )
-
-    XCTAssertEqual(member.isPresent, true)
-    member.isPresent = false
-    XCTAssertEqual(member.isPresent, false)
   }
 
   func testCustomProperties_initFlatJSON() {
@@ -209,8 +197,8 @@ class ChatMemberTests: XCTestCase {
     )
     
     let membershipPatch = PubNubMembership.Patcher(
-      userId: patchedMember.pubnubUserId,
-      spaceId: patchedMember.pubnubChannelId,
+      userId: patchedMember.chatUser.id,
+      spaceId: patchedMember.chatChannel.id,
       updated: patchedMember.updated  ?? .distantPast,
       eTag: patchedMember.eTag ?? "",
       status: .some(patchedMember.status ?? ""),
@@ -218,57 +206,24 @@ class ChatMemberTests: XCTestCase {
     )
     let memberPatch = ChatMember<ChatMockCustom>.Patcher(pubnub: membershipPatch)
     
-    XCTAssertEqual(memberPatch.userId, patchedMember.pubnubUserId)
-    XCTAssertEqual(memberPatch.channelId, patchedMember.pubnubChannelId)
+    XCTAssertEqual(memberPatch.userId, patchedMember.chatUser.id)
+    XCTAssertEqual(memberPatch.channelId, patchedMember.chatChannel.id)
     XCTAssertEqual(memberPatch.updated, patchedMember.updated)
     XCTAssertEqual(memberPatch.eTag, patchedMember.eTag)
     XCTAssertEqual(patchedMember, member.patch(memberPatch))
-  }
-
-  func testPresenceChange_init() {
-    let change = MembershipPresenceChange(
-      channelId: "testChannelId",
-      userId: "testUserId",
-      isPresent: true,
-      presenceState: nil
-    )
-
-    let otherChange = MembershipPresenceChange(
-      channelId: "testChannelId",
-      userId: "testUserId",
-      presenceChange: .init(isPresent: true, presenceState: nil)
-    )
-
-    XCTAssertEqual(change, otherChange)
-  }
-
-  func testPresenceChange_nil() {
-    XCTAssertNil(MembershipPresenceChange(
-      channelId: "testChannelId",
-      userId: "testUserId",
-      isPresent: nil,
-      presenceState: nil
-    ))
-  }
-
-  func testPresence_IsEmpty() {
-    let present = MembershipPresence(isPresent: nil, presenceState: nil)
-    
-    XCTAssertTrue(present.isEmpty)
   }
 
   func testMember_Presence_PubNubPresence() {
     let member = ChatMember<ChatMockCustom>(
       channelId: "channelId",
       userId: "userId",
-      isPresent: true
+      presence: .init(isPresent: true, presenceState: nil)
     )
 
     let otherMember = ChatMember<ChatMockCustom>(
       channelId: "channelId",
       userId: "otherUser",
-      isPresent: true,
-      presenceState: ["key": "value"]
+      presence: .init(isPresent: true, presenceState: ["key": "value"])
     )
 
     let presence = PubNubPresenceBase(
@@ -288,20 +243,19 @@ class ChatMemberTests: XCTestCase {
     let joinMember = ChatMember<ChatMockCustom>(
       channelId: "channelId",
       userId: "joinUserId",
-      isPresent: true
+      presence: .init(isPresent: true)
     )
 
     let leaveMember = ChatMember<ChatMockCustom>(
       channelId: "channelId",
       userId: "leaveUserId",
-      isPresent: false
+      presence: .init(isPresent: false)
     )
 
     let stateMember = ChatMember<ChatMockCustom>(
       channelId: "channelId",
       userId: "stateUserId",
-      isPresent: true,
-      presenceState: ["key": "value"]
+      presence: .init(isPresent: true, presenceState: ["key": "value"])
     )
 
     let actions: [PubNubPresenceChangeAction] = [

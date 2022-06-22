@@ -78,7 +78,8 @@ extension PubNubManagedMember: ManagedMemberEntity {
       status: status,
       updated: lastUpdated,
       eTag: eTag,
-      presence: .init(isPresent: isPresent, presenceState: state)
+      presence: .init(isPresent: isPresent, presenceState: state),
+      custom: (try? Constant.jsonDecoder.decode(Custom.Member.self, from: custom)) ?? Custom.Member()
     )
   }
   
@@ -165,8 +166,10 @@ extension PubNubManagedMember: ManagedMemberEntity {
     from member: ChatMember<Custom>
   ) throws where Custom : ChatCustomData {
     self.id = member.id
-    
     self.status = member.status
+    self.eTag = member.eTag
+    self.lastUpdated = member.updated
+    self.custom = try member.custom.custom.jsonDataResult.get()
     
     if let presence = member.presence {
       self.isPresent = isPresent

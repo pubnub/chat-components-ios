@@ -100,50 +100,44 @@ extension ChatDataProvider {
     membershipListener: PubNubMembershipListener
   ) {
     
-    userListener.didReceiveUserEvents  = { [weak self] events in
-      guard let self = self else { return }
-      
+    userListener.didReceiveUserEvents = { [weak self] events in
       for event in events {
         switch event {
         case .userUpdated(let patcher):
           PubNub.log.debug("Listener: User Updated \(patcher)")
-          self.patch(user: .init(pubnub: patcher))
+          self?.patch(user: .init(pubnub: patcher))
           
         case .userRemoved(let user):
           PubNub.log.debug("Listener: User Removed \(user)")
-          self.removeStoredUser(userId: user.id)
+          self?.removeStoredUser(userId: user.id)
         }
       }
     }
     
-    spaceListener.didReceiveSpaceEvents  = { [weak self] events in
-      guard let self = self else { return }
-      
+    spaceListener.didReceiveSpaceEvents = { [weak self] events in
       for event in events {
         switch event {
         case .spaceUpdated(let patcher):
           PubNub.log.debug("Listener: Channel Updated \(patcher)")
-          self.patch(channel: .init(pubnub: patcher))
+          self?.patch(channel: .init(pubnub: patcher))
           
         case .spaceRemoved(let space):
           PubNub.log.debug("Listener: Channel Removed \(space)")
-          self.removeStoredChannel(channelId: space.id)
+          self?.removeStoredChannel(channelId: space.id)
         }
       }
     }
 
-    membershipListener.didReceiveMembershipEvents  = { [weak self] events in
-      guard let self = self else { return }
-
+    membershipListener.didReceiveMembershipEvents = { [weak self] events in
       for event in events {
         switch event {
         case .membershipUpdated(let patcher):
           PubNub.log.debug("Listener: Membership Updated \(patcher)")
-          self.patch(member: .init(pubnub: patcher))
+          self?.patch(member: .init(pubnub: patcher))
           
         case .membershipRemoved(let membership):
           PubNub.log.debug("Listener: Membership Removed \(membership)")
-          self.removeStoredMember(
+          self?.removeStoredMember(
             channelId: membership.space.id, userId: membership.user.id
           )
         }
@@ -239,4 +233,3 @@ extension ChatDataProvider {
     }
   }
 }
-

@@ -86,7 +86,7 @@ extension PubNubManagedChannel: ManagedChannelEntity {
   public func convert<Custom: ChannelCustomData>() -> ChatChannel<Custom> {
     return ChatChannel(
       id: id,
-      name: name ?? "",
+      name: name,
       type: type,
       status: status,
       details: details,

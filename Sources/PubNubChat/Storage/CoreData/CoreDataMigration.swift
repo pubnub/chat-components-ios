@@ -20,7 +20,10 @@ class PayloadAlignmentMapper {
   }
   
   func mappingModel() throws -> NSMappingModel {
-    guard sourceModel.numberVersionIdentifier == 0 && destinationModel.numberVersionIdentifier == 1 else {
+    let migrateFromInitialModel = sourceModel.versionID == DefaultCoreDataMigrationManager.ModelVersion.initial.rawValue
+    let migrateToPayloadAlignmentModel = destinationModel.versionID == DefaultCoreDataMigrationManager.ModelVersion.payloadAlignment.rawValue
+    
+    guard migrateFromInitialModel && migrateToPayloadAlignmentModel else {
       preconditionFailure("Cannot perform migration due to incompatible versions between \(sourceModel) and \(destinationModel)")
     }
     

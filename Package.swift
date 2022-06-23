@@ -66,6 +66,11 @@ let package = Package(
       dependencies: ["PubNub"],
       exclude: ["Info.plist"]
     ),
+    .testTarget(
+      name: "PubNubChatTests",
+      dependencies: ["PubNubChat"],
+      exclude: ["Info.plist"]
+    ),
     .target(
       name: "PubNubChatComponents",
       dependencies: ["PubNubChat", "Kingfisher", "ChatLayout", "InputBarAccessoryView"],

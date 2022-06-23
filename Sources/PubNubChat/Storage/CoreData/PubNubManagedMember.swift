@@ -30,26 +30,37 @@ import CoreData
 
 import PubNub
 
+/// The CoreData managed `Member` class used whenever a ChatMember needs to be stored locally
 @objc(PubNubManagedMember)
 public final class PubNubManagedMember: NSManagedObject {
   // Entity Attributes
+  /// Unique identifier for the Member
   @NSManaged public var id: String
+  /// Data blob that represents the Custom Properties that can be stored with the Member.
   @NSManaged public var custom: Data
+  /// The current state of the Member relationship
   @NSManaged public var status: String?
-
+  /// Last time the remote object was changed.
   @NSManaged public var lastUpdated: Date?
+  /// Caching value that changes whenever the remote object changes.
   @NSManaged public var eTag: String?
 
   // Presence Attributes
+  /// Whether the User is "Active" on a the Chanel
   @NSManaged public var isPresent: Bool
+  /// State information associated with the User for the Channel
   @NSManaged public var presenceState: Data?
   
   // Derived Attributes
+  /// Unique identifier for the Channel.
   @NSManaged public var channelId: String
+  /// Unique identifier for the User.
   @NSManaged public var userId: String
 
   // Relationships
+  /// User that is associated with the Channel
   @NSManaged public var user: PubNubManagedUser
+  /// Channel that is associated with the User
   @NSManaged public var channel: PubNubManagedChannel
 }
 

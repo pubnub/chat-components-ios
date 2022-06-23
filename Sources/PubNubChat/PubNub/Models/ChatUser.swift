@@ -33,7 +33,7 @@ import PubNubUser
 /// The default ``ChatUser`` class not containing any Custom Properties
 public typealias PubNubChatUser = ChatUser<VoidCustomData>
 
-/// The generic `User` class is used whenever a Swift PubNub API requires a `User` object.
+/// The generic `User` class used whenever a Swift PubNub API requires a `User` object.
 @dynamicMemberLookup
 public struct ChatUser<Custom: UserCustomData>: Identifiable, Hashable, ServerSynced {
   

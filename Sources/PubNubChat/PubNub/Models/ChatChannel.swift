@@ -34,7 +34,7 @@ import PubNubSpace
 /// The default ``ChatChannel`` class not containing any Custom Properties
 public typealias PubNubChatChannel = ChatChannel<VoidCustomData>
 
-/// The generic `Channel` class is used whenever a Swift PubNub API requires a `Space` object.
+/// The generic `Channel` class used whenever a Swift PubNub API requires a `Space` object.
 @dynamicMemberLookup
 public struct ChatChannel<Custom: ChannelCustomData>: Identifiable, Hashable, ServerSynced {
   

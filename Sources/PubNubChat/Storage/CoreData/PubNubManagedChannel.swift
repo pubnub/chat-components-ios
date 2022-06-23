@@ -32,29 +32,37 @@ import Combine
 import PubNub
 import SwiftUI
 
+/// The CoreData managed `Channel` class used whenever a ChatChannel needs to be stored locally
 @objc(PubNubManagedChannel)
 public final class PubNubManagedChannel: NSManagedObject {
+  /// Unique identifier for the Channel.
   @NSManaged public var id: String
+  /// Name of the Channel.
   @NSManaged public var name: String?
-
+  /// Functional type of the Channel.
   @NSManaged public var type: String
+  /// The current state of the Channel
   @NSManaged public var status: String?
-  
+  /// Channel details you can display alongside the name.
   @NSManaged public var details: String?
+  /// Image you can use to visually represent the channel.
   @NSManaged public var avatarURL: URL?
-
+  /// Data blob that represents the Custom Properties that can be stored with the Channel.
   @NSManaged public var custom: Data
-
+  /// Last time the remote object was changed.
   @NSManaged public var lastUpdated: Date?
+  /// Caching value that changes whenever the remote object changes.
   @NSManaged public var eTag: String?
 
   // Relationships
 
+  /// Messages that are currently associated with the Channel
   @NSManaged public var messages: Set<PubNubManagedMessage>
+  /// Users that are currently associated with the Channel
   @NSManaged public var members: Set<PubNubManagedMember>
 
   // Derived Attributes
-
+  /// Total amount of Members that are currently active on the Channel
   @NSManaged public var memberCount: Int
 
   // Transient Property

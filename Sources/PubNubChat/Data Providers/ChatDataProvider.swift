@@ -41,9 +41,13 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
  
   var provider: ChatProvider<ModelData, ManagedEntities>
   
+  /// Instance of a Core Subscription Listener used when calling ``syncPubnubListeners(coreListener:userListener:spaceListener:membershipListener:)``
   public var coreListener = CoreListener()
+  /// Instance of a User Subscription Listener used when calling ``syncPubnubListeners(coreListener:userListener:spaceListener:membershipListener:)``
   public var userListener = PubNubUserListener()
+  /// Instance of a Space Subscription Listener used when calling ``syncPubnubListeners(coreListener:userListener:spaceListener:membershipListener:)``
   public var spaceListener = PubNubSpaceListener()
+  /// Instance of a Membership Subscription Listener used when calling ``syncPubnubListeners(coreListener:userListener:spaceListener:membershipListener:)``
   public var membershipListener = PubNubMembershipListener()
 
   let datastoreQueue = DispatchQueue(label: "Datastore Write Queue", qos: .userInitiated)

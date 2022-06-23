@@ -34,14 +34,22 @@ import PubNubSpace
 import PubNubMembership
 
 // MARK: - Protocol Wrapper
-public protocol PubNubProvider: SubscribeAPI, PubNubUserAPI, PubNubChannelAPI, PubNubMemberAPI, MessageAPI, MessageActionAPI, PresenceAPI, PubNubConfigurable, PubNubUserBase, PubNubSpaceBase, PubNubMembershipBase {}
+
+/// Protocol that provides the overall PubNub API Interface
+public protocol PubNubProvider: SubscribeAPI, PubNubUserAPI, PubNubChannelAPI, PubNubMemberAPI, MessageAPI, MessageActionAPI, PresenceAPI, PubNubConfigurable, PubNubUserInterface, PubNubSpaceInterface, PubNubMembershipInterface {}
 
 extension PubNub: PubNubProvider {}
 
 // MARK: - Configuration Provider
 
+/// An object that is capable of configuring a PubNub instance
 public protocol PubNubConfigurable {
+  /// The configuration object of the PubNub instance
   var configuration: PubNubConfiguration { get }
+  /// Set consumer identifying value for components usage.
+  /// - Parameters:
+  ///   - identifier: Identifier of consumer with which value will be associated.
+  ///   - value: Value which should be associated with consumer identifier.
   mutating func setConsumer(identifier: String, value: String)
 }
 
@@ -56,22 +64,28 @@ public extension PubNubProvider {
 }
 
 // MARK: - Base Providers
-
-public protocol PubNubBase {
+/// Interface for the Core functionality of PubNub
+public protocol PubNubCoreInterface {
+  /// Pubnub Core Interface instance
   var pubnub: PubNub { get }
 }
-
-public protocol PubNubUserBase: PubNubBase {
+/// Interface for the User functionality of PubNub
+public protocol PubNubUserInterface: PubNubCoreInterface {
+  /// Pubnub User Interface instance
   var userInterface: PubNubUserInterface { get }
 }
-public protocol PubNubSpaceBase: PubNubBase {
+/// Interface for the Space functionality of PubNub
+public protocol PubNubSpaceInterface: PubNubCoreInterface {
+  /// Pubnub Space Interface instance
   var spaceInterface: PubNubSpaceInterface { get }
 }
-public protocol PubNubMembershipBase: PubNubBase {
+/// Interface for the Membership functionality of PubNub
+public protocol PubNubMembershipInterface: PubNubCoreInterface {
+  /// Pubnub Membership Interface instance
   var membershipInterface: PubNubMembershipInterface { get }
 }
 
-extension PubNub: PubNubUserBase, PubNubSpaceBase, PubNubMembershipBase {
+extension PubNub: PubNubUserInterface, PubNubSpaceInterface, PubNubMembershipInterface {
   public var userInterface: PubNubUserInterface {
     return self
   }
@@ -93,6 +107,12 @@ extension PubNub: PubNubUserBase, PubNubSpaceBase, PubNubMembershipBase {
 
 extension ChatDataProvider {
   
+  /// Default listener implementation that will attempt to store event data into the local CoreData store
+  /// - Parameters:
+  ///   - coreListener: Instance of a Core Subscription Listener
+  ///   - userListener: Instance of a User Event Listener
+  ///   - spaceListener: Instance of a Space Event Listener
+  ///   - membershipListener: Instance of a Membership Event Listener
   open func syncPubnubListeners(
     coreListener: CoreListener,
     userListener: PubNubUserListener,

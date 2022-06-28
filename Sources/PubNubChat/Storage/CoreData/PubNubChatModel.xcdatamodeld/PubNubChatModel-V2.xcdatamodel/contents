@@ -49,8 +49,6 @@
         <attribute name="contentType" optional="YES" attributeType="String"/>
         <attribute name="custom" optional="YES" attributeType="Binary"/>
         <attribute name="dateCreated" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="dateReceived" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="dateSent" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" attributeType="String"/>
         <attribute name="pubnubChannelId" optional="YES" attributeType="String" derived="YES" derivationExpression="channel.id"/>
         <attribute name="pubnubUserId" optional="YES" attributeType="String" derived="YES" derivationExpression="author.id"/>
@@ -91,7 +89,7 @@
     <elements>
         <element name="PubNubManagedChannel" positionX="-78.437255859375" positionY="268.0662231445312" width="128" height="209"/>
         <element name="PubNubManagedMember" positionX="160" positionY="192" width="128" height="149"/>
-        <element name="PubNubManagedMessage" positionX="54" positionY="441" width="128" height="224"/>
+        <element name="PubNubManagedMessage" positionX="54" positionY="441" width="128" height="194"/>
         <element name="PubNubManagedUser" positionX="-76.082275390625" positionY="465.6267700195312" width="128" height="194"/>
     </elements>
 </model>

@@ -1,8 +1,27 @@
+// CoreDataMigrationManager.swift
 //
-//  File.swift
-//  
+//  PubNub Real-time Cloud-Hosted Push API and Push Notification Client Frameworks
+//  Copyright �© 2022 PubNub Inc.
+//  https://www.pubnub.com/
+//  https://www.pubnub.com/terms
 //
-//  Created by Jakub Guz on 6/22/22.
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
 //
 
 import Foundation
@@ -63,16 +82,6 @@ class DefaultCoreDataMigrationManager: CoreDataMigrationManager {
     }
   }
   
-  private func resolveMappingModel(
-    between sourceModel: NSManagedObjectModel,
-    and destinationModel: NSManagedObjectModel
-  ) throws -> NSMappingModel? {
-    return try PayloadAlignmentMapper(
-      sourceModel: sourceModel,
-      destinationModel: destinationModel
-    ).mappingModel()
-  }
-  
   private func performMigration(
     from sourceModel: NSManagedObjectModel,
     to destinationModel: NSManagedObjectModel
@@ -109,11 +118,43 @@ class DefaultCoreDataMigrationManager: CoreDataMigrationManager {
       at: temporaryStoreLocation
     )
   }
+  
+  private func resolveMappingModel(
+    between sourceModel: NSManagedObjectModel,
+    and destinationModel: NSManagedObjectModel
+  ) throws -> NSMappingModel? {
+    let mappingModel = try NSMappingModel.inferredMappingModel(forSourceModel: sourceModel, destinationModel: destinationModel)
+    // Pick the correct strategy by checking both model versions
+    PayloadAlignmentMigration.configure(mappingModel: mappingModel)
+    // Returns configured mapping model
+    return mappingModel
+  }
 }
 
-extension DefaultCoreDataMigrationManager {
-  enum ModelVersion: Int {
-    case initial = 0
-    case payloadAlignment = 1
+class PayloadAlignmentMigration {
+  static func configure(mappingModel: NSMappingModel) {
+    let entityMapping = mappingModel.entityMappings.first { $0.sourceEntityName == "PubNubManagedMessage" && $0.destinationEntityName == "PubNubManagedMessage" }!
+    entityMapping.entityMigrationPolicyClassName = "PubNubChat.PayloadAlignmentMessageEntityMigration"
+    entityMapping.mappingType = .customEntityMappingType
+    entityMapping.name = "PubNubManagedMessageToPubNubManagedMessage"
+    
+    mappingModel.entityMappings.removeAll() { $0.sourceEntityName == "PubNubManagedMessage" && $0.destinationEntityName == "PubNubManagedMessage" }
+    mappingModel.entityMappings.append(entityMapping)
+    
+    let sourcePropertyForTextValue = "content"
+    let migrationPolicyTargetSelector = "resolveTextProperty:"
+    
+    let propertyMapping = entityMapping.attributeMappings!.first { $0.name == "text" }!
+    propertyMapping.name = "text"
+    propertyMapping.valueExpression = NSExpression(format: "FUNCTION($entityPolicy, %@, $source.%@)", migrationPolicyTargetSelector, sourcePropertyForTextValue)
+  }
+}
+
+class PayloadAlignmentMessageEntityMigration: NSEntityMigrationPolicy {
+  @objc func resolveTextProperty(_ content: Data) -> String {
+    let decodedContent = try? Constant.jsonDecoder.decode(AnyJSON.self, from: content)
+    let currentTextValue = decodedContent?["text"]?.stringOptional
+    
+    return currentTextValue ?? String()
   }
 }

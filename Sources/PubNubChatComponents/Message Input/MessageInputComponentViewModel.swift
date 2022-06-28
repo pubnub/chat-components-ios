@@ -166,8 +166,8 @@ public class MessageInputComponentViewModel<ModelData, ManagedEntities>
     forcePublisheTypingSubject.send(false)
   }
   
-  open func constructOutgoingContent(inputText: String) -> ChatMessage<ModelData>.Content {
-    return ChatMessage<ModelData>.Content(
+  open func constructOutgoingContent(inputText: String) -> ChatMessage<ModelData>.MessagePayload {
+    return ChatMessage<ModelData>.MessagePayload(
       id: UUID().uuidString,
       text: inputText,
       custom: constructOutgoingContentCustomData(),

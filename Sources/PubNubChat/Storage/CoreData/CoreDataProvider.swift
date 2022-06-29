@@ -65,7 +65,8 @@ public class CoreDataProvider: NSPersistentContainer {
     dataModelFilename: String = "PubNubChatModel",
     location: StoreLocation,
     flushDataOnLoad: Bool = false,
-    clearTransientData: Bool = false
+    clearTransientData: Bool = false,
+    migrationManager: CoreDataMigrationManager? = nil
   ) throws {
     guard let modelURL = bundle.url(forResource: dataModelFilename, withExtension: "momd") else {
       preconditionFailure("Managed Object Model URL failed for filename \(dataModelFilename) in bundle \(bundle)")
@@ -84,6 +85,18 @@ public class CoreDataProvider: NSPersistentContainer {
     storeDescription.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
     
     persistentStoreDescriptions = [storeDescription]
+    
+    if location != StoreLocation.memory {
+      if let migrationManager = migrationManager {
+        try migrationManager.migrateIfNeeded()
+      } else {
+        let momFiles = bundle.paths(forResourcesOfType: "mom", inDirectory: modelURL.lastPathComponent)
+        var models = momFiles.compactMap() { NSManagedObjectModel(contentsOf: URL(fileURLWithPath: $0)) }.sorted() { $0.versionID < $1.versionID }
+        let defaultMigrationManager = DefaultCoreDataMigrationManager(rootModel: models.removeFirst(), nextModelVersions: models, persistentStoreLocation: location.rawValue)
+        
+        try defaultMigrationManager.migrateIfNeeded()
+      }
+    }
     
     // Load or Create the Store
     if flushDataOnLoad {

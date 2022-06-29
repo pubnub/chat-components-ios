@@ -30,8 +30,18 @@ import XCTest
 @testable import PubNub
 
 struct ChannelMockCustom: ChannelCustomData {
-  var location: String = "here"
-  var isHidden: Bool = false
+  init() {
+    location = "here"
+    isHidden = false
+  }
+  
+  init(flatJSON: [String : JSONCodableScalar]?) {
+    location = flatJSON?["location"]?.scalarValue.stringOptional ?? String()
+    isHidden = flatJSON?["isHidden"]?.scalarValue.boolOptional ?? false
+  }
+  
+  var location: String
+  var isHidden: Bool
 }
 
 class Channel_Tests: XCTestCase {
@@ -49,6 +59,7 @@ class Channel_Tests: XCTestCase {
     let channel = ChatChannel(
       id: "12341234",
       name: "Cool Channel",
+      type: "default",
       custom: ChannelMockCustom()
     )
 

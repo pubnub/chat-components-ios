@@ -264,7 +264,7 @@ open class MessageListItemCell: CollectionViewCellComponent {
       .theming(theme.itemTheme.secondaryLabel, cancelIn: &contentCancellables)
 
     messageTextContent?.textView
-      .configure(message.messageTextContentPublisher, cancelIn: &contentCancellables)
+      .configure(message.messageTextPublisher, cancelIn: &contentCancellables)
       .theming(theme.contentTextTheme, cancelIn: &contentCancellables)
 
     bubbleContainer?
@@ -278,102 +278,4 @@ open class MessageTextContentCell: MessageListItemCell {
   
   public lazy var textContent = TextComponentView(frame: bounds)
   
-}
-
-open class MessageLinkContentCell: CollectionViewCellComponent {
-  // MARK: Subviews
-  
-  open var authorAvatarView: ImageComponentView?
-  open var primaryLabel: LabelComponentView?
-  open var secondaryLabel: LabelComponentView?
-  open var tertiaryLabel: LabelComponentView?
-  open var quaternaryLabel: LabelComponentView?
-  
-  // Text
-  open var linkView: LinkComponentView?
-  
-  // theme.bubbleContainerTheme.tailSize * 2
-  public var contentEdgeSpacing: CGFloat = 10.0
-  
-  // MARK: UIStack Subview
-  public let topContainerStack = UIStackView()
-  public let contentContainer = UIStackView()
-  
-  public var customImageViewSpacing: CGFloat {
-    guard let imageView = authorAvatarView else { return 0 }
-    return stackView.customSpacing(after: imageView)
-  }
-  
-  // MARK: - UICollectionViewLayoutAttributes
-  
-  public override func setupSubviews() {
-    super.setupSubviews()
-    
-    self.authorAvatarView = PubNubAvatarComponentView(frame: bounds)
-    self.primaryLabel = PubNubLabelComponentView(frame: bounds)
-    self.secondaryLabel = PubNubLabelComponentView(frame: bounds)
-    self.linkView = LinkComponentView(frame: bounds)
-    
-    // Arrange Top Container
-    topContainerStack.isLayoutMarginsRelativeArrangement = true
-    topContainerStack.layoutMargins = .init(
-      top: .zero, left: -contentEdgeSpacing + 15.0, bottom: .zero, right: .zero
-    )
-    topContainerStack.addArrangedSubview(primaryLabel)
-    topContainerStack.setCustomSpacing(5.0, after: primaryLabel)
-    topContainerStack.addArrangedSubview(secondaryLabel)
-    
-    contentContainer.axis = .vertical
-    $cellAlignment.sink { [weak self] newAlignment in
-      self?.contentContainer.alignment = newAlignment.stackViewAlignment
-    }.store(in: &cancellables)
-    contentContainer.isLayoutMarginsRelativeArrangement = true
-    contentContainer.addArrangedSubview(topContainerStack)
-    contentContainer.addArrangedSubview(linkView)
-    
-    authorAvatarView?.heightAnchor.constraint(equalToConstant: 30).isActive = true
-    authorAvatarView?.widthAnchor.constraint(equalToConstant: 30).isActive = true
-    
-    stackView.alignment = .bottom
-    stackView.addArrangedSubview(authorAvatarView)
-    stackView.setCustomSpacing(contentEdgeSpacing, after: authorAvatarView)
-    stackView.addArrangedSubview(contentContainer)
-  }
-  
-  // MARK: - Configure Message
-  open override func configure<Message: ManagedMessageViewModel>(
-    _ message: Message,
-    theme: MessageListCellComponentTheme
-  ) {
-    theme.$alignment.sink { [weak self] newAlignment in
-      self?.cellAlignment = newAlignment
-    }.store(in: &contentCancellables)
-    
-    authorAvatarView?
-      .configure(
-        message.userViewModel.userAvatarUrlPublisher,
-        placeholder: theme.itemTheme.imageView.$localImage.eraseToAnyPublisher(),
-        cancelIn: &contentCancellables
-      )
-      .theming(theme.itemTheme.imageView, cancelIn: &contentCancellables)
-    
-    primaryLabel?
-      .configure(message.userViewModel.userNamePublisher, cancelIn: &contentCancellables)
-      .theming(theme.itemTheme.primaryLabel, cancelIn: &contentCancellables)
-    
-    secondaryLabel?
-      .configure(
-        message.messageDateCreatedPublisher,
-        formatter: theme.dateFormatter,
-        cancelIn: &contentCancellables
-      )
-      .theming(theme.itemTheme.secondaryLabel, cancelIn: &contentCancellables)
-
-    linkView?.configure(
-      urlPublisher: message.messageLinkContentPublisher,
-      cache: theme.contentLinkTheme.cacheProvider,
-      reloadDelegate: self,
-      cancelIn: &contentCancellables
-    )
-  }
 }

@@ -33,42 +33,76 @@ import PubNub
 public typealias PubNubChatMessage = ChatMessage<VoidCustomData>
 
 @dynamicMemberLookup
-public struct ChatMessage<CustomData: ChatCustomData>: Identifiable, Codable {
+public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
   
-  public struct Content: JSONCodable {
+  public struct MessagePayload: JSONCodable {
     public var id: String
+    public var text: String
+    public var contentType: String?
+    public var content: JSONCodable?
+    public var custom: Custom.Message
+    public var createdAt: Date
     
-    public var dateCreated: Date
-    
-    public var contentType: String
-    public var contentPayload: MessageContent
-    
-    public var custom: CustomData.Message
+    enum CodingKeys: String, CodingKey {
+      case id
+      case text
+      case contentType
+      case content
+      case custom
+      case createdAt
+    }
     
     public init(
       id: String = UUID().uuidString,
-      dateCreated: Date = Date(),
-      content: MessageContent,
-      custom: CustomData.Message
+      text: String = String(),
+      contentType: String? = nil,
+      content: JSONCodable? = nil,
+      custom: Custom.Message = Custom.Message(),
+      createdAt: Date = Date()
     ) {
       self.id = id
-      self.dateCreated = dateCreated
-      self.contentType = content.contentType.rawValue
-      self.contentPayload = content
+      self.text = text
+      self.contentType = contentType
+      self.content = content
       self.custom = custom
+      self.createdAt = createdAt
+    }
+    
+    public init(from decoder: Decoder) throws {
+      let container = try decoder.container(keyedBy: CodingKeys.self)
+            
+      id = try container.decode(String.self, forKey: .id)
+      text = try container.decode(String.self, forKey: .text)
+      contentType = try container.decodeIfPresent(String.self, forKey: .contentType)
+      content = try container.decodeIfPresent(AnyJSON.self, forKey: .content)
+      custom = try container.decodeIfPresent(Custom.Message.self, forKey: .custom) ?? Custom.Message()
+      createdAt = try container.decode(Date.self, forKey: .createdAt)
     }
     
     public init(
       jsonCodable: JSONCodable
     ) throws {
-      let content = try jsonCodable.codableValue.decode(Content.self)
+      let content = try jsonCodable.codableValue.decode(MessagePayload.self)
 
       self.init(
         id: content.id,
-        dateCreated: content.dateCreated,
-        content: content.contentPayload,
-        custom: content.custom
+        text: content.text,
+        contentType: content.contentType,
+        content: content.content,
+        custom: content.custom,
+        createdAt: content.createdAt
       )
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+      var container = encoder.container(keyedBy: CodingKeys.self)
+
+      try container.encode(id, forKey: .id)
+      try container.encode(text, forKey: .text)
+      try container.encodeIfPresent(contentType, forKey: .contentType)
+      try container.encodeIfPresent(content?.codableValue, forKey: .content)
+      try container.encodeIfPresent(custom, forKey: .custom)
+      try container.encode(createdAt, forKey: .createdAt)
     }
   }
 
@@ -77,33 +111,24 @@ public struct ChatMessage<CustomData: ChatCustomData>: Identifiable, Codable {
   public var id: String {
     return content.id
   }
-
-  public var dateSent: Date?
-  public var dateReceived: Date?
   
-  public var content: Content
+  public var content: MessagePayload
   
   public var pubnubUserId: String
-  public var userModel: ChatUser<CustomData.User>?
+  public var userModel: ChatUser<Custom.User>?
   
   public var pubnubChannelId: String
-  public var channelModel: ChatChannel<CustomData.Channel>?
+  public var channelModel: ChatChannel<Custom.Channel>?
   
   public init(
-    content: Content,
+    content: MessagePayload,
     timetoken: Timetoken = 0,
-    //    sentStatus: String = "pending",
-    dateSent: Date? = nil,
-    dateReceived: Date? = nil,
     pubnubUserId: String,
-    user: ChatUser<CustomData.User>? = nil,
+    user: ChatUser<Custom.User>? = nil,
     pubnubChannelId: String,
-    channel: ChatChannel<CustomData.Channel>? = nil
+    channel: ChatChannel<Custom.Channel>? = nil
   ) {
     self.timetoken = timetoken
-    //    self.sentStatus = sentStatus
-    self.dateSent = dateSent
-    self.dateReceived = dateReceived
     
     self.content = content
     
@@ -117,27 +142,26 @@ public struct ChatMessage<CustomData: ChatCustomData>: Identifiable, Codable {
   public init(
     id: String = UUID().uuidString,
     timetoken: Timetoken = 0,
-//    sentStatus: String = "pending",
     dateCreated: Date = Date(),
-    dateSent: Date? = nil,
-    dateReceived: Date? = nil,
-    content: MessageContent,
-    custom: CustomData.Message = CustomData.Message(),
+    text: String,
+    contentType: String? = nil,
+    content: JSONCodable? = nil,
+    custom: Custom.Message = Custom.Message(),
     pubnubUserId: String,
-    user: ChatUser<CustomData.User>? = nil,
+    user: ChatUser<Custom.User>? = nil,
     pubnubChannelId: String,
-    channel: ChatChannel<CustomData.Channel>? = nil
+    channel: ChatChannel<Custom.Channel>? = nil
   ) {
     self.init(
-      content: Content(
+      content: MessagePayload(
         id: id,
-        dateCreated: dateCreated,
+        text: text,
+        contentType: contentType,
         content: content,
-        custom: custom
+        custom: custom,
+        createdAt: dateCreated
       ),
       timetoken: timetoken,
-      dateSent: dateSent,
-      dateReceived: dateReceived,
       pubnubUserId: pubnubUserId,
       user: user,
       pubnubChannelId: pubnubChannelId,
@@ -147,111 +171,14 @@ public struct ChatMessage<CustomData: ChatCustomData>: Identifiable, Codable {
   
   // MARK: Dynamic Member Lookup
   
-  public subscript<T>(dynamicMember keyPath: WritableKeyPath<CustomData.Message, T>) -> T {
+  public subscript<T>(dynamicMember keyPath: WritableKeyPath<Custom.Message, T>) -> T {
     get { content.custom[keyPath: keyPath] }
     set { content.custom[keyPath: keyPath] = newValue }
   }
   
-  public subscript<T>(dynamicMember keyPath: WritableKeyPath<Content, T>) -> T {
+  public subscript<T>(dynamicMember keyPath: WritableKeyPath<MessagePayload, T>) -> T {
     get { content[keyPath: keyPath] }
     set { content[keyPath: keyPath] = newValue }
-  }
-}
-
-// MARK: Content Types
-
-public enum MessageContentType: String, Codable {
-  case text
-  case link
-  case imageRemote = "image-remote"
-  case custom
-  
-  public init(rawValue: String) {
-    switch rawValue {
-    case MessageContentType.text.rawValue:
-      self = .text
-    case MessageContentType.link.rawValue:
-      self = .link
-    case MessageContentType.imageRemote.rawValue:
-      self = .imageRemote
-    default:
-      self = .custom
-    }
-  }
-}
-
-public enum MessageContent {
-  case text(String)
-  case link(URL)
-  case imageRemote(URL)
-  case custom(AnyJSON)
-  
-  public var textType: String? {
-    switch self {
-    case .text(let content):
-      return content
-    default:
-      return nil
-    }
-  }
-  
-  public var linkType: URL? {
-    switch self {
-    case .link(let content):
-      return content
-    default:
-      return nil
-    }
-  }
-  
-  public var contentType: MessageContentType {
-    switch self {
-    case .text:
-      return MessageContentType.text
-    case .link:
-      return MessageContentType.link
-    case .imageRemote:
-      return MessageContentType.imageRemote
-    case .custom:
-      return MessageContentType.custom
-    }
-  }
-  
-  public var jsonContent: AnyJSON {
-    switch self {
-    case .text(let content):
-      return [contentType.rawValue: content]
-    case .link(let content):
-      return [contentType.rawValue: content]
-    case .imageRemote(let content):
-      return [contentType.rawValue: content]
-    case .custom(let content):
-      return content
-    }
-  }
-}
-
-extension MessageContent: Codable {
-  public init(from decoder: Decoder) throws {
-    let container = try decoder.singleValueContainer()
-
-    let json = try container.decode(AnyJSON.self)
-
-    if let content = json["text"]?.stringOptional {
-      self = .text(content)
-    } else if let content = json["link"]?.stringOptional, let contentURL = URL(string: content) {
-      self = .link(contentURL)
-    } else if let content = json["imageRemote"]?.stringOptional, let contentURL = URL(string: content) {
-      self = .imageRemote(contentURL)
-    } else {
-      self = .custom(json)
-    }
-  }
-  
-  public func encode(to encoder: Encoder) throws {
-    var container = encoder.singleValueContainer()
-    
-    try container.encode(jsonContent)
   }
 }
 
@@ -263,7 +190,7 @@ extension ChatMessage: PubNubMessage {
       return content
     }
     set(newValue) {
-      guard let newContent = try? Content(jsonCodable: newValue) else {
+      guard let newContent = try? MessagePayload(jsonCodable: newValue) else {
         PubNub.log.warn("ChatMessage could not decode \(newValue) into Message.Content")
         return
       }
@@ -330,15 +257,13 @@ extension ChatMessage: PubNubMessage {
   
   public init(from other: PubNubMessage) throws {
     
-    let content = try Content(jsonCodable: other.payload)
+    let content = try MessagePayload(jsonCodable: other.payload)
     
     let senderId = other.publisher ?? ""
     
     self.init(
       content: content,
       timetoken: other.published,
-      dateSent: other.published.timetokenDate,
-      dateReceived: nil,
       pubnubUserId: senderId,
       user: nil,
       pubnubChannelId: other.channel,

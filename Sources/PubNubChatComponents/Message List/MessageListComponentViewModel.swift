@@ -170,15 +170,9 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
     // Register Cells
     messageListTheme.authorItemTheme.cellType
       .registerCell(controller.collectionView)
-    messageListTheme.authorItemTheme.richMessageContentCellTypes.forEach {
-      $1.registerCell(controller.collectionView)
-    }
     
     messageListTheme.incomingItemTheme.cellType
       .registerCell(controller.collectionView)
-    messageListTheme.incomingItemTheme.richMessageContentCellTypes.forEach {
-      $1.registerCell(controller.collectionView)
-    }
     
     messageListTheme.typingIndicatorCellTheme.cellType
       .registerCell(controller.collectionView)
@@ -391,52 +385,10 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
     let cellTheme = message.userViewModel.pubnubId == provider.currentUserId ?
       componentTheme.authorItemTheme : componentTheme.incomingItemTheme
     
-    switch message.messageContentType {
-    case .text:
-      return try configureTextMessgeCell(
-        collectionView, at: indexPath, cellType: cellTheme.cellType,
-        for: message, theme: cellTheme
-      )
-    case .link:
-      if let linkCellType = cellTheme.richMessageContentCellTypes[.link] {
-        return try configureLinkMessgeCell(
-          collectionView, at: indexPath, cellType: linkCellType,
-          for: message, theme: cellTheme
-        )
-      } else {
-        // Fall back to Text
-        return try configureTextMessgeCell(
-          collectionView, at: indexPath, cellType: cellTheme.cellType,
-          for: message, theme: cellTheme
-        )
-      }
-    case .imageRemote:
-      if let linkCellType = cellTheme.richMessageContentCellTypes[.imageRemote] {
-        return try configureImageRemoteMessgeCell(
-          collectionView, at: indexPath, cellType: linkCellType,
-          for: message, theme: cellTheme
-        )
-      } else {
-        // Fall back to Text
-        return try configureTextMessgeCell(
-          collectionView, at: indexPath, cellType: cellTheme.cellType,
-          for: message, theme: cellTheme
-        )
-      }
-    case .custom:
-      if let linkCellType = cellTheme.richMessageContentCellTypes[.custom] {
-        return try configureCustomMessgeCell(
-          collectionView, at: indexPath, cellType: linkCellType,
-          for: message, theme: cellTheme
-        )
-      } else {
-        // Fall back to Text
-        return try configureTextMessgeCell(
-          collectionView, at: indexPath, cellType: cellTheme.cellType,
-          for: message, theme: cellTheme
-        )
-      }
-    }
+    return try configureTextMessgeCell(
+      collectionView, at: indexPath, cellType: cellTheme.cellType,
+      for: message, theme: cellTheme
+    )
   }
   
   // MARK: Custom Cell Types
@@ -460,65 +412,6 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
     return cell
   }
   
-
-  open func configureLinkMessgeCell(
-    _ collectionView: UICollectionView,
-    at indexPath: IndexPath,
-    cellType: CollectionViewCellComponent.Type,
-    for message: ManagedEntities.Message,
-    theme: MessageListCellComponentTheme
-  ) throws -> CollectionViewCellComponent {
-    
-    let cell = try cellType.dequeue(collectionView, for: indexPath)
-    
-    cell.reloadId = message.managedObjectId
-    cell.reloadDelegate = self
-    
-    cell.theming(theme)
-
-    cell.configure(message, theme: theme)
-    
-    return cell
-  }
-  
-  open func configureImageRemoteMessgeCell(
-    _ collectionView: UICollectionView,
-    at indexPath: IndexPath,
-    cellType: CollectionViewCellComponent.Type,
-    for message: ManagedEntities.Message,
-    theme: MessageListCellComponentTheme
-  ) throws -> CollectionViewCellComponent {
-    let cell = try cellType.dequeue(collectionView, for: indexPath)
-    
-    cell.reloadId = message.managedObjectId
-    cell.reloadDelegate = self
-    
-    cell.theming(theme)
-    
-    cell.configure(message, theme: theme)
-    
-    return cell
-  }
-
-  open func configureCustomMessgeCell(
-    _ collectionView: UICollectionView,
-    at indexPath: IndexPath,
-    cellType: CollectionViewCellComponent.Type,
-    for message: ManagedEntities.Message,
-    theme: MessageListCellComponentTheme
-  ) throws -> CollectionViewCellComponent {
-    let cell = try cellType.dequeue(collectionView, for: indexPath)
-    
-    cell.reloadId = message.managedObjectId
-    cell.reloadDelegate = self
-    
-    cell.theming(theme)
-
-    cell.configure(message, theme: theme)
-    
-    return cell
-  }
-
   // MARK: - Fetched Results Controller & Delegate
 
   public var configureFetchedResultsController: ((NSFetchedResultsController<ManagedEntities.Message>) -> Void)?

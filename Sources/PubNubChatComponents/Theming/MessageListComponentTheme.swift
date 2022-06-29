@@ -67,8 +67,6 @@ public class MessageListComponentTheme: ViewControllerComponentTheme {
 }
 
 public class MessageListCellComponentTheme: CollectionViewCellTheme {
-  // Layout
-  public var richMessageContentCellTypes: [MessageContentType: CollectionViewCellComponent.Type]
   
   // Appearance
   @Published public var alignment: UICollectionViewCell.Alignment
@@ -81,7 +79,6 @@ public class MessageListCellComponentTheme: CollectionViewCellTheme {
 
   public init(
     textMessageContentCellType: CollectionViewCellComponent.Type,
-    richMessageContentCellTypes: [MessageContentType: CollectionViewCellComponent.Type] = [:],
     backgroundColor: UIColor?,
     highlightColor: UIColor?,
     selectedColor: UIColor?,
@@ -93,7 +90,6 @@ public class MessageListCellComponentTheme: CollectionViewCellTheme {
     itemTheme: BasicComponentTheme,
     dateFormatter: DateFormatter
   ) {
-    self.richMessageContentCellTypes = richMessageContentCellTypes
     self.alignment = alignment
     self.maxWidthPercentage = maxWidthPercentage
     self.bubbleContainerTheme = bubbleContainerTheme
@@ -165,9 +161,6 @@ extension MessageListCellComponentTheme {
   public static var incomingGroupChat: MessageListCellComponentTheme {
     return MessageListCellComponentTheme(
       textMessageContentCellType: MessageListItemCell.self,
-      richMessageContentCellTypes: [
-        .link: MessageLinkContentCell.self
-      ],
       backgroundColor: .clear,
       highlightColor: .clear,
       selectedColor: .clear,

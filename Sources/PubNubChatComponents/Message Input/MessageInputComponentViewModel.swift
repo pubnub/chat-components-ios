@@ -166,22 +166,13 @@ public class MessageInputComponentViewModel<ModelData, ManagedEntities>
     forcePublisheTypingSubject.send(false)
   }
   
-  open func constructOutgoingContent(inputText: String) -> ChatMessage<ModelData>.Content {
-    if let url = URL(string: inputText), !inputText.split(separator: " ").flatMap({ String($0).detectedURLs() }).isEmpty {
-      return ChatMessage<ModelData>.Content(
-        id: UUID().uuidString,
-        dateCreated: Date(),
-        content: .link(url),
-        custom: constructOutgoingContentCustomData()
-      )
-    } else {
-      return ChatMessage<ModelData>.Content(
-        id: UUID().uuidString,
-        dateCreated: Date(),
-        content: .text(inputText),
-        custom: constructOutgoingContentCustomData()
-      )
-    }
+  open func constructOutgoingContent(inputText: String) -> ChatMessage<ModelData>.MessagePayload {
+    return ChatMessage<ModelData>.MessagePayload(
+      id: UUID().uuidString,
+      text: inputText,
+      custom: constructOutgoingContentCustomData(),
+      createdAt: Date()
+    )
   }
 
   open func constructOutgoingContentCustomData() -> ModelData.Message {

@@ -186,7 +186,6 @@ public protocol ManagedMessageEntity: ManagedEntity {
   // Accessors
   
   var pubnubMessageID: Timetoken { get }
-  var messageContentType: MessageContentType { get }
   
   // Relationships
   

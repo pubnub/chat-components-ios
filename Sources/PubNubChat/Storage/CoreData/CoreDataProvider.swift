@@ -83,8 +83,6 @@ public class CoreDataProvider: NSPersistentContainer {
     
     storeDescription.url = location.rawValue
     storeDescription.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
-    storeDescription.shouldMigrateStoreAutomatically = true
-    storeDescription.shouldInferMappingModelAutomatically = true
     
     persistentStoreDescriptions = [storeDescription]
     

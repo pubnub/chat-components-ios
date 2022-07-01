@@ -114,6 +114,17 @@ public struct ChatMember<Custom: ChatCustomData>: Identifiable, Hashable, Server
       custom: custom
     )
   }
+
+  @available(*, deprecated, renamed: "init(channel:user:status:updated:eTag:presence:custom:)")
+  public init(
+    channel: ChatChannel<Custom.Channel>,
+    member: ChatUser<Custom.User>
+  ) {
+    self.init(
+      channel: channel,
+      user: member
+    )
+  }
   
   // MARK: Dynamic Member Lookup
   

@@ -36,7 +36,7 @@ import PubNubMembership
 // MARK: - Protocol Wrapper
 
 /// Protocol that provides the overall PubNub API Interface
-public protocol PubNubProvider: SubscribeAPI, PubNubUserAPI, PubNubChannelAPI, PubNubMemberAPI, MessageAPI, MessageActionAPI, PresenceAPI, PubNubConfigurable, PubNubUserInterface, PubNubSpaceInterface, PubNubMembershipInterface {}
+public protocol PubNubProvider: SubscribeAPI, PubNubUserAPI, PubNubChannelAPI, PubNubMemberAPI, MessageAPI, MessageActionAPI, PresenceAPI, PubNubConfigurable, PubNubUserAPIInterface, PubNubSpaceAPIInterface, PubNubMembershipAPIInterface {}
 
 extension PubNub: PubNubProvider {}
 
@@ -70,22 +70,22 @@ public protocol PubNubCoreInterface {
   var pubnub: PubNub { get }
 }
 /// Interface for the User functionality of PubNub
-public protocol PubNubUserInterface: PubNubCoreInterface {
+public protocol PubNubUserAPIInterface: PubNubCoreInterface {
   /// Pubnub User Interface instance
   var userInterface: PubNubUserInterface { get }
 }
 /// Interface for the Space functionality of PubNub
-public protocol PubNubSpaceInterface: PubNubCoreInterface {
+public protocol PubNubSpaceAPIInterface: PubNubCoreInterface {
   /// Pubnub Space Interface instance
   var spaceInterface: PubNubSpaceInterface { get }
 }
 /// Interface for the Membership functionality of PubNub
-public protocol PubNubMembershipInterface: PubNubCoreInterface {
+public protocol PubNubMembershipAPIInterface: PubNubCoreInterface {
   /// Pubnub Membership Interface instance
   var membershipInterface: PubNubMembershipInterface { get }
 }
 
-extension PubNub: PubNubUserInterface, PubNubSpaceInterface, PubNubMembershipInterface {
+extension PubNub: PubNubUserAPIInterface, PubNubSpaceAPIInterface, PubNubMembershipAPIInterface {
   public var userInterface: PubNubUserInterface {
     return self
   }
@@ -249,7 +249,7 @@ extension ChatDataProvider {
 
       // Process the batch updates
       self.load(messages: messages)
-      self.load(members: presenceChanges)
+      self.load(members: presenceChanges, forceWrite: false)
     }
   }
 }

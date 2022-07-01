@@ -27,7 +27,6 @@
 
 import Foundation
 import CoreData
-import UIKit
 import Combine
 
 import PubNub
@@ -128,6 +127,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
 
   public func load(
     members: [ChatMember<ModelData>],
+    forceWrite: Bool = true,
     batchSize: Int = 256,
     batchHandler: (([ChatMember<ModelData>], Error?) -> Void)? = nil,
     completion: (() -> Void)? = nil
@@ -142,7 +142,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
         if let error = self?.provider.coreDataContainer.syncWrite({ context in
           for item in batch {
             try ManagedEntities.Member.insertOrUpdate(
-              member: item, forceWrite: false, into: context
+              member: item, forceWrite: forceWrite, into: context
             )
           }
         }) {

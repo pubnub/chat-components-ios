@@ -150,6 +150,7 @@ class PayloadAlignmentMigration {
   }
 }
 
+@objc(PayloadAlignmentMessageEntityMigration)
 class PayloadAlignmentMessageEntityMigration: NSEntityMigrationPolicy {
   @objc func resolveTextProperty(_ content: Data) -> String {
     let decodedContent = try? Constant.jsonDecoder.decode(AnyJSON.self, from: content)

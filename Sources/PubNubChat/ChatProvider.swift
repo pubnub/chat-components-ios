@@ -75,7 +75,7 @@ open class ChatProvider<ModelData, ManagedEntities> where ModelData: ChatCustomD
         )
       }
     } catch {
-      preconditionFailure("Failed to initialize the in-memory storage with error: \(error). This is a non-recoverable error.")
+      preconditionFailure("Failed to initialize CoreData with error: \(error). This is a non-recoverable error.")
     }
     
     self.init(

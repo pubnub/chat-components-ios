@@ -51,7 +51,7 @@ let package = Package(
   ],
   dependencies: [
     // Common
-    .package(name: "PubNub", url: "https://github.com/pubnub/swift.git", .branch("features/CLEN-351_VSP-modules")),
+    .package(name: "PubNub", url: "https://github.com/pubnub/swift.git", from: "6.0.0"),
     
     // PubNubChat
     

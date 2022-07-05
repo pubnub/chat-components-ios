@@ -1752,8 +1752,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/pubnub/swift";
 			requirement = {
-				branch = "features/CLEN-351_VSP-modules";
-				kind = branch;
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.0.0;
 			};
 		};
 		35F46DF926C1D8DC0024FB67 /* XCRemoteSwiftPackageReference "ChatLayout" */ = {

@@ -53,6 +53,7 @@ public final class PubNubManagedMessage: NSManagedObject {
   // Relationships
   @NSManaged public var author: PubNubManagedUser
   @NSManaged public var channel: PubNubManagedChannel
+  @NSManaged public var actions: Set<PubNubManagedMessageAction>
 }
 
 // MARK: Helpers
@@ -104,7 +105,7 @@ extension PubNubManagedMessage: ManagedMessageEntity {
     into context: NSManagedObjectContext
   ) throws -> PubNubManagedMessage {
     if let existingMessage = try? context.fetch(
-      messagesBy(messageId: message.id)
+      messageBy(messageId: message.id)
     ).first {
       try existingMessage.update(from: message)
       
@@ -173,7 +174,7 @@ extension PubNubManagedMessage: ManagedMessageEntity {
     from context: NSManagedObjectContext
   ) -> PubNubManagedMessage? {
     if let existingMessage = try? context.fetch(
-      messagesBy(messageId: messageId)
+      messageBy(messageId: messageId)
     ).first {
       context.delete(existingMessage)
       return existingMessage
@@ -200,9 +201,16 @@ extension PubNubManagedMessage: ManagedMessageEntityFetches {
     return request
   }
   
-  public static func messagesBy(messageId: String) -> NSFetchRequest<PubNubManagedMessage> {
+  public static func messageBy(messageId: String) -> NSFetchRequest<PubNubManagedMessage> {
     let request = NSFetchRequest<PubNubManagedMessage>(entityName: entityName)
     request.predicate = NSPredicate(format: "id == %@", messageId)
+    
+    return request
+  }
+  
+  public static func messageBy(pubnubTimetoken: Timetoken, channelId: String) -> NSFetchRequest<PubNubManagedMessage> {
+    let request = NSFetchRequest<PubNubManagedMessage>(entityName: entityName)
+    request.predicate = NSPredicate(format: "dateSent == %@ && pubnubChannelId == %@", pubnubTimetoken, channelId)
     
     return request
   }

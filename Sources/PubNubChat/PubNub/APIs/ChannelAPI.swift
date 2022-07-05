@@ -29,6 +29,7 @@ import Foundation
 import Combine
 
 import PubNub
+import PubNubSpace
 
 public struct PaginationError<Request>: Error {
   public var request: Request
@@ -36,52 +37,59 @@ public struct PaginationError<Request>: Error {
 }
 
 public protocol PubNubChannelAPI {
-  func fetchAll<Custom: ChannelCustomData>(
-    channels request: ObjectsFetchRequest,
+  func fetch<Custom: ChannelCustomData>(
+    channels request: ChannelsFetchRequest,
     into: Custom.Type,
-    completion: ((Result<(channels: [ChatChannel<Custom>], next: ObjectsFetchRequest?), Error>) -> Void)?
+    completion: @escaping ((Result<(channels: [ChatChannel<Custom>], next: ChannelsFetchRequest?), Error>) -> Void)
   )
 
   func fetch<Custom: ChannelCustomData>(
-    channel request: ObjectMetadataIdRequest,
+    channel request: ChatChannelRequest<Custom>,
+    into: Custom.Type,
+    completion: @escaping ((Result<ChatChannel<Custom>, Error>) -> Void)
+  )
+
+  func create<Custom: ChannelCustomData>(
+    channel request: ChatChannelRequest<Custom>,
+    into: Custom.Type,
+    completion: ((Result<ChatChannel<Custom>, Error>) -> Void)?
+  )
+  
+  func update<Custom: ChannelCustomData>(
+    channel request: ChatChannelRequest<Custom>,
     into: Custom.Type,
     completion: ((Result<ChatChannel<Custom>, Error>) -> Void)?
   )
 
-  func set<Custom: ChannelCustomData>(
-    channel request: ChannelMetadataRequest<Custom>,
+  func remove<Custom: ChannelCustomData>(
+    channel request: ChatChannelRequest<Custom>,
     into: Custom.Type,
-    completion: ((Result<ChatChannel<Custom>, Error>) -> Void)?
-  )
-
-  func remove(
-    channel request: ObjectRemoveRequest,
-    completion: ((Result<String, Error>) -> Void)?
+    completion: ((Result<Void, Error>) -> Void)?
   )
 }
 
 extension PubNubChannelAPI {
   
-  func fetchAllPublisher<Custom: ChannelCustomData>(
-    channels request: ObjectsFetchRequest,
+  func fetchPublisher<Custom: ChannelCustomData>(
+    channels request: ChannelsFetchRequest,
     into customType: Custom.Type
-  ) -> AnyPublisher<(channels: [ChatChannel<Custom>], next: ObjectsFetchRequest?), Error> {
+  ) -> AnyPublisher<(channels: [ChatChannel<Custom>], next: ChannelsFetchRequest?), Error> {
     return Future { promise in
-      fetchAll(channels: request, into: customType) { promise($0) }
+      fetch(channels: request, into: customType) { promise($0) }
     }.eraseToAnyPublisher()
   }
   
-  public func fetchAllPagesPublisher<Custom: ChannelCustomData>(
-    channels request: ObjectsFetchRequest,
+  public func fetchPagesPublisher<Custom: ChannelCustomData>(
+    channels request: ChannelsFetchRequest,
     into customType: Custom.Type
-  ) -> AnyPublisher<([ChatChannel<Custom>], ObjectsFetchRequest?), PaginationError<ObjectsFetchRequest>> {
+  ) -> AnyPublisher<([ChatChannel<Custom>], ChannelsFetchRequest?), PaginationError<ChannelsFetchRequest>> {
     
-    let pagedPublisher = CurrentValueSubject<ObjectsFetchRequest, PaginationError<ObjectsFetchRequest>>(request)
+    let pagedPublisher = CurrentValueSubject<ChannelsFetchRequest, PaginationError<ChannelsFetchRequest>>(request)
 
     return pagedPublisher
       .flatMap({ request in
-        fetchAllPublisher(channels: request, into: customType)
-          .mapError { PaginationError<ObjectsFetchRequest>(request: request, error: $0) }
+        fetchPublisher(channels: request, into: customType)
+          .mapError { PaginationError<ChannelsFetchRequest>(request: request, error: $0) }
       })
       .handleEvents(receiveOutput: { output in
         if let request = output.next {
@@ -97,64 +105,85 @@ extension PubNubChannelAPI {
 
 // MARK: - PubNub Ext
 
-extension PubNub: PubNubChannelAPI {
-  public func fetchAll<Custom: ChannelCustomData>(
-    channels request: ObjectsFetchRequest,
+extension PubNubProvider {
+  public func fetch<Custom: ChannelCustomData>(
+    channels request: ChannelsFetchRequest,
     into: Custom.Type,
-    completion: ((Result<(channels: [ChatChannel<Custom>], next: ObjectsFetchRequest?), Error>) -> Void)?
+    completion: @escaping ((Result<(channels: [ChatChannel<Custom>], next: ChannelsFetchRequest?), Error>) -> Void)
   ) {
-    allChannelMetadata(
-      include: request.include,
+    spaceInterface.fetchSpaces(
+      includeCustom: request.includeCustom,
+      includeTotalCount: request.includeTotalCount,
       filter: request.filter,
       sort: request.sort,
       limit: request.limit,
       page: request.page,
-      custom: .init(customConfiguration: request.config?.mergeChatConsumerID())
+      requestConfig: .init(customConfiguration: request.config)
     ) { result in
-      completion?(result.map {
-        ($0.channels.compactMap { try? $0.transcode() }, request.next(page: $0.next))
-      })
+      completion(result.map { ($0.spaces.map { ChatChannel(pubnub: $0) }, request.next(page: $0.next)) })
     }
   }
 
   public func fetch<Custom: ChannelCustomData>(
-    channel request: ObjectMetadataIdRequest,
+    channel request: ChatChannelRequest<Custom>,
     into: Custom.Type,
-    completion: ((Result<ChatChannel<Custom>, Error>) -> Void)?
+    completion: @escaping ((Result<ChatChannel<Custom>, Error>) -> Void)
   ) {
-    fetch(
-      channel: request.metadataId,
-      include: request.includeCustom,
-      custom: .init(customConfiguration: request.config?.mergeChatConsumerID())
+    spaceInterface.fetchSpace(
+      spaceId: request.channel.id,
+      includeCustom: request.includeCustom,
+      requestConfig: .init(customConfiguration: request.config)
     ) { result in
-      completion?(
-        result
-          .flatMap { do { return .success(try $0.transcode()) } catch { return .failure(error) } }
-      )
+      completion(result.map { ChatChannel(pubnub: $0) })
     }
   }
 
-  public func set<Custom: ChannelCustomData>(
-    channel request: ChannelMetadataRequest<Custom>,
+  public func create<Custom: ChannelCustomData>(
+    channel request: ChatChannelRequest<Custom>,
     into: Custom.Type,
     completion: ((Result<ChatChannel<Custom>, Error>) -> Void)?
   ) {
-    set(
-      channel: request.channel,
-      include: request.includeCustom,
-      custom: .init(customConfiguration: request.config?.mergeChatConsumerID())
+    spaceInterface.createSpace(
+      spaceId: request.channel.id,
+      name: request.channel.name,
+      type: request.channel.type,
+      status: request.channel.status,
+      description: request.channel.details,
+      custom: request.channel.custom,
+      includeCustom: request.includeCustom,
+      requestConfig: .init(customConfiguration: request.config)
     ) { result in
-      completion?(result.flatMap { do { return .success(try $0.transcode()) } catch { return .failure(error) } })
+      completion?(result.map { ChatChannel(pubnub: $0) })
     }
   }
 
-  public func remove(
-    channel request: ObjectRemoveRequest,
-    completion: ((Result<String, Error>) -> Void)?
+  public func update<Custom: ChannelCustomData>(
+    channel request: ChatChannelRequest<Custom>,
+    into: Custom.Type,
+    completion: ((Result<ChatChannel<Custom>, Error>) -> Void)?
   ) {
-    remove(
-      channel: request.metadataId,
-      custom: .init(customConfiguration: request.config?.mergeChatConsumerID()),
+    spaceInterface.updateSpace(
+      spaceId: request.channel.id,
+      name: request.channel.name,
+      type: request.channel.type,
+      status: request.channel.status,
+      description: request.channel.details,
+      custom: request.channel.custom,
+      includeCustom: request.includeCustom,
+      requestConfig: .init(customConfiguration: request.config)
+    ) { result in
+      completion?(result.map { ChatChannel(pubnub: $0) })
+    }
+  }
+  
+  public func remove<Custom: ChannelCustomData>(
+    channel request: ChatChannelRequest<Custom>,
+    into: Custom.Type,
+    completion: ((Result<Void, Error>) -> Void)?
+  ) {
+    spaceInterface.removeSpace(
+      spaceId: request.channel.id,
+      requestConfig: .init(customConfiguration: request.config),
       completion: completion
     )
   }
@@ -162,7 +191,9 @@ extension PubNub: PubNubChannelAPI {
 
 // MARK: - Requests
 
-public struct ChannelMetadataRequest<Custom: ChannelCustomData> {
+public typealias ChannelsFetchRequest = FetchEntitiesRequest<PubNub.SpaceSort>
+
+public struct ChatChannelRequest<Custom: ChannelCustomData>: Equatable {
   public let requestId: String = UUID().uuidString
 
   public var channel: ChatChannel<Custom>
@@ -180,32 +211,3 @@ public struct ChannelMetadataRequest<Custom: ChannelCustomData> {
     self.config = config
   }
 }
-
-extension ChannelMetadataRequest: Equatable {
-  public static func == (lhs: ChannelMetadataRequest, rhs: ChannelMetadataRequest) -> Bool {
-    return lhs.requestId == rhs.requestId
-  }
-}
-
-public struct ObjectRemoveRequest: Equatable {
-  public let requestId: String = UUID().uuidString
-  public var metadataId: String
-  public var config: PubNubConfiguration?
-  
-  public init(
-    metadataId: String,
-    config: PubNubConfiguration? = nil
-  ) {
-    self.metadataId = metadataId
-    self.config = config
-  }
-}
-
-// MARK: - Extensions
-
-extension PubNubChannelMetadataChangeset {
-  func apply<T: PubNubChannelMetadata>(to object: PubNubChannelMetadata, into _: T.Type) -> T? {
-    return apply(to: object) as? T
-  }
-}
-

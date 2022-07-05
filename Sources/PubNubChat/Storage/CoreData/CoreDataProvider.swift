@@ -278,12 +278,12 @@ public class CoreDataProvider: NSPersistentContainer {
 
   @objc
   func storeRemoteChange(_ notification: Notification) {
-    PubNub.log.error("NSPersistentStoreRemoteChange Notification: \(String(describing: notification.userInfo))")
+    PubNub.log.debug("NSPersistentStoreRemoteChange Notification: \(String(describing: notification.userInfo))")
   }
   
   @objc
   func managedObjectContextDidSave(_ notification: Notification) {
-    PubNub.log.error("NSManagedObjectContextDidSave Notification: \(String(describing: notification.userInfo))")
+    PubNub.log.debug("NSManagedObjectContextDidSave Notification: \(String(describing: notification.userInfo))")
   }
 }
 

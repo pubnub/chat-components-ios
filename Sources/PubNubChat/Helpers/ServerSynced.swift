@@ -1,8 +1,8 @@
 //
-//  CoreDataContainer_Tests.swift
+//  ServerSynced.swift
 //
 //  PubNub Real-time Cloud-Hosted Push API and Push Notification Client Frameworks
-//  Copyright © 2021 PubNub Inc.
+//  Copyright © 2022 PubNub Inc.
 //  https://www.pubnub.com/
 //  https://www.pubnub.com/terms
 //
@@ -25,28 +25,19 @@
 //  THE SOFTWARE.
 //
 
-import XCTest
-@testable import PubNubChat
+import Foundation
 
-class CoreDataContainer_Tests: XCTestCase {
-  
-  override func setUpWithError() throws {
-    // Put setup code here. This method is called before the invocation of each test method in the class.
-  }
-  
-  override func tearDownWithError() throws {
-    // Put teardown code here. This method is called after the invocation of each test method in the class.
-  }
-  
-  func testExample() throws {
-    // This is an example of a functional test case.
-    // Use XCTAssert and related functions to verify your tests produce the correct results.
-  }
-  
-  func testPerformanceExample() throws {
-    // This is an example of a performance test case.
-    self.measure {
-      // Put the code you want to measure the time of here.
-    }
+/// An object that can be synced with a PubNub server
+public protocol ServerSynced {
+  /// Caching value that changes whenever the remote object changes.
+  var eTag: String? { get set }
+  /// Last time the remote object was changed.
+  var updated: Date? { get set }
+}
+
+extension ServerSynced {
+  /// Whether the is known to have been synced with a PubNub server
+  var isSynced: Bool {
+    return eTag != nil && updated != nil
   }
 }

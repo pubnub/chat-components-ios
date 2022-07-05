@@ -104,11 +104,5 @@ open class ChannelMemberComponentCell: CollectionViewCellComponent {
         member.userViewModel.userNamePublisher.map({ $0 }).eraseToAnyPublisher(), cancelIn: &contentCancellables
       )
       .theming(theme.itemTheme.primaryLabel, cancelIn: &contentCancellables)
-    
-    secondaryLabel?
-      .configure(
-        member.userViewModel.userOccupationPublisher, cancelIn: &contentCancellables
-      )
-      .theming(theme.itemTheme.secondaryLabel, cancelIn: &contentCancellables)
   }
 }

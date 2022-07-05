@@ -51,19 +51,23 @@ let package = Package(
   ],
   dependencies: [
     // Common
-    .package(name: "PubNub", url: "https://github.com/pubnub/swift.git", from: "4.1.2"),
+    .package(name: "PubNub", url: "https://github.com/pubnub/swift.git", from: "6.0.0"),
     
     // PubNubChat
     
     // PubNubChatComponents
     .package(name: "Kingfisher", url: "https://github.com/onevcat/Kingfisher.git", from: "6.3.0"),
-    .package(name: "ChatLayout", url: "https://github.com/ekazaev/ChatLayout", from: "1.1.10"),
+    .package(name: "ChatLayout", url: "https://github.com/ekazaev/ChatLayout", .upToNextMinor(from: "1.1.10")),
     .package(name: "InputBarAccessoryView", url: "https://github.com/nathantannar4/InputBarAccessoryView", from: "5.4.0")
   ],
   targets: [
     .target(
       name: "PubNubChat",
-      dependencies: ["PubNub"],
+      dependencies: [
+        "PubNub",
+          .product(name: "PubNubUser", package: "PubNub"),
+          .product(name: "PubNubSpace", package: "PubNub"),
+          .product(name: "PubNubMembership", package: "PubNub")],
       exclude: ["Info.plist"]
     ),
     .testTarget(

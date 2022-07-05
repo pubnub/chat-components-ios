@@ -29,7 +29,7 @@ import Foundation
 
 import PubNub
 
-public protocol CustomFlatJSONData: FlatJSONRepresentable, Defaultable {}
+public protocol CustomFlatJSONData: FlatJSONCodable, Hashable, Defaultable {}
 public protocol CustomJSONData: JSONCodable, Hashable, Defaultable {}
 
 public struct VoidCustomData: Codable, Hashable,
@@ -40,7 +40,7 @@ public struct VoidCustomData: Codable, Hashable,
   MessageCustomData
 {
   public init() {}
-  public init(flatJSON: [String: JSONCodableScalar]?) { }
+  public init(flatJSON: [String: JSONCodableScalar]) { }
   public var flatJSON: [String: JSONCodableScalar] { [:] }
 }
 
@@ -58,23 +58,4 @@ public protocol ChatCustomData {
 
 public protocol Defaultable {
   init()
-}
-
-public protocol FlatJSONRepresentable: Hashable, JSONCodable {
-  init(flatJSON: [String: JSONCodableScalar]?)
-  var flatJSON: [String: JSONCodableScalar] { get }
-}
-
-public extension FlatJSONRepresentable {
-  var flatJSON: [String: JSONCodableScalar] {
-    var payload = [String: JSONCodableScalar]()
-    
-    for child in Mirror(reflecting: self).children  {
-      if let label = child.label, let value = child.value as? JSONCodableScalar {
-        payload.updateValue(value, forKey: label)
-      }
-    }
-    
-    return payload
-  }
 }

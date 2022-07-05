@@ -29,49 +29,147 @@ import Foundation
 import Combine
 
 import PubNub
+import PubNubUser
+import PubNubSpace
+import PubNubMembership
 
 // MARK: - Protocol Wrapper
-public typealias PubNubObjectAPI = PubNubUserAPI & PubNubChannelAPI & PubNubMembershipAPI & PubNubMemberAPI
-public typealias PubNubAPI = SubscribeAPI & PubNubObjectAPI & MessageAPI & PresenceAPI & PubNubConfigurable & PubNubBase
+
+/// Protocol that provides the overall PubNub API Interface
+public protocol PubNubProvider: SubscribeAPI, PubNubUserAPI, PubNubChannelAPI, PubNubMemberAPI, MessageAPI, MessageActionAPI, PresenceAPI, PubNubConfigurable, PubNubUserAPIInterface, PubNubSpaceAPIInterface, PubNubMembershipAPIInterface {}
+
+extension PubNub: PubNubProvider {}
 
 // MARK: - Configuration Provider
+
+/// An object that is capable of configuring a PubNub instance
 public protocol PubNubConfigurable {
+  /// The configuration object of the PubNub instance
   var configuration: PubNubConfiguration { get }
+  /// Set consumer identifying value for components usage.
+  /// - Parameters:
+  ///   - identifier: Identifier of consumer with which value will be associated.
+  ///   - value: Value which should be associated with consumer identifier.
   mutating func setConsumer(identifier: String, value: String)
 }
 
-public protocol PubNubBase {
-  var pubnub: PubNub? { get }
-}
+public extension PubNubProvider {
+  var configuration: PubNubConfiguration {
+    return pubnub.configuration
+  }
 
-extension PubNub: PubNubConfigurable {}
-
-extension PubNub: PubNubBase {
-  public var pubnub: PubNub? {
-    return self
+  mutating func setConsumer(identifier: String, value: String) {
+    pubnub.setConsumer(identifier: identifier, value: value)
   }
 }
 
-// MARK: - KeySet Provider
-public protocol PubNubKeySetProvider {
-  var subscribeKey: String { get set }
-  var publishKey: String? { get set }
+// MARK: - Base Providers
+/// Interface for the Core functionality of PubNub
+public protocol PubNubCoreInterface {
+  /// Pubnub Core Interface instance
+  var pubnub: PubNub { get }
+}
+/// Interface for the User functionality of PubNub
+public protocol PubNubUserAPIInterface: PubNubCoreInterface {
+  /// Pubnub User Interface instance
+  var userInterface: PubNubUserInterface { get }
+}
+/// Interface for the Space functionality of PubNub
+public protocol PubNubSpaceAPIInterface: PubNubCoreInterface {
+  /// Pubnub Space Interface instance
+  var spaceInterface: PubNubSpaceInterface { get }
+}
+/// Interface for the Membership functionality of PubNub
+public protocol PubNubMembershipAPIInterface: PubNubCoreInterface {
+  /// Pubnub Membership Interface instance
+  var membershipInterface: PubNubMembershipInterface { get }
+}
+
+extension PubNub: PubNubUserAPIInterface, PubNubSpaceAPIInterface, PubNubMembershipAPIInterface {
+  public var userInterface: PubNubUserInterface {
+    return self
+  }
+  
+  public var spaceInterface: PubNubSpaceInterface {
+    return self
+  }
+  
+  public var membershipInterface: PubNubMembershipInterface {
+    return self
+  }
+  
+  public var pubnub: PubNub {
+    return self
+  }
 }
 
 // MARK: Subscribe/Data Listener
 
 extension ChatDataProvider {
   
-  open func syncPubnubSubscribeListener(_ listener: SubscriptionListener) {
+  /// Default listener implementation that will attempt to store event data into the local CoreData store
+  /// - Parameters:
+  ///   - coreListener: Instance of a Core Subscription Listener
+  ///   - userListener: Instance of a User Event Listener
+  ///   - spaceListener: Instance of a Space Event Listener
+  ///   - membershipListener: Instance of a Membership Event Listener
+  open func syncPubnubListeners(
+    coreListener: CoreListener,
+    userListener: PubNubUserListener,
+    spaceListener: PubNubSpaceListener,
+    membershipListener: PubNubMembershipListener
+  ) {
     
-    listener.didReceiveBatchSubscription = { [weak self] events in
-      guard let self = self else { return }
-      var users = [PubNubUUIDMetadataChangeset]()
-      var channels = [PubNubChannelMetadataChangeset]()
+    userListener.didReceiveUserEvents = { [weak self] events in
+      for event in events {
+        switch event {
+        case .userUpdated(let patcher):
+          PubNub.log.debug("Listener: User Updated \(patcher)")
+          self?.patch(user: .init(pubnub: patcher))
+          
+        case .userRemoved(let user):
+          PubNub.log.debug("Listener: User Removed \(user)")
+          self?.removeStoredUser(userId: user.id)
+        }
+      }
+    }
+    
+    spaceListener.didReceiveSpaceEvents = { [weak self] events in
+      for event in events {
+        switch event {
+        case .spaceUpdated(let patcher):
+          PubNub.log.debug("Listener: Channel Updated \(patcher)")
+          self?.patch(channel: .init(pubnub: patcher))
+          
+        case .spaceRemoved(let space):
+          PubNub.log.debug("Listener: Channel Removed \(space)")
+          self?.removeStoredChannel(channelId: space.id)
+        }
+      }
+    }
 
-      var members = [ChatMember<ModelData>]()
+    membershipListener.didReceiveMembershipEvents = { [weak self] events in
+      for event in events {
+        switch event {
+        case .membershipUpdated(let patcher):
+          PubNub.log.debug("Listener: Membership Updated \(patcher)")
+          self?.patch(member: .init(pubnub: patcher))
+          
+        case .membershipRemoved(let membership):
+          PubNub.log.debug("Listener: Membership Removed \(membership)")
+          self?.removeStoredMember(
+            channelId: membership.space.id, userId: membership.user.id
+          )
+        }
+      }
+    }
+     
+    coreListener.didReceiveBatchSubscription = { [weak self] events in
+      guard let self = self else { return }
+
       var messages = [ChatMessage<ModelData>]()
       var presenceChanges = [ChatMember<ModelData>]()
+      var messageActions = [ChatMessageAction<ModelData>]()
 
       for event in events {
         switch event {
@@ -112,52 +210,46 @@ extension ChatDataProvider {
             )
             presenceChanges.append(contentsOf: memberships)
           }
-        case .uuidMetadataSet(let userChangeset):
-          PubNub.log.debug("Listener: User Metadata set \(userChangeset)")
-          users.append(userChangeset)
-        
-        case .uuidMetadataRemoved(metadataId: let metadataId):
-          PubNub.log.debug("Listener: User Metadata removed \(metadataId)")
-          self.removeStoredUser(userId: metadataId)
-      
-        case .channelMetadataSet(let channelChangeset):
-          PubNub.log.debug("Listener: Channel Metadata set \(channelChangeset)")
-          channels.append(channelChangeset)
-          
-        case .channelMetadataRemoved(metadataId: let metadataId):
-          PubNub.log.debug("Listener: Channel Metadata removed \(metadataId)")
-          self.removeStoredChannel(channelId: metadataId)
-
-        case .membershipMetadataSet(let membership):
-          PubNub.log.debug("Listener: Membership Metadata set \(membership)")
-          do {
-            members.append(try ChatMember<ModelData>(from: membership))
-          } catch {
-            PubNub.log.error("Listener Membership Metadata received conversion error \(error)")
-          }
-          
-        case .membershipMetadataRemoved(let membership):
-          PubNub.log.debug("Listener: Membership Metadata removed \(membership)")
-          self.removeStoredMember(
-            channelId: membership.channelMetadataId, userId: membership.uuidMetadataId
-          )
-
         case .messageActionAdded(let messageAction):
-          PubNub.log.debug("Listener no-op: Message Action added \(messageAction)")
+          PubNub.log.debug("Listener: Message Action added \(messageAction)")
+          do {
+            messageActions.append(try ChatMessageAction<ModelData>(from: messageAction))
+          } catch {
+            PubNub.log.error("Listener Message Action received conversion error \(error)")
+          }
         case .messageActionRemoved(let messageAction):
-          PubNub.log.debug("Listener no-op: Message Action removed \(messageAction)")
+          PubNub.log.debug("Listener: Message Action removed \(messageAction)")
+          self.removeStoredMessageAction(messageActionId: messageAction.pubnubId)
+          
         case .fileUploaded(let file):
           PubNub.log.debug("Listener no-op: File uploaded \(file)")
         case .subscribeError(let error):
           PubNub.log.error("Listener Subscribe error \(error)")
+        
+        case .uuidMetadataSet(_):
+          /* no-op for Object v2 */
+          break
+        case .uuidMetadataRemoved(metadataId: _):
+          /* no-op for Object v2 */
+          break
+        case .channelMetadataSet(_):
+          /* no-op for Object v2 */
+          break
+        case .channelMetadataRemoved(metadataId: _):
+          /* no-op for Object v2 */
+          break
+        case .membershipMetadataSet(_):
+          /* no-op for Object v2 */
+          break
+        case .membershipMetadataRemoved(_):
+          /* no-op for Object v2 */
+          break
         }
       }
 
       // Process the batch updates
       self.load(messages: messages)
-      self.load(members: presenceChanges)
-      self.load(members: members)
+      self.load(members: presenceChanges, forceWrite: false)
     }
   }
 }
-

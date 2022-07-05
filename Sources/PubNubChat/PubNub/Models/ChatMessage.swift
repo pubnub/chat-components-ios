@@ -34,7 +34,7 @@ public typealias PubNubChatMessage = ChatMessage<VoidCustomData>
 
 @dynamicMemberLookup
 public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
-  
+
   public struct MessagePayload: JSONCodable {
     public var id: String
     public var text: String
@@ -42,7 +42,7 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
     public var content: JSONCodable?
     public var custom: Custom.Message
     public var createdAt: Date
-    
+
     enum CodingKeys: String, CodingKey {
       case id
       case text
@@ -51,7 +51,7 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
       case custom
       case createdAt
     }
-    
+
     public init(
       id: String = UUID().uuidString,
       text: String = String(),
@@ -67,10 +67,10 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
       self.custom = custom
       self.createdAt = createdAt
     }
-    
+
     public init(from decoder: Decoder) throws {
       let container = try decoder.container(keyedBy: CodingKeys.self)
-            
+
       id = try container.decode(String.self, forKey: .id)
       text = try container.decode(String.self, forKey: .text)
       contentType = try container.decodeIfPresent(String.self, forKey: .contentType)
@@ -78,7 +78,7 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
       custom = try container.decodeIfPresent(Custom.Message.self, forKey: .custom) ?? Custom.Message()
       createdAt = try container.decode(Date.self, forKey: .createdAt)
     }
-    
+
     public init(
       jsonCodable: JSONCodable
     ) throws {
@@ -93,7 +93,7 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
         createdAt: content.createdAt
       )
     }
-    
+
     public func encode(to encoder: Encoder) throws {
       var container = encoder.container(keyedBy: CodingKeys.self)
 
@@ -107,19 +107,19 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
   }
 
   public var timetoken: Timetoken
-  
+
   public var id: String {
     return content.id
   }
-  
+
   public var content: MessagePayload
-  
+
   public var pubnubUserId: String
   public var userModel: ChatUser<Custom.User>?
-  
+
   public var pubnubChannelId: String
   public var channelModel: ChatChannel<Custom.Channel>?
-  
+
   public init(
     content: MessagePayload,
     timetoken: Timetoken = 0,
@@ -129,16 +129,16 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
     channel: ChatChannel<Custom.Channel>? = nil
   ) {
     self.timetoken = timetoken
-    
+
     self.content = content
-    
+
     self.pubnubUserId = pubnubUserId
     self.userModel = user
-    
+
     self.pubnubChannelId = pubnubChannelId
     self.channelModel = channel
   }
-  
+
   public init(
     id: String = UUID().uuidString,
     timetoken: Timetoken = 0,
@@ -168,14 +168,14 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
       channel: channel
     )
   }
-  
+
   // MARK: Dynamic Member Lookup
-  
+
   public subscript<T>(dynamicMember keyPath: WritableKeyPath<Custom.Message, T>) -> T {
     get { content.custom[keyPath: keyPath] }
     set { content.custom[keyPath: keyPath] = newValue }
   }
-  
+
   public subscript<T>(dynamicMember keyPath: WritableKeyPath<MessagePayload, T>) -> T {
     get { content[keyPath: keyPath] }
     set { content[keyPath: keyPath] = newValue }
@@ -194,11 +194,11 @@ extension ChatMessage: PubNubMessage {
         PubNub.log.warn("ChatMessage could not decode \(newValue) into Message.Content")
         return
       }
-      
+
       content = newContent
     }
   }
-  
+
   public var actions: [PubNubMessageAction] {
     get {
       return []
@@ -207,7 +207,7 @@ extension ChatMessage: PubNubMessage {
       // no-op
     }
   }
-  
+
   public var publisher: String? {
     get {
       return pubnubUserId
@@ -219,15 +219,15 @@ extension ChatMessage: PubNubMessage {
       pubnubUserId = senderId
     }
   }
-  
+
   public var channel: String {
     return pubnubChannelId
   }
-  
+
   public var subscription: String? {
     return pubnubChannelId
   }
-  
+
   public var published: Timetoken {
     get {
       return timetoken
@@ -236,7 +236,7 @@ extension ChatMessage: PubNubMessage {
       timetoken = newValue
     }
   }
-  
+
   public var metadata: JSONCodable? {
     get {
       return nil
@@ -245,7 +245,7 @@ extension ChatMessage: PubNubMessage {
       // no-op
     }
   }
-  
+
   public var messageType: PubNubMessageType {
     get {
       return .message
@@ -254,13 +254,13 @@ extension ChatMessage: PubNubMessage {
       // no-op
     }
   }
-  
+
   public init(from other: PubNubMessage) throws {
-    
+
     let content = try MessagePayload(jsonCodable: other.payload)
-    
+
     let senderId = other.publisher ?? ""
-    
+
     self.init(
       content: content,
       timetoken: other.published,

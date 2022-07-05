@@ -28,132 +28,207 @@
 import Foundation
 
 import PubNub
+import PubNubUser
 
+/// The default ``ChatUser`` class not containing any Custom Properties
 public typealias PubNubChatUser = ChatUser<VoidCustomData>
 
+/// The generic `User` class used whenever a Swift PubNub API requires a `User` object.
 @dynamicMemberLookup
-public struct ChatUser<Custom: UserCustomData>: Identifiable, Codable, Hashable {
+public struct ChatUser<Custom: UserCustomData>: Identifiable, Hashable, ServerSynced {
   
-  public struct PubNubDefault: Hashable, Codable {
-    public var occupation: String?
+  /// Custom properties that can be stored alongside the server specified User fields
+  public struct CustomProperties: Hashable {
+    // PubNub owned Custom Property accessed via a dynamicMember property
+    // User doesn't have PubNub defaults, if some are added
+    // then an additional dynamicMember should be added for access
     
-    public init() {
-      self.init(occupation: nil)
-    }
+    /// Developer owned generic UserCustomData
+    ///  Its properties can be accessed directly from the ChatUser instance
+    public var custom: Custom
     
-    public init(
-      occupation: String?
-    ) {
-      self.occupation = occupation
+    public init(custom: Custom) {
+      self.custom = custom
     }
   }
-  
-  public var id: String
-  public var name: String?
-  
-  public var externalId: String?
-  public var avatarURL: URL?
-  public var email: String?
-  
-  public var updated: Date?
-  public var eTag: String?
 
-  // `Custom` data required by PubNubCHat
-  public var defaultPubnub: PubNubDefault
-  // Additional `Custom` data not required
-  public var customUser: Custom
+  /// Unique identifier for the User.
+  public let id: String
+  /// Name of the User.
+  public var name: String?
+  /// Functional type of the User.
+  public var type: String
+  /// The current state of the User
+  public var status: String?
+  /// The external identifier for the User
+  public var externalId: String?
+  /// The profile URL for the User
+  public var avatarURL: URL?
+  /// The email address of the User
+  public var email: String?
+  /// Last time the remote object was changed.
+  public var updated: Date?
+  /// Caching value that changes whenever the remote object changes.
+  public var eTag: String?
+  /// Custom object that can be stored with the User.
+  public var custom: CustomProperties
   
   public init(
     id: String,
-    name: String?,
-    occupation: String? = nil,
+    name: String? = nil,
+    type: String? = nil,
+    status: String? = nil,
     externalId: String? = nil,
     avatarURL: URL? = nil,
     email: String? = nil,
     updated: Date? = nil,
     eTag: String? = nil,
-    customUser: Custom = Custom()
+    custom: Custom = Custom()
   ) {
     self.id = id
     self.name = name
+    self.type = type ?? "default"
+    self.status = status
     self.externalId = externalId
     self.avatarURL = avatarURL
     self.email = email
     self.updated = updated
     self.eTag = eTag
-    self.defaultPubnub = .init(occupation: occupation)
-    self.customUser = customUser
+    self.custom = CustomProperties(custom: custom)
   }
   
   // MARK: Dynamic Member Lookup
   
+  // MARK: Dynamic Member Lookup
+  /// Returns a binding to the resulting value of a given key path.
+  /// - Parameter dynamicMember: A key path to a specific resulting value.
+  /// - Returns: A new binding.
   public subscript<T>(dynamicMember keyPath: WritableKeyPath<Custom, T>) -> T {
-    get { customUser[keyPath: keyPath] }
-    set { customUser[keyPath: keyPath] = newValue }
-  }
-  
-  public subscript<T>(dynamicMember keyPath: WritableKeyPath<PubNubDefault, T>) -> T {
-    get { defaultPubnub[keyPath: keyPath] }
-    set { defaultPubnub[keyPath: keyPath] = newValue }
+    get { custom.custom[keyPath: keyPath] }
+    set { custom.custom[keyPath: keyPath] = newValue }
   }
 }
 
-// MARK: PubNubDefault Extension
+extension ChatUser: Codable {
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: PubNubUser.CodingKeys.self)
+    
+    let customProperties = try container
+      .decodeIfPresent(CustomProperties.self, forKey: .custom)
 
-extension ChatUser.PubNubDefault: UserCustomData {
-  
-  public init(flatJSON: [String: JSONCodableScalar]?) {
     self.init(
-      occupation: flatJSON?["occupation"]?.stringOptional
+      id: try container.decode(String.self, forKey: .id),
+      name: try container.decodeIfPresent(String.self, forKey: .name),
+      type: try container.decodeIfPresent(String.self, forKey: .type),
+      status: try container.decodeIfPresent(String.self, forKey: .status),
+      externalId: try container.decodeIfPresent(String.self, forKey: .externalId),
+      avatarURL: try container.decodeIfPresent(URL.self, forKey: .profileUrl),
+      email: try container.decodeIfPresent(String.self, forKey: .email),
+      updated: try container.decodeIfPresent(Date.self, forKey: .updated),
+      eTag: try container.decodeIfPresent(String.self, forKey: .eTag),
+      custom: customProperties?.custom ?? Custom()
     )
+  }
+  
+  public func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: PubNubUser.CodingKeys.self)
+    
+    try container.encode(id, forKey: .id)
+    try container.encodeIfPresent(name, forKey: .name)
+    try container.encode(type, forKey: .type)
+    try container.encodeIfPresent(status, forKey: .status)
+    try container.encodeIfPresent(externalId, forKey: .externalId)
+    try container.encodeIfPresent(avatarURL, forKey: .profileUrl)
+    try container.encodeIfPresent(email, forKey: .email)
+    try container.encodeIfPresent(updated, forKey: .updated)
+    try container.encodeIfPresent(eTag, forKey: .eTag)
+    try container.encode(custom, forKey: .custom)
+  }
+}
+
+// MARK: CustomProperties Extension
+
+extension ChatUser.CustomProperties: UserCustomData {
+  public init() {
+    self.custom = Custom()
+  }
+
+  public init(flatJSON: [String: JSONCodableScalar]) {
+    self.custom = Custom(flatJSON: flatJSON)
   }
   
   public var flatJSON: [String: JSONCodableScalar] {
-    let json: [String: JSONCodableScalar] = ["occupation": occupation]
-    
-    return json
+    return custom.flatJSON
   }
 }
 
-// MARK: PubNubUUIDMetadata Extension
+extension ChatUser.CustomProperties: Codable {
+  public init(from decoder: Decoder) throws {
+    self.custom = try Custom(from: decoder)
+  }
+  
+  public func encode(to encoder: Encoder) throws {
+    try custom.encode(to: encoder)
+  }
+}
 
-extension ChatUser: PubNubUUIDMetadata {
-  public var profileURL: String? {
-    get {
-      avatarURL?.absoluteString
-    }
-    set(newValue) {
-      avatarURL = try? URL(string: newValue)
-    }
-  }
-  
-  public var metadataId: String {
-    return id
-  }
-  
-  public var custom: [String : JSONCodableScalar]? {
-    get {
-      defaultPubnub.flatJSON.merging(customUser.flatJSON) { _, new in new }
-    }
-    set(newValue) {
-      self.defaultPubnub = PubNubDefault(flatJSON: newValue)
-      self.customUser = Custom(flatJSON: newValue)
-    }
-  }
-  
-  public init(from other: PubNubUUIDMetadata) throws {
-    let custom = PubNubDefault(flatJSON: other.custom)
-    
+// MARK: PubNubUser Extension
+
+extension ChatUser {
+  /// Create a ``ChatUser`` from the provided `PubNubUser`
+  public init(pubnub: PubNubUser) {
     self.init(
-      id: other.metadataId,
-      name: other.name,
-      occupation: custom.occupation,
-      externalId: other.externalId,
-      avatarURL: try URL(string: other.profileURL),
-      email: other.email,
-      updated: other.updated,
-      eTag: other.eTag,
-      customUser: Custom(flatJSON: other.custom)
+      id: pubnub.id,
+      name: pubnub.name,
+      type: pubnub.type,
+      status: pubnub.status,
+      externalId: pubnub.externalId,
+      avatarURL: pubnub.profileURL,
+      email: pubnub.email,
+      updated: pubnub.updated,
+      eTag: pubnub.eTag,
+      custom: Custom(flatJSON: pubnub.custom?.flatJSON)
     )
+  }
+  
+  /// Object that can be used to apply an update to another ``ChatUser``
+  public struct Patcher {
+    /// The underlying PubNubUser Patcher object
+    public var pubnub: PubNubUser.Patcher
+    /// The unique identifier of the object that was changed
+    public var id: String { pubnub.id }
+    /// The cache identifier of the change
+    public var eTag: String { pubnub.eTag }
+    /// The timestamp of the change
+    public var updated: Date { pubnub.updated }
+    
+    public init(pubnub: PubNubUser.Patcher) {
+      self.pubnub = pubnub
+    }
+  }
+  
+  /// Apply the patch to this ``ChatUser`` instance
+  /// - Parameter patcher: The patching changeset to apply
+  /// - Returns: The patched ``ChatUser`` with updated fields or a copy of this instance if no change was able to be applied
+  public func patch(_ patcher: Patcher) -> ChatUser<Custom> {
+    guard patcher.pubnub.shouldUpdate(userId: id, eTag: eTag, lastUpdated: updated) else {
+      return self
+    }
+
+    var mutableSelf = self
+    
+    patcher.pubnub.apply(
+      name: { mutableSelf.name = $0 },
+      type: { if let value = $0 { mutableSelf.type = value } },
+      status: { mutableSelf.status = $0 },
+      externalId: { mutableSelf.externalId = $0 },
+      profileURL: { mutableSelf.avatarURL = $0 },
+      email: { mutableSelf.email = $0 },
+      custom: { mutableSelf.custom = CustomProperties(flatJSON: $0?.flatJSON) },
+      updated: { mutableSelf.updated = $0 },
+      eTag: { mutableSelf.eTag = $0 }
+    )
+    
+    return mutableSelf
   }
 }

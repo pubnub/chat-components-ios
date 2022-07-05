@@ -41,9 +41,9 @@ open class ChatProvider<ModelData, ManagedEntities> where ModelData: ChatCustomD
   public var pubnubConfig: PubNubConfiguration {
     return pubnubProvider.configuration
   }
-  public var pubnubProvider: PubNubAPI {
+  public var pubnubProvider: PubNubProvider {
     didSet {
-      pubnubProvider.add(dataProvider.pubnubListner)
+      addDefaultPubNubListeners()
     }
   }
 
@@ -52,7 +52,7 @@ open class ChatProvider<ModelData, ManagedEntities> where ModelData: ChatCustomD
   }()
 
   public convenience init(
-    pubnubProvider: PubNub,
+    pubnubProvider: PubNubProvider,
     datastoreConfiguration: DatastoreConfiguration = .pubnubDefault,
     cacheProvider: CacheProvider = UserDefaults.standard
   ) {
@@ -75,7 +75,7 @@ open class ChatProvider<ModelData, ManagedEntities> where ModelData: ChatCustomD
         )
       }
     } catch {
-      preconditionFailure("Failed to initialize the in-memory storage with error: \(error). This is a non-recoverable error.")
+      preconditionFailure("Failed to initialize CoreData with error: \(error). This is a non-recoverable error.")
     }
     
     self.init(
@@ -86,7 +86,7 @@ open class ChatProvider<ModelData, ManagedEntities> where ModelData: ChatCustomD
   }
   
   public init(
-    pubnubProvider: PubNub,
+    pubnubProvider: PubNubProvider,
     coreDataProvider: CoreDataProvider,
     cacheProvider: CacheProvider
   ) {
@@ -104,8 +104,15 @@ open class ChatProvider<ModelData, ManagedEntities> where ModelData: ChatCustomD
     // Update the cache with the current user
     self.cacheProvider.cache(currentUserId: pubnubProvider.configuration.uuid)
     
-    // Add default listener
-    self.pubnubProvider.add(dataProvider.pubnubListner)
+    // Add default listeners
+    addDefaultPubNubListeners()
+  }
+  
+  public func addDefaultPubNubListeners() {
+    self.pubnubProvider.add(dataProvider.coreListener)
+    self.pubnubProvider.add(dataProvider.userListener)
+    self.pubnubProvider.add(dataProvider.spaceListener)
+    self.pubnubProvider.add(dataProvider.membershipListener)
   }
 }
 

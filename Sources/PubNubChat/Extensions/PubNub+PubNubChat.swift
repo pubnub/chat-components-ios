@@ -47,7 +47,7 @@ extension Optional: JSONCodableScalar, JSONCodable where Wrapped: JSONCodableSca
 }
 
 extension JSONCodableScalar {
-  var urlOptional: URL? {
+  public var urlOptional: URL? {
     if let urlString = stringOptional {
       return URL(string: urlString)
     }

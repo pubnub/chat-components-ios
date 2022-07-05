@@ -27,10 +27,12 @@
 
 import Foundation
 import CoreData
-import UIKit
 import Combine
 
 import PubNub
+import PubNubUser
+import PubNubSpace
+import PubNubMembership
 
 // MARK: - Data Provider
 
@@ -38,7 +40,14 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
  
   var provider: ChatProvider<ModelData, ManagedEntities>
   
-  public var pubnubListner = SubscriptionListener()
+  /// Instance of a Core Subscription Listener used when calling ``syncPubnubListeners(coreListener:userListener:spaceListener:membershipListener:)``
+  public var coreListener = CoreListener()
+  /// Instance of a User Subscription Listener used when calling ``syncPubnubListeners(coreListener:userListener:spaceListener:membershipListener:)``
+  public var userListener = PubNubUserListener()
+  /// Instance of a Space Subscription Listener used when calling ``syncPubnubListeners(coreListener:userListener:spaceListener:membershipListener:)``
+  public var spaceListener = PubNubSpaceListener()
+  /// Instance of a Membership Subscription Listener used when calling ``syncPubnubListeners(coreListener:userListener:spaceListener:membershipListener:)``
+  public var membershipListener = PubNubMembershipListener()
 
   let datastoreQueue = DispatchQueue(label: "Datastore Write Queue", qos: .userInitiated)
   var cancellations = Set<AnyCancellable>()
@@ -46,7 +55,12 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
   init(provider: ChatProvider<ModelData, ManagedEntities>) {
     self.provider = provider
     
-    syncPubnubSubscribeListener(pubnubListner)
+    syncPubnubListeners(
+      coreListener: coreListener,
+      userListener: userListener,
+      spaceListener: spaceListener,
+      membershipListener: membershipListener
+    )
   }
 
   // MARK: Load Model Data
@@ -113,6 +127,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
 
   public func load(
     members: [ChatMember<ModelData>],
+    forceWrite: Bool = true,
     batchSize: Int = 256,
     batchHandler: (([ChatMember<ModelData>], Error?) -> Void)? = nil,
     completion: (() -> Void)? = nil
@@ -126,7 +141,9 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
       for batch in members.chunked(into: batchSize) {
         if let error = self?.provider.coreDataContainer.syncWrite({ context in
           for item in batch {
-            try ManagedEntities.Member.insertOrUpdate(member: item, into: context)
+            try ManagedEntities.Member.insertOrUpdate(
+              member: item, forceWrite: forceWrite, into: context
+            )
           }
         }) {
           PubNub.log.error("Error saving member batch \(error)")
@@ -140,8 +157,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
       DispatchQueue.main.async { completion?() }
     }
   }
-  
-  
+
   public func load(
     messages: [ChatMessage<ModelData>],
     batchSize: Int = 256,
@@ -169,6 +185,88 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
       }
 
       DispatchQueue.main.async { completion?() }
+    }
+  }
+  
+  public func load(
+    messageActions: [ChatMessageAction<ModelData>],
+    batchSize: Int = 256,
+    batchHandler: (([ChatMessageAction<ModelData>], Error?) -> Void)? = nil,
+    completion: (() -> Void)? = nil
+  ) {
+    if messageActions.isEmpty {
+      DispatchQueue.main.async { completion?() }
+      return
+    }
+    
+    datastoreQueue.async { [weak self] in
+      for batch in messageActions.chunked(into: batchSize) {
+        if let error = self?.provider.coreDataContainer.syncWrite({ context in
+          for item in batch {
+            try ManagedEntities.MessageAction.insertOrUpdate(messageAction: item, into: context)
+          }
+        }) {
+          PubNub.log.error("Error saving message batch \(error)")
+          
+          DispatchQueue.main.async { batchHandler?(batch, error) }
+        } else {
+          DispatchQueue.main.async { batchHandler?(batch, nil) }
+        }
+      }
+      
+      DispatchQueue.main.async { completion?() }
+    }
+  }
+  
+  // MARK: Patch Model Data
+  public func patch(
+    user patch: ChatUser<ModelData.User>.Patcher,
+    completion: ((Error?) -> Void)? = nil
+  ) {
+    datastoreQueue.async { [weak self] in
+      self?.provider.coreDataContainer.write({ context in
+        try ManagedEntities.User.patch(
+          usingPatch: patch, into: context
+        )
+      }, errorHandler: { error in
+        PubNub.log.error("Error patching user \(error)")
+        
+        DispatchQueue.main.async { completion?(error) }
+      })
+    }
+  }
+
+  public func patch(
+    channel patch: ChatChannel<ModelData.Channel>.Patcher,
+    completion: ((Error?) -> Void)? = nil
+  ) {
+    datastoreQueue.async { [weak self] in
+      self?.provider.coreDataContainer.write({ context in
+        try ManagedEntities.Channel.patch(
+          usingPatch: patch, into: context
+        )
+      }, errorHandler: { error in
+        PubNub.log.error("Error patching channel \(error)")
+        
+        DispatchQueue.main.async { completion?(error) }
+      })
+    }
+  }
+
+  public func patch(
+    member patch: ChatMember<ModelData>.Patcher,
+    completion: ((Error?) -> Void)? = nil
+  ) {
+    datastoreQueue.async { [weak self] in
+      self?.provider.coreDataContainer.write({ context in
+        try ManagedEntities.Member.patch(
+          usingPatch: patch, into: context
+        )
+      }, errorHandler: { error in
+        PubNub.log.error("Error patching channel \(error)")
+        
+        DispatchQueue.main.async { completion?(error) }
+      })
     }
   }
   
@@ -222,6 +320,38 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
       })
     }
   }
+
+  public func removeStoredMembers(
+    members: [ChatMember<ModelData>],
+    batchSize: Int = 256,
+    batchHandler: (([ChatMember<ModelData>], Error?) -> Void)? = nil,
+    completion: (() -> Void)? = nil
+  ) {
+    if members.isEmpty {
+      DispatchQueue.main.async { completion?() }
+      return
+    }
+    
+    datastoreQueue.async { [weak self] in
+      for batch in members.chunked(into: batchSize) {
+        if let error = self?.provider.coreDataContainer.syncWrite({ context in
+          for item in batch {
+            ManagedEntities.Member.remove(
+              channelId: item.chatChannel.id, userId: item.chatUser.id, from: context
+            )
+          }
+        }) {
+          PubNub.log.error("Error saving message batch \(error)")
+          
+          DispatchQueue.main.async { batchHandler?(batch, error) }
+        } else {
+          DispatchQueue.main.async { batchHandler?(batch, nil) }
+        }
+      }
+      
+      DispatchQueue.main.async { completion?() }
+    }
+  }
   
   public func removeStoredMessage(
     messageId: String,
@@ -233,6 +363,22 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
         completion?(nil)
       }, errorHandler: { error in
         PubNub.log.error("Error removing message \(error)")
+        
+        DispatchQueue.main.async { completion?(error) }
+      })
+    }
+  }
+  
+  public func removeStoredMessageAction(
+    messageActionId: String,
+    completion: ((Error?) -> Void)? = nil
+  ) {
+    datastoreQueue.async { [weak self] in
+      self?.provider.coreDataContainer.write({ context in
+        ManagedEntities.MessageAction.remove(messageActionId: messageActionId, from: context)
+        completion?(nil)
+      }, errorHandler: { error in
+        PubNub.log.error("Error removing message action \(error)")
         
         DispatchQueue.main.async { completion?(error) }
       })
@@ -255,6 +401,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
   }
 
   // MARK: - PubNub Remote API Helpers
+
   
   // MARK: Message API Actions
   
@@ -323,11 +470,75 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
       }
       .store(in: &cancellations)
   }
+  
+  // MARK: Message Action API Actions
+  
+  public func sendRemoteMessageAction(
+    _ request: MessageActionSendRequest<ModelData>,
+    completion: ((Result<ChatMessageAction<ModelData>, Error>) -> Void)?
+  ) {
+    provider.pubnubProvider
+      .sendMessageAction(request) { [weak self] result in
+        switch result {
+        case .success(let action):
+          PubNub.log.debug("Send Message Success \(action)")
+          self?.load(messageActions: [action], completion: {
+            completion?(.success(action))
+          })
+        case .failure(let error):
+          PubNub.log.error("Send Message Action Error \(error)")
+          completion?(.failure(error))
+        }
+      }
+  }
+  
+  public func syncRemoteMessageActions(
+    _ request: MessageActionFetchRequest,
+    completion: ((Result<(actions: [ChatMessageAction<ModelData>], next: MessageActionFetchRequest?), PaginationError<MessageActionFetchRequest>>) -> Void)?
+  ) {
+    provider.pubnubProvider.fetchMessageActions(
+      request, into: ModelData.self
+    ) { [weak self] result in
+      switch result {
+      case let .success((actions, next)):
+        // Store in DB
+        self?.load(messageActions: actions, completion: {
+          completion?(.success((actions: actions, next: next)))
+        })
+      case .failure(let error):
+        PubNub.log.error("Sync Remote Message Actions Error \(error)")
+        completion?(.failure(PaginationError(request: request, error: error)))
+      }
+    }
+  }
+  
+  public func syncAllRemoteMessageActions(
+    _ request: MessageActionFetchRequest,
+    pageHandler: (([ChatMessageAction<ModelData>], MessageActionFetchRequest?, Error?) -> Void)? = nil,
+    completion: ((PaginationError<MessageActionFetchRequest>?) -> Void)? = nil
+  ) {
+    provider.pubnubProvider
+      .fetchMessageActionsPagesPublisher(request, into: ModelData.self)
+      .sink { completionSignal in
+        switch completionSignal {
+        case .finished:
+          completion?(nil)
+        case .failure(let error):
+          PubNub.log.error("Error sycning all remote message actions \(error.localizedDescription) on request \(error.request)")
+          completion?(error)
+        }
+      } receiveValue: { [weak self] actions, next in
+        self?.load(messageActions: actions, completion: {
+          pageHandler?(actions, next, nil)
+        })
+      }
+      .store(in: &cancellations)
+  }
 
   // MARK: Channel API Actions
   
   public func syncRemoteChannel(
-    _ request: ObjectMetadataIdRequest,
+    _ request: ChatChannelRequest<ModelData.Channel>,
     completion: ((Result<ChatChannel<ModelData.Channel>, Error>) -> Void)? = nil
   ) {
     provider.pubnubProvider.fetch(
@@ -346,11 +557,11 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     }
   }
   
-  public func syncAllRemoteChannels(
-    _ request: ObjectsFetchRequest,
-    completion: ((Result<(channels: [ChatChannel<ModelData.Channel>], next: ObjectsFetchRequest?), Error>) -> Void)?
+  public func syncRemoteChannels(
+    _ request: ChannelsFetchRequest,
+    completion: ((Result<(channels: [ChatChannel<ModelData.Channel>], next: ChannelsFetchRequest?), Error>) -> Void)?
   ) {
-    provider.pubnubProvider.fetchAll(
+    provider.pubnubProvider.fetch(
       channels: request, into: ModelData.Channel.self) { [weak self] result in
         switch result {
         case .success((let channels, let next)):
@@ -363,13 +574,13 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
       }
   }
   
-  public func syncAllRemoteChannelsPaginated(
-    _ request: ObjectsFetchRequest,
-    pageHandler: (([ChatChannel<ModelData.Channel>], ObjectsFetchRequest?, Error?) -> Void)? = nil,
-    completion: ((PaginationError<ObjectsFetchRequest>?) -> Void)? = nil
+  public func syncRemoteChannelsPaginated(
+    _ request: ChannelsFetchRequest,
+    pageHandler: (([ChatChannel<ModelData.Channel>], ChannelsFetchRequest?, Error?) -> Void)? = nil,
+    completion: ((PaginationError<ChannelsFetchRequest>?) -> Void)? = nil
   ) {
     provider.pubnubProvider
-      .fetchAllPagesPublisher(channels: request, into: ModelData.Channel.self)
+      .fetchPagesPublisher(channels: request, into: ModelData.Channel.self)
       .sink { completionSignal in
         switch completionSignal {
         case .finished:
@@ -386,11 +597,31 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
       .store(in: &cancellations)
   }
   
-  public func setRemoteChannel(
-    _ request: ChannelMetadataRequest<ModelData.Channel>,
+  public func createRemoteChannel(
+    _ request: ChatChannelRequest<ModelData.Channel>,
     completion: ((Result<ChatChannel<ModelData.Channel>, Error>) -> Void)? = nil
   ) {
-    provider.pubnubProvider.set(
+    provider.pubnubProvider.create(
+      channel: request,
+      into: ModelData.Channel.self
+    ) { [weak self] result in
+      switch result {
+      case .success(let remoteChannel):
+        self?.load(channels: [remoteChannel], completion: {
+          completion?(.success(remoteChannel))
+        })
+      case .failure(let error):
+        PubNub.log.error("Error setting remote channel metadata error \(error)")
+        completion?(.failure(error))
+      }
+    }
+  }
+
+  public func updateRemoteChannel(
+    _ request: ChatChannelRequest<ModelData.Channel>,
+    completion: ((Result<ChatChannel<ModelData.Channel>, Error>) -> Void)? = nil
+  ) {
+    provider.pubnubProvider.update(
       channel: request,
       into: ModelData.Channel.self
     ) { [weak self] result in
@@ -407,17 +638,20 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
   }
   
   public func removeRemoteChannel(
-    _ request: ObjectRemoveRequest,
-    completion: ((Result<String, Error>) -> Void)?
+    _ request: ChatChannelRequest<ModelData.Channel>,
+    completion: ((Result<Void, Error>) -> Void)?
   ) {
-    provider.pubnubProvider.remove(channel: request) { [weak self] result in
+    provider.pubnubProvider.remove(
+      channel: request,
+      into: ModelData.Channel.self
+    ) { [weak self] result in
       switch result {
       case .success:
-        self?.removeStoredChannel(channelId: request.metadataId) { error in
+        self?.removeStoredChannel(channelId: request.channel.id) { error in
           if let error = error {
             completion?(.failure(error))
           } else {
-            completion?(.success(request.metadataId))
+            completion?(.success(Void()))
           }
         }
       case .failure(let error):
@@ -430,7 +664,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
   // MARK: User API Actions
   
   public func syncRemoteUser(
-    _ request: ObjectMetadataIdRequest,
+    _ request: ChatUserRequest<ModelData.User>,
     completion: ((Result<ChatUser<ModelData.User>, Error>) -> Void)? = nil
   ) {
     provider.pubnubProvider.fetch(
@@ -449,11 +683,11 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     }
   }
   
-  public func syncAllRemoteUsers(
-    _ request: ObjectsFetchRequest,
-    completion: ((Result<(channels: [ChatUser<ModelData.User>], next: ObjectsFetchRequest?), Error>) -> Void)?
+  public func syncRemoteUsers(
+    _ request: UsersFetchRequest,
+    completion: ((Result<(channels: [ChatUser<ModelData.User>], next: UsersFetchRequest?), Error>) -> Void)?
   ) {
-    provider.pubnubProvider.fetchAll(
+    provider.pubnubProvider.fetch(
       users: request, into: ModelData.User.self) { [weak self] result in
         switch result {
         case .success((let users, let next)):
@@ -466,13 +700,13 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
       }
   }
   
-  public func syncAllRemoteUsersPaginated(
-    _ request: ObjectsFetchRequest,
-    pageHandler: (([ChatUser<ModelData.User>], ObjectsFetchRequest?, Error?) -> Void)? = nil,
-    completion: ((PaginationError<ObjectsFetchRequest>?) -> Void)? = nil
+  public func syncRemoteUsersPaginated(
+    _ request: UsersFetchRequest,
+    pageHandler: (([ChatUser<ModelData.User>], UsersFetchRequest?, Error?) -> Void)? = nil,
+    completion: ((PaginationError<UsersFetchRequest>?) -> Void)? = nil
   ) {
     provider.pubnubProvider
-      .fetchAllPagesPublisher(users: request, into: ModelData.User.self)
+      .fetchPagesPublisher(users: request, into: ModelData.User.self)
       .sink { completionSignal in
         switch completionSignal {
         case .finished:
@@ -489,11 +723,31 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
       .store(in: &cancellations)
   }
   
-  public func setRemoteUser(
-    _ request: UserMetadataRequest<ModelData.User>,
+  public func createRemoteUser(
+    _ request: ChatUserRequest<ModelData.User>,
     completion: ((Result<ChatUser<ModelData.User>, Error>) -> Void)? = nil
   ) {
-    provider.pubnubProvider.set(
+    provider.pubnubProvider.create(
+      user: request,
+      into: ModelData.User.self
+    ) { [weak self] result in
+      switch result {
+      case .success(let remoteUser):
+        self?.load(users: [remoteUser], completion: {
+          completion?(.success(remoteUser))
+        })
+      case .failure(let error):
+        PubNub.log.error("Error setting remote user metadata \(error)")
+        completion?(.failure(error))
+      }
+    }
+  }
+  
+  public func updateRemoteUser(
+    _ request: ChatUserRequest<ModelData.User>,
+    completion: ((Result<ChatUser<ModelData.User>, Error>) -> Void)? = nil
+  ) {
+    provider.pubnubProvider.update(
       user: request,
       into: ModelData.User.self
     ) { [weak self] result in
@@ -510,17 +764,20 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
   }
   
   public func removeRemoteUser(
-    _ request: ObjectRemoveRequest,
-    completion: ((Result<String, Error>) -> Void)?
+    _ request: ChatUserRequest<ModelData.User>,
+    completion: ((Result<Void, Error>) -> Void)?
   ) {
-    provider.pubnubProvider.remove(user: request) { [weak self] result in
+    provider.pubnubProvider.remove(
+      user: request,
+      into: ModelData.User.self
+    ) { [weak self] result in
       switch result {
       case .success:
-        self?.removeStoredUser(userId: request.metadataId) { error in
+        self?.removeStoredUser(userId: request.user.id) { error in
           if let error = error {
             completion?(.failure(error))
           } else {
-            completion?(.success(request.metadataId))
+            completion?(.success(Void()))
           }
         }
       case .failure(let error):
@@ -532,31 +789,12 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
   
   // MARK: Member API Actions
   
-  public func syncRemoteMembers(
-    _ request: MemberFetchRequest,
-    completion: ((Result<([ChatMember<ModelData>], next: MemberFetchRequest?), Error>) -> Void)?
+  public func syncRemoteUserMembers(
+    _ request: UserMemberFetchRequest,
+    completion: ((Result<([ChatMember<ModelData>], next: UserMemberFetchRequest?), Error>) -> Void)?
   ) {
     provider.pubnubProvider.fetch(
-      members: request, into: ModelData.self
-    ) { [weak self] result in
-      switch result {
-      case let .success((members, next)):
-        self?.load(members: members, completion: {
-          completion?(.success((members, next: next)))
-        })
-      case .failure(let error):
-        PubNub.log.error("Error syncing remote members \(error)")
-        completion?(.failure(error))
-      }
-    }
-  }
-  
-  public func syncRemoteMemberships(
-    _ request: MembershipFetchRequest,
-    completion: ((Result<([ChatMember<ModelData>], next: MembershipFetchRequest?), Error>) -> Void)?
-  ) {
-    provider.pubnubProvider.fetch(
-      memberships: request, into: ModelData.self
+      userMembers: request, into: ModelData.self
     ) { [weak self] result in
       switch result {
       case let .success((members, next)):
@@ -570,13 +808,32 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     }
   }
   
-  public func syncRemoteMembersPagination(
-    _ request: MemberFetchRequest,
-    pageHandler: (([ChatMember<ModelData>], MemberFetchRequest?, Error?) -> Void)? = nil,
-    completion: ((PaginationError<MemberFetchRequest>?) -> Void)? = nil
+  public func syncRemoteChannelMembers(
+    _ request: ChannelMemberFetchRequest,
+    completion: ((Result<([ChatMember<ModelData>], next: ChannelMemberFetchRequest?), Error>) -> Void)?
+  ) {
+    provider.pubnubProvider.fetch(
+      channelMembers: request, into: ModelData.self
+    ) { [weak self] result in
+      switch result {
+      case let .success((members, next)):
+        self?.load(members: members, completion: {
+          completion?(.success((members, next: next)))
+        })
+      case .failure(let error):
+        PubNub.log.error("Error fetching remote memberships \(error)")
+        completion?(.failure(error))
+      }
+    }
+  }
+  
+  public func syncRemoteUserMembersPagination(
+    _ request: UserMemberFetchRequest,
+    pageHandler: (([ChatMember<ModelData>], UserMemberFetchRequest?, Error?) -> Void)? = nil,
+    completion: ((PaginationError<UserMemberFetchRequest>?) -> Void)? = nil
   ) {
     provider.pubnubProvider
-      .fetchPagesPublisher(members: request, into: ModelData.self)
+      .fetchPagesPublisher(userMembers: request, into: ModelData.self)
       .sink { completionSignal in
         switch completionSignal {
         case .finished:
@@ -593,19 +850,19 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
       .store(in: &cancellations)
   }
   
-  public func syncRemoteMembershipsPagination(
-    _ request: MembershipFetchRequest,
-    pageHandler: (([ChatMember<ModelData>], MembershipFetchRequest?, Error?) -> Void)? = nil,
-    completion: ((PaginationError<MembershipFetchRequest>?) -> Void)? = nil
+  public func syncRemoteChannelMembersPagination(
+    _ request: ChannelMemberFetchRequest,
+    pageHandler: (([ChatMember<ModelData>], ChannelMemberFetchRequest?, Error?) -> Void)? = nil,
+    completion: ((PaginationError<ChannelMemberFetchRequest>?) -> Void)? = nil
   ) {
     provider.pubnubProvider
-      .fetchPagesPublisher(memberships: request, into: ModelData.self)
+      .fetchPagesPublisher(channelMembers: request, into: ModelData.self)
       .sink { completionSignal in
         switch completionSignal {
         case .finished:
           completion?(nil)
         case .failure(let error):
-          PubNub.log.error("Error sycning all remote memberships \(error.localizedDescription) on request \(error.request)")
+          PubNub.log.error("Error syncing all remote member \(error.localizedDescription) on request \(error.request)")
           completion?(error)
         }
       } receiveValue: { [weak self] members, next in
@@ -616,17 +873,17 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
       .store(in: &cancellations)
   }
   
-  public func setRemoteMembers(
-    _ request: MemberModifyRequest,
-    completion: ((Result<([ChatMember<ModelData>], next: MemberModifyRequest?), Error>) -> Void)?
+  public func createRemoteMembers(
+    _ request: MembersModifyRequest<ModelData>,
+    completion: ((Result<Void, Error>) -> Void)?
   ) {
-    provider.pubnubProvider.set(
+    provider.pubnubProvider.create(
       members: request, into: ModelData.self
     ) { [weak self] result in
       switch result {
-      case let .success((members, next)):
-        self?.load(members: members, completion: {
-          completion?(.success((members, next: next)))
+      case .success:
+        self?.load(members: request.members, completion: {
+          completion?(.success(Void()))
         })
       case .failure(let error):
         PubNub.log.error("Error setting remote member \(error)")
@@ -635,58 +892,39 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
     }
   }
   
-  public func setRemoteMemberships(
-    _ request: MembershipModifyRequest,
-    completion: ((Result<([ChatMember<ModelData>], next: MembershipModifyRequest?), Error>) -> Void)?
+  public func updateRemoteMemberships(
+    _ request: MembersModifyRequest<ModelData>,
+    completion: ((Result<Void, Error>) -> Void)?
   ) {
-    provider.pubnubProvider.set(
-      memberships: request, into: ModelData.self
-    ) { [weak self] result in
-      switch result {
-      case let .success((members, next)):
-        self?.load(members: members, completion: {
-          completion?(.success((members, next: next)))
-        })
-      case .failure(let error):
-        PubNub.log.error("Error setting remote membership \(error)")
-        completion?(.failure(error))
-      }
-    }
-  }
-  
-  public func removeRemoteMembers(
-    _ request: MemberModifyRequest,
-    completion: ((Result<([ChatMember<ModelData>], next: MemberModifyRequest?), Error>) -> Void)?
-  ) {
-    provider.pubnubProvider.remove(
+    provider.pubnubProvider.update(
       members: request, into: ModelData.self
     ) { [weak self] result in
       switch result {
-      case let .success((members, next)):
-        self?.load(members: members, completion: {
-          completion?(.success((members, next: next)))
+      case .success:
+        self?.load(members: request.members, completion: {
+          completion?(.success(Void()))
         })
       case .failure(let error):
-        PubNub.log.error("Error removing remote member \(error)")
+        PubNub.log.error("Error setting remote member \(error)")
         completion?(.failure(error))
       }
     }
   }
   
   public func removeRemoteMemberships(
-    _ request: MembershipModifyRequest,
-    completion: ((Result<([ChatMember<ModelData>], next: MembershipModifyRequest?), Error>) -> Void)?
+    _ request: MembersModifyRequest<ModelData>,
+    completion: ((Result<Void, Error>) -> Void)?
   ) {
     provider.pubnubProvider.remove(
-      memberships: request, into: ModelData.self
+      members: request, into: ModelData.self
     ) { [weak self] result in
       switch result {
-      case let .success((members, next)):
-        self?.load(members: members, completion: {
-          completion?(.success((members, next: next)))
+      case .success:
+        self?.removeStoredMembers(members: request.members, completion: {
+          completion?(.success(Void()))
         })
       case .failure(let error):
-        PubNub.log.error("Error removing remote membership \(error)")
+        PubNub.log.error("Error setting remote member \(error)")
         completion?(.failure(error))
       }
     }

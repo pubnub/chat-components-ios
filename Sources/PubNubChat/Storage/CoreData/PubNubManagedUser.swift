@@ -30,28 +30,40 @@ import CoreData
 
 import PubNub
 
+/// The CoreData managed `User` class used whenever a ChatUser needs to be stored locally
 @objc(PubNubManagedUser)
 public final class PubNubManagedUser: NSManagedObject {
   // Entity Attributes
+  /// Unique identifier for the User.
   @NSManaged public var id: String
+  /// Name of the User.
   @NSManaged public var name: String?
-  
-  @NSManaged public var occupation: String?
-  
+  /// Functional type of the User.
+  @NSManaged public var type: String
+  /// The current state of the User
+  @NSManaged public var status: String?
+  /// The external identifier for the User
   @NSManaged public var externalId: String?
+  /// The profile URL for the User
   @NSManaged public var avatarURL: URL?
+  /// The email address of the User
   @NSManaged public var email: String?
-
+  /// Data blob that represents the Custom Properties that can be stored with the Channel.
   @NSManaged public var custom: Data
-  
+  /// Last time the remote object was changed.
   @NSManaged public var lastUpdated: Date?
+  /// Caching value that changes whenever the remote object changes.
   @NSManaged public var eTag: String?
     
   // Derived Attributes
 
   // Relationships
+  /// Channels that are currently associated with this User
   @NSManaged public var memberships: Set<PubNubManagedMember>
+  /// Messages that are currently associated with this User across all Channels
   @NSManaged public var messages: Set<PubNubManagedMessage>
+  /// Message Actions that are currently associated with this User across all Channels
+  @NSManaged public var actions: Set<PubNubManagedMessageAction>
 }
 
 extension PubNubManagedUser: ManagedUserEntity {
@@ -75,13 +87,14 @@ extension PubNubManagedUser: ManagedUserEntity {
     return ChatUser(
       id: id,
       name: name,
-      occupation: occupation,
+      type: type,
+      status: status,
       externalId: externalId,
       avatarURL: avatarURL,
       email: email,
       updated: lastUpdated,
       eTag: eTag,
-      customUser: (try? Constant.jsonDecoder.decode(Custom.self, from: custom)) ?? Custom()
+      custom: (try? Constant.jsonDecoder.decode(Custom.self, from: custom)) ?? Custom()
     )
   }
   
@@ -110,28 +123,38 @@ extension PubNubManagedUser: ManagedUserEntity {
       try object.update(from: user)
     }
   }
+
+  public static func patch<Custom: UserCustomData>(
+    usingPatch patcher: ChatUser<Custom>.Patcher,
+    into context: NSManagedObjectContext
+  ) throws -> PubNubManagedUser {
+    if let existingUser = try context.fetch(
+      userBy(userId: patcher.id)
+    ).first {
+      let chatUser = existingUser.convert().patch(patcher)
+      try existingUser.update(from: chatUser)
+      
+      return existingUser
+    } else {
+      throw ChatError.missingRequiredData
+    }
+  }
   
   func update<Custom>(
     from user: ChatUser<Custom>
   ) throws where Custom : UserCustomData {
     self.id = user.id
     self.name = user.name
+    self.type = user.type
+    self.status = user.status
     self.externalId = user.externalId
     self.avatarURL = user.avatarURL
     self.email = user.email
-    self.custom = try user.customUser.jsonDataResult.get()
+    self.custom = try user.custom.custom.jsonDataResult.get()
     self.lastUpdated = user.updated
     self.eTag = user.eTag
   }
-  
-  func upgrade<Custom>(
-    from membership: ChatMember<Custom>
-  ) throws where Custom : ChatCustomData {
-    if let memberModel = membership.chatUser {
-      try update(from: memberModel)
-    }
-  }
-  
+
   @discardableResult
   public static func remove(
     userId: String,

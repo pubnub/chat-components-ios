@@ -30,21 +30,37 @@ import CoreData
 
 import PubNub
 
+/// The CoreData managed `Member` class used whenever a ChatMember needs to be stored locally
 @objc(PubNubManagedMember)
 public final class PubNubManagedMember: NSManagedObject {
   // Entity Attributes
+  /// Unique identifier for the Member
   @NSManaged public var id: String
+  /// Data blob that represents the Custom Properties that can be stored with the Member.
   @NSManaged public var custom: Data
+  /// The current state of the Member relationship
+  @NSManaged public var status: String?
+  /// Last time the remote object was changed.
+  @NSManaged public var lastUpdated: Date?
+  /// Caching value that changes whenever the remote object changes.
+  @NSManaged public var eTag: String?
+
   // Presence Attributes
+  /// Whether the User is "Active" on a the Chanel
   @NSManaged public var isPresent: Bool
+  /// State information associated with the User for the Channel
   @NSManaged public var presenceState: Data?
   
   // Derived Attributes
+  /// Unique identifier for the Channel.
   @NSManaged public var channelId: String
+  /// Unique identifier for the User.
   @NSManaged public var userId: String
-  
+
   // Relationships
+  /// User that is associated with the Channel
   @NSManaged public var user: PubNubManagedUser
+  /// Channel that is associated with the User
   @NSManaged public var channel: PubNubManagedChannel
 }
 
@@ -62,63 +78,73 @@ extension PubNubManagedMember: ManagedMemberEntity {
   }
   
   public func convert<Custom>() -> ChatMember<Custom> where Custom : ChatCustomData {
+    var state: AnyJSON? = nil
+    if let presenceState = presenceState {
+      state = try? Constant.jsonDecoder.decode(AnyJSON.self, from: presenceState)
+    }
+
     return ChatMember<Custom>(
-      pubnubChannelId: channelId,
       channel: channel.convert(),
-      pubnubUserId: userId,
       user: user.convert(),
-      isPresent: isPresent
+      status: status,
+      updated: lastUpdated,
+      eTag: eTag,
+      presence: .init(isPresent: isPresent, presenceState: state),
+      custom: (try? Constant.jsonDecoder.decode(Custom.Member.self, from: custom)) ?? Custom.Member()
     )
   }
   
   @discardableResult
   public static func insertOrUpdate<Custom: ChatCustomData>(
     member: ChatMember<Custom>,
+    forceWrite: Bool = false,
     into context: NSManagedObjectContext
   ) throws -> PubNubManagedMember {
     if let existingMember = try? context.fetch(
-      memberBy(pubnubChannelId: member.pubnubChannelId, pubnubUserId: member.pubnubUserId)
+      memberBy(pubnubChannelId: member.chatChannel.id, pubnubUserId: member.chatUser.id)
     ).first {
       try existingMember.update(from: member)
       
-      if let channelModel = member.chatChannel {
-        try PubNubManagedChannel.insertOrUpdate(channel: channelModel, into: context)
+      // Write the value if it has server-set properties or if force write was specified
+      if member.chatChannel.isSynced || forceWrite {
+        try PubNubManagedChannel.insertOrUpdate(channel: member.chatChannel, into: context)
       }
-      if let userModel = member.chatUser {
-        try PubNubManagedUser.insertOrUpdate(user: userModel, into: context)
+      if member.chatUser.isSynced || forceWrite {
+        try PubNubManagedUser.insertOrUpdate(user: member.chatUser, into: context)
       }
       
       return existingMember
     } else {
       // Create new object from context
-      return try insert(member: member, into: context)
+      return try insert(member: member, forceWrite: forceWrite, into: context)
     }
   }
 
   static func insert<Custom: ChatCustomData>(
     member: ChatMember<Custom>,
+    forceWrite: Bool,
     into context: NSManagedObjectContext
   ) throws -> PubNubManagedMember {
     
     // Insert or update Channel
     let managedChannel: PubNubManagedChannel
-    if let channelModel = member.chatChannel {
-      managedChannel = try PubNubManagedChannel.insertOrUpdate(channel: channelModel, into: context)
-    } else if let existingChannel = try context.fetch(PubNubManagedChannel.channelBy(pubnubId: member.pubnubChannelId)).first {
+    if member.chatChannel.isSynced || forceWrite {
+      managedChannel = try PubNubManagedChannel.insertOrUpdate(channel: member.chatChannel, into: context)
+    } else if let existingChannel = try context.fetch(PubNubManagedChannel.channelBy(pubnubId: member.chatChannel.id)).first {
       managedChannel = existingChannel
     } else {
-      PubNub.log.error("Member failed to save due to missing stored channel \(member.pubnubChannelId)")
+      PubNub.log.error("Member failed to save due to missing stored channel \(member.chatChannel.id)")
       throw ChatError.missingRequiredData
     }
     
     // Insert or update User
     let managedUser: PubNubManagedUser
-    if let userModel = member.chatUser {
-      managedUser = try PubNubManagedUser.insertOrUpdate(user: userModel, into: context)
-    } else if let existingUser = try context.fetch(PubNubManagedUser.userBy(pubnubId: member.pubnubUserId)).first {
+    if member.chatUser.isSynced || forceWrite {
+      managedUser = try PubNubManagedUser.insertOrUpdate(user:  member.chatUser, into: context)
+    } else if let existingUser = try context.fetch(PubNubManagedUser.userBy(pubnubId: member.chatUser.id)).first {
       managedUser = existingUser
     } else {
-      PubNub.log.error("Member failed to save due to missing stored user \(member.pubnubUserId)")
+      PubNub.log.error("Member failed to save due to missing stored user \(member.chatUser.id)")
       throw ChatError.missingRequiredData
     }
     
@@ -128,19 +154,44 @@ extension PubNubManagedMember: ManagedMemberEntity {
       managed.channel = managedChannel
       managed.user = managedUser
     }
+  }
 
+  @discardableResult
+  public static func patch<Custom: ChatCustomData>(
+    usingPatch patcher: ChatMember<Custom>.Patcher,
+    into context: NSManagedObjectContext
+  ) throws -> PubNubManagedMember {
+    if let existingMember = try? context.fetch(
+      memberBy(pubnubChannelId: patcher.channelId, pubnubUserId: patcher.userId)
+    ).first {
+      let chatMember = existingMember.convert().patch(patcher)
+      try existingMember.update(from: chatMember)
+      
+      return existingMember
+    } else {
+      throw ChatError.missingRequiredData
+    }
   }
   
   func update<Custom>(
     from member: ChatMember<Custom>
   ) throws where Custom : ChatCustomData {
     self.id = member.id
+    self.status = member.status
+    self.eTag = member.eTag
+    self.lastUpdated = member.updated
+    self.custom = try member.custom.custom.jsonDataResult.get()
     
-    if let isPresent = member.presence?.isPresent {
+    if let presence = member.presence {
       self.isPresent = isPresent
-    }
-    if let presenceState = member.presence?.presenceState?.jsonData {
-      self.presenceState = presenceState
+      switch presence.presenceState {
+      case .noChange:
+        break
+      case .none:
+        self.presenceState = nil
+      case let .some(state):
+        self.presenceState = try state.jsonDataResult.get()
+      }
     }
   }
   

@@ -49,13 +49,13 @@ public protocol PresenceAPI {
 
 // MARK: - PubNub Ext
 
-extension PubNub: PresenceAPI {
+extension PubNubProvider {
   public func fetch<Custom: ChatCustomData>(
     hereNow request: FetchHereNowRequest,
     into: Custom.Type = Custom.self,
     completion: ((Result<(occupancy: [String: Int], memberships: [ChatMember<Custom>]), Error>) -> Void)?
   ) {
-    hereNow(
+    pubnub.hereNow(
       on: request.channels,
       and: request.groups,
       includeUUIDs: request.includeUUIDs,
@@ -84,7 +84,7 @@ extension PubNub: PresenceAPI {
     into: Custom.Type = Custom.self,
     completion: ((Result<[ChatMember<Custom>], Error>) -> Void)?
   ) {
-    getPresenceState(
+    pubnub.getPresenceState(
       for: request.uuid,
       on: request.channels,
       and: request.groups,
@@ -95,10 +95,9 @@ extension PubNub: PresenceAPI {
         let memberships = stateByChannel
           .map { channelId, state in
             ChatMember<Custom>(
-              pubnubChannelId: channelId,
-              pubnubUserId: memberId,
-              isPresent: true,
-              presenceState: state
+              channelId: channelId,
+              userId: memberId,
+              presence: .init(isPresent: true, presenceState: state)
             )
           }
         
@@ -114,7 +113,7 @@ extension PubNub: PresenceAPI {
     into: Custom.Type,
     completion: ((Result<[ChatMember<Custom>], Error>) -> Void)?
   ) {
-    setPresence(
+    pubnub.setPresence(
       state: request.state.scalarDictionary,
       on: request.channels,
       and: request.groups,
@@ -122,9 +121,17 @@ extension PubNub: PresenceAPI {
     ) { result in
       switch result {
       case .success(let state):
-        let channelMembers = request.channels.map { ChatMember<Custom>(pubnubChannelId: $0, pubnubUserId: request.currentUserId, presenceState: state) }
-        let groupMembers = request.groups.map { ChatMember<Custom>(pubnubChannelId: $0, pubnubUserId: request.currentUserId, presenceState: state) }
-        
+        let channelMembers = request.channels.map {
+          ChatMember<Custom>(
+            channelId: $0, userId: request.currentUserId,
+            presence: .init(isPresent: true, presenceState: state))
+        }
+        let groupMembers = request.groups.map {
+          ChatMember<Custom>(
+            channelId: $0, userId: request.currentUserId,
+            presence: .init(isPresent: true, presenceState: state))
+        }
+
         completion?(.success(channelMembers + groupMembers))
       case .failure(let error):
         completion?(.failure(error))

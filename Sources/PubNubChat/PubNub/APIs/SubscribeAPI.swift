@@ -64,38 +64,59 @@ public struct UnsubscribeRequest: Codable {
   }
 }
 
-// MARK: - PubNubAPI API
+// MARK: - SubscribeAPI API
 
 public protocol SubscribeAPI {
   func subscribe(_ request: SubscribeRequest)
   func reconnect(at: Timetoken?)
   func disconnect()
 
+  // TODO: This needed?
   var previousTimetoken: Timetoken? { get }
 
   func unsubscribe(_ request: UnsubscribeRequest)
   func unsubscribeAll()
 
-  func add(_ listener: SubscriptionListener)
+  func add(_ listener: BaseSubscriptionListener)
 }
 
 // MARK: - PubNub Ext
 
-extension PubNub: SubscribeAPI {
-  public func subscribe(_ request: SubscribeRequest) {
-    subscribe(
+public extension PubNubProvider {
+  func subscribe(_ request: SubscribeRequest) {
+    pubnub.subscribe(
       to: request.channels,
       and: request.channelGroups,
       at: request.timetoken ?? 0,
       withPresence: request.withPresence
     )
   }
+
+  var previousTimetoken: Timetoken? {
+    return pubnub.previousTimetoken
+  }
+
+  func reconnect(at: Timetoken?) {
+    pubnub.reconnect(at: at)
+  }
+
+  func disconnect() {
+    pubnub.disconnect()
+  }
   
-  public func unsubscribe(_ request: UnsubscribeRequest) {
-    unsubscribe(
+  func unsubscribe(_ request: UnsubscribeRequest) {
+    pubnub.unsubscribe(
       from: request.channels,
       and: request.channelGroups,
       presenceOnly: request.withPresence
     )
+  }
+
+  func unsubscribeAll() {
+    pubnub.unsubscribeAll()
+  }
+
+  func add(_ listener: BaseSubscriptionListener) {
+    pubnub.add(listener)
   }
 }

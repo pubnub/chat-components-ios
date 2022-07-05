@@ -38,8 +38,8 @@ class CoreDataMigrationManager_Tests: XCTestCase {
   override func setUpWithError() throws {
     try super.setUpWithError()
     
-    let momdURL = try XCTUnwrap(Bundle.module.url(forResource: "PubNubChatModel", withExtension: "momd"))
-    let momFilesURL = Bundle.module.paths(forResourcesOfType: "mom", inDirectory: momdURL.lastPathComponent)
+    let momdURL = try XCTUnwrap(Bundle.fixedModule.url(forResource: "PubNubChatModel", withExtension: "momd"))
+    let momFilesURL = Bundle.fixedModule.paths(forResourcesOfType: "mom", inDirectory: momdURL.lastPathComponent)
     
     // Loads all available NSManagedObjectModel objects and sort them ascending by version identifier
     // Pick in your test cases any versions you want
@@ -139,14 +139,14 @@ class CoreDataMigrationManager_Tests: XCTestCase {
   }
   
   func testMigration_DefaultCoreDataMigrationWorksForAllModelVersions() throws {
-    XCTAssertNoThrow(try CoreDataProvider(bundle: Bundle.module, dataModelFilename: "PubNubChatModel", location: CoreDataProvider.StoreLocation.disk(dbURL: persistentStoreLocation)))
+    XCTAssertNoThrow(try CoreDataProvider(bundle: Bundle.fixedModule, dataModelFilename: "PubNubChatModel", location: CoreDataProvider.StoreLocation.disk(dbURL: persistentStoreLocation)))
   }
   
   func testMigration_CustomMigrationManagerIsInvoked() throws {
     let expectation = expectation(description: "CustomMigrationManager")
     let location = CoreDataProvider.StoreLocation.disk(dbURL: persistentStoreLocation)
     
-    XCTAssertNoThrow(try CoreDataProvider(bundle: Bundle.module, dataModelFilename: "PubNubChatModel", location: location, migrationManager: CustmoMigrationManager(onMigrateIfNeededMethodInvoked: {
+    XCTAssertNoThrow(try CoreDataProvider(bundle: Bundle.fixedModule, dataModelFilename: "PubNubChatModel", location: location, migrationManager: CustmoMigrationManager(onMigrateIfNeededMethodInvoked: {
       expectation.fulfill()
     })))
     

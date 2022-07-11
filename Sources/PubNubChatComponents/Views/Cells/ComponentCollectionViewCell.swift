@@ -170,6 +170,15 @@ open class CollectionViewCellComponent: UICollectionViewCell, ReloadCellDelegate
   ) {
     
   }
+  
+  // Message Reaction List
+  open func configure<Message: ManagedMessageViewModel, User: ManagedUserViewModel>(
+    _ message: Message,
+    currentUser: User,
+    onTapAction: ((MessageReactionButtonComponent?, Message) -> Void)?
+  ) {
+
+  }
 }
 /// Base `Message` cell that can be subclassed based on payload type
 open class MessageListItemCell: CollectionViewCellComponent {
@@ -186,11 +195,14 @@ open class MessageListItemCell: CollectionViewCellComponent {
   open var bubbleContainer: BubbleContainerView?
   open var messageTextContent: TextComponentView?
   
+  open var reactionListView: MessageReactionListComponent?
+  
   public var contentEdgeSpacing: CGFloat = .zero
   
   // MARK: UIStack Subview
   public let topContainerStack = UIStackView()
   public let contentContainer = UIStackView()
+  public let bottomContainer = UIStackView()
   
   public var customImageViewSpacing: CGFloat {
     guard let imageView = authorAvatarView else { return 0 }
@@ -207,6 +219,7 @@ open class MessageListItemCell: CollectionViewCellComponent {
     self.secondaryLabel = PubNubLabelComponentView(frame: bounds)
     self.bubbleContainer = BubbleContainerView(frame: bounds)
     self.messageTextContent = TextComponentView(frame: bounds)
+    self.reactionListView = MessageReactionListComponent(frame: bounds)
     
     // Arrange Top Container
     topContainerStack.isLayoutMarginsRelativeArrangement = true
@@ -216,6 +229,13 @@ open class MessageListItemCell: CollectionViewCellComponent {
     topContainerStack.addArrangedSubview(primaryLabel)
     topContainerStack.setCustomSpacing(5.0, after: primaryLabel)
     topContainerStack.addArrangedSubview(secondaryLabel)
+    
+    // Arrange Bottom Container
+    bottomContainer.isLayoutMarginsRelativeArrangement = true
+    bottomContainer.layoutMargins = .init(
+      top: .zero, left: -contentEdgeSpacing + 15.0, bottom: .zero, right: .zero
+    )
+    bottomContainer.addArrangedSubview(reactionListView)
 
     contentContainer.axis = .vertical
     $cellAlignment.sink { [weak self] newAlignment in
@@ -224,6 +244,8 @@ open class MessageListItemCell: CollectionViewCellComponent {
     contentContainer.isLayoutMarginsRelativeArrangement = true
     contentContainer.addArrangedSubview(topContainerStack)
     contentContainer.addArrangedSubview(bubbleContainer)
+    contentContainer.setCustomSpacing(5.0, after: bubbleContainer)
+    contentContainer.addArrangedSubview(bottomContainer)
 
     authorAvatarView?.heightAnchor.constraint(equalToConstant: 30).isActive = true
     authorAvatarView?.widthAnchor.constraint(equalToConstant: 30).isActive = true
@@ -271,6 +293,18 @@ open class MessageListItemCell: CollectionViewCellComponent {
       .configure(contentView: messageTextContent!)
     bubbleContainer?
       .theming(theme.bubbleContainerTheme, cancelIn: &contentCancellables)
+  }
+
+  open override func configure<Message: ManagedMessageViewModel, User: ManagedUserViewModel>(
+    _ message: Message,
+    currentUser: User,
+    onTapAction: ((MessageReactionButtonComponent?, Message) -> Void)?
+  ) {
+    reactionListView?.configure(
+      message,
+      currentUserId: currentUser.pubnubId,
+      onMessageActionTap: onTapAction
+    )
   }
 }
 

@@ -248,7 +248,9 @@ extension ChatDataProvider {
       }
 
       // Process the batch updates
-      self.load(messages: messages)
+      self.load(messages: messages, processMessageActions: false, completion:  {
+        self.load(messageActions: messageActions)
+      })
       self.load(members: presenceChanges, forceWrite: false)
     }
   }

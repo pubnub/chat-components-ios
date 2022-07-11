@@ -70,4 +70,3 @@ open class UserInlineDetailComponentView: UIStackContainerView {
       .theming(theme.primaryLabel, cancelIn: &cancellables)
   }
 }
-

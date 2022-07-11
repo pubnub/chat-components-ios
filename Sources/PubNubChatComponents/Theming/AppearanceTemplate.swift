@@ -56,6 +56,8 @@ public struct AppearanceTemplate {
 
     public static var separator: UIColor = UIColor(named: "separator") ?? .separator
     public static var opaqueSeparator: UIColor = UIColor(named: "opaqueSeparator") ?? .opaqueSeparator
+    
+    public static var messageActionActive: UIColor = UIColor(named: "messageActionActive") ??  UIColor(0xef3a43, alpha: 0.24)
   }
   
   // Dynamic Type Sizes https://developer.apple.com/design/human-interface-guidelines/ios/visual-design/typography/

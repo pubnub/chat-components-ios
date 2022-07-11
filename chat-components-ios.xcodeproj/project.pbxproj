@@ -93,6 +93,8 @@
 		35DB0C40286F895B001E1F76 /* PubNubChatModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 35DB0C3D286F895B001E1F76 /* PubNubChatModel.xcdatamodeld */; };
 		35DB0C44286F8A2B001E1F76 /* CoreDataMigrationManager_Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35DB0BBF286CB31F001E1F76 /* CoreDataMigrationManager_Tests.swift */; };
 		35DB0C45286F8A2E001E1F76 /* Bundle+Fix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35DB0C41286F8A17001E1F76 /* Bundle+Fix.swift */; };
+		35DB0C4F2875E094001E1F76 /* MessageReactionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35DB0C4E2875E094001E1F76 /* MessageReactionView.swift */; };
+		35DB0C512875E0B6001E1F76 /* MessageReactionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35DB0C502875E0B6001E1F76 /* MessageReactionListView.swift */; };
 		35ECD9B427148198000E17AF /* ENV.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35ECD9B327148198000E17AF /* ENV.swift */; };
 		35F436BC26FEB0CB00033720 /* ManagedEntityListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35F436BA26FEB08500033720 /* ManagedEntityListViewModel.swift */; };
 		35F436BE2700F81800033720 /* ChannelListComponentViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35F436BD2700F81800033720 /* ChannelListComponentViewModel.swift */; };
@@ -224,6 +226,8 @@
 		35DB0C3E286F895B001E1F76 /* PubNubChatModel-V2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "PubNubChatModel-V2.xcdatamodel"; sourceTree = "<group>"; };
 		35DB0C3F286F895B001E1F76 /* PubNubChatModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = PubNubChatModel.xcdatamodel; sourceTree = "<group>"; };
 		35DB0C41286F8A17001E1F76 /* Bundle+Fix.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Bundle+Fix.swift"; sourceTree = "<group>"; };
+		35DB0C4E2875E094001E1F76 /* MessageReactionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageReactionView.swift; sourceTree = "<group>"; };
+		35DB0C502875E0B6001E1F76 /* MessageReactionListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageReactionListView.swift; sourceTree = "<group>"; };
 		35ECD9B327148198000E17AF /* ENV.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ENV.swift; sourceTree = "<group>"; };
 		35F436BA26FEB08500033720 /* ManagedEntityListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedEntityListViewModel.swift; sourceTree = "<group>"; };
 		35F436BD2700F81800033720 /* ChannelListComponentViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelListComponentViewModel.swift; sourceTree = "<group>"; };
@@ -508,6 +512,8 @@
 				35B418BA26DE82D100DB49A7 /* LabelComponentView.swift */,
 				350E046726F00C8D00DD28F1 /* LinkComponentView.swift */,
 				350BFB102729151500F0F95B /* UserInlineDetailComponentView.swift */,
+				35DB0C4E2875E094001E1F76 /* MessageReactionView.swift */,
+				35DB0C502875E0B6001E1F76 /* MessageReactionListView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -954,11 +960,13 @@
 				352A5D24270B953F00B521A9 /* MemberListComponentTheme.swift in Sources */,
 				352A5D22270B953300B521A9 /* ChannelListComponentTheme.swift in Sources */,
 				3501A587265D8BDF00063403 /* AppearanceTemplate.swift in Sources */,
+				35DB0C512875E0B6001E1F76 /* MessageReactionListView.swift in Sources */,
 				350BFB0F27290DC400F0F95B /* ChannelMemberComponentCell.swift in Sources */,
 				35F436CA2702236600033720 /* ThemeProvider.swift in Sources */,
 				35F436D02704BB0000033720 /* Combine+PubNub.swift in Sources */,
 				35074ACE271878DE00462624 /* MessageInputComponentTheme.swift in Sources */,
 				35074AD92725EE5900462624 /* ComponentCollectionViewCell.swift in Sources */,
+				35DB0C4F2875E094001E1F76 /* MessageReactionView.swift in Sources */,
 				352A5D26270B954900B521A9 /* MessageListComponentTheme.swift in Sources */,
 				355526D426D46363009698E3 /* DateFormatter+Components.swift in Sources */,
 				35B3B5BA2656C21C00473120 /* ImageComponentView.swift in Sources */,

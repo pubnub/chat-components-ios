@@ -119,6 +119,8 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
 
   public var pubnubChannelId: String
   public var channelModel: ChatChannel<Custom.Channel>?
+  
+  public var messageActions: [ChatMessageAction<Custom>]
 
   public init(
     content: MessagePayload,
@@ -126,7 +128,8 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
     pubnubUserId: String,
     user: ChatUser<Custom.User>? = nil,
     pubnubChannelId: String,
-    channel: ChatChannel<Custom.Channel>? = nil
+    channel: ChatChannel<Custom.Channel>? = nil,
+    messageActions: [ChatMessageAction<Custom>] = []
   ) {
     self.timetoken = timetoken
 
@@ -137,6 +140,8 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
 
     self.pubnubChannelId = pubnubChannelId
     self.channelModel = channel
+    
+    self.messageActions = messageActions
   }
 
   public init(
@@ -150,7 +155,8 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
     pubnubUserId: String,
     user: ChatUser<Custom.User>? = nil,
     pubnubChannelId: String,
-    channel: ChatChannel<Custom.Channel>? = nil
+    channel: ChatChannel<Custom.Channel>? = nil,
+    messageActions: [ChatMessageAction<Custom>] = []
   ) {
     self.init(
       content: MessagePayload(
@@ -165,7 +171,8 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
       pubnubUserId: pubnubUserId,
       user: user,
       pubnubChannelId: pubnubChannelId,
-      channel: channel
+      channel: channel,
+      messageActions: messageActions
     )
   }
 
@@ -201,10 +208,10 @@ extension ChatMessage: PubNubMessage {
 
   public var actions: [PubNubMessageAction] {
     get {
-      return []
+      return messageActions
     }
     set(newValue) {
-      // no-op
+      messageActions = newValue.compactMap({ try? .init(from: $0) })
     }
   }
 
@@ -267,7 +274,8 @@ extension ChatMessage: PubNubMessage {
       pubnubUserId: senderId,
       user: nil,
       pubnubChannelId: other.channel,
-      channel: nil
+      channel: nil,
+      messageActions: other.actions.compactMap { try? .init(from: $0) }
     )
   }
 }

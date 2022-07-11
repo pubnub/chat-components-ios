@@ -160,6 +160,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
 
   public func load(
     messages: [ChatMessage<ModelData>],
+    processMessageActions: Bool,
     batchSize: Int = 256,
     batchHandler: (([ChatMessage<ModelData>], Error?) -> Void)? = nil,
     completion: (() -> Void)? = nil
@@ -173,7 +174,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
       for batch in messages.chunked(into: batchSize) {
         if let error = self?.provider.coreDataContainer.syncWrite({ context in
           for item in batch {
-            try ManagedEntities.Message.insertOrUpdate(message: item, into: context)
+            try ManagedEntities.Message.insertOrUpdate(message: item, prcoessMessageActions: processMessageActions, into: context)
           }
         }) {
           PubNub.log.error("Error saving message batch \(error)")
@@ -414,7 +415,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
         switch result {
         case .success(let message):
           PubNub.log.debug("Send Message Success \(message)")
-          self?.load(messages: [message], completion: {
+          self?.load(messages: [message], processMessageActions: false, completion: {
             completion?(.success(message))
           })
         case .failure(let error):
@@ -436,7 +437,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
         // Get all the message values
         let messages = messagesByChannel.values.flatMap({ $0 })
         // Store in DB
-        self?.load(messages: messages, completion: {
+        self?.load(messages: messages, processMessageActions: request.actionsInResponse, completion: {
           completion?(.success((messageByChannelId: messagesByChannel, next: next)))
         })
       case .failure(let error):
@@ -464,7 +465,7 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
       } receiveValue: { [weak self] messagesById, next in
         let messages = messagesById.values.flatMap { $0 }
         
-        self?.load(messages: messages, completion: {
+        self?.load(messages: messages, processMessageActions: request.actionsInResponse, completion: {
           pageHandler?(messagesById, next, nil)
         })
       }
@@ -485,6 +486,32 @@ public class ChatDataProvider<ModelData, ManagedEntities> where ModelData: ChatC
           self?.load(messageActions: [action], completion: {
             completion?(.success(action))
           })
+        case .failure(let error):
+          PubNub.log.error("Send Message Action Error \(error)")
+          completion?(.failure(error))
+        }
+      }
+  }
+
+  public func removeRemoteMessageAction(
+    _ request: MessageActionRequest<ModelData>,
+    completion: ((Result<Void, Error>) -> Void)?
+  ) {
+    provider.pubnubProvider
+      .removeMessageAction(request) { [weak self] result in
+        switch result {
+        case .success(let action):
+          PubNub.log.debug("Send Message Success \(action)")
+          self?.removeStoredMessageAction(
+            messageActionId: action.id,
+            completion: { error in
+              if let error = error {
+                completion?(.failure(error))
+              } else {
+                completion?(.success(Void()))
+              }
+            }
+          )
         case .failure(let error):
           PubNub.log.error("Send Message Action Error \(error)")
           completion?(.failure(error))

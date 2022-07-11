@@ -102,6 +102,7 @@ extension PubNubManagedMessage: ManagedMessageEntity {
   @discardableResult
   public static func insertOrUpdate<Custom: ChatCustomData>(
     message: ChatMessage<Custom>,
+    prcoessMessageActions: Bool,
     into context: NSManagedObjectContext
   ) throws -> PubNubManagedMessage {
     if let existingMessage = try? context.fetch(
@@ -116,6 +117,32 @@ extension PubNubManagedMessage: ManagedMessageEntity {
         try PubNubManagedUser.insertOrUpdate(user: userModel, into: context)
       }
       
+      // Add and Remove Message Actions
+      // [1, 2, 3, 4, 5]
+      let existingActionIds = Set(existingMessage.actions.map { $0.id })
+      // [3, 4, 5, 6, 7]
+      let otherActionIds = Set(message.messageActions.map { $0.id })
+
+      // Remove: [1, 2]
+      let removeActionIds = existingActionIds.subtracting(otherActionIds)
+      let removeActions = existingMessage.actions.filter { removeActionIds.contains($0.id) }
+      existingMessage.actions.subtract(removeActions)
+      for action in removeActions {
+        context.delete(action)
+      }
+      
+      // Add: [6, 7]
+      let addActionIds = otherActionIds.subtracting(existingActionIds)
+      let addActions = message.messageActions.filter { addActionIds.contains($0.id) }
+      for action in addActions {
+        do {
+          existingMessage
+            .actions.insert(try PubNubManagedMessageAction.insertOrUpdate(messageAction: action, into: context))
+        } catch {
+          PubNub.log.error("Could not insert Message Action while updating Message \(error)")
+        }
+      }
+
       return existingMessage
     } else {
       // Create new object from context
@@ -153,6 +180,16 @@ extension PubNubManagedMessage: ManagedMessageEntity {
       // Ensure Relationships are also set
       object.author = managedUser
       object.channel = managedChannel
+
+      var actions = Set<PubNubManagedMessageAction>()
+      for action in message.messageActions {
+        do {
+          actions.insert(try PubNubManagedMessageAction(chat: action, parent: object, context: context))
+        } catch {
+          PubNub.log.error("Could not insert Message Action while inserting Message \(error)")
+        }
+      }
+      object.actions = actions
     }
   }
   
@@ -210,7 +247,7 @@ extension PubNubManagedMessage: ManagedMessageEntityFetches {
   
   public static func messageBy(pubnubTimetoken: Timetoken, channelId: String) -> NSFetchRequest<PubNubManagedMessage> {
     let request = NSFetchRequest<PubNubManagedMessage>(entityName: entityName)
-    request.predicate = NSPredicate(format: "dateSent == %@ && pubnubChannelId == %@", pubnubTimetoken, channelId)
+    request.predicate = NSPredicate(format: "%K == %d && %K == %@", "timetoken", pubnubTimetoken, "pubnubChannelId", channelId)
     
     return request
   }

@@ -36,7 +36,8 @@ import PubNub
 extension ChatProvider
   where ManagedEntities: ChatViewModels,
         ManagedEntities: ManagedChatEntities,
-        ManagedEntities.Channel.MemberViewModel == ManagedEntities.Member {
+        ManagedEntities.Channel.MemberViewModel == ManagedEntities.Member,
+        ManagedEntities.Message.MessageActionModel == ManagedEntities.MessageAction {
 
   open func messagesFrom(pubnubChannelId: String) -> NSFetchedResultsController<ManagedEntities.Message> {
 
@@ -86,7 +87,8 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
   where ModelData: ChatCustomData,
         ManagedEntities: ChatViewModels,
         ManagedEntities: ManagedChatEntities,
-        ManagedEntities.Channel.MemberViewModel == ManagedEntities.Member
+        ManagedEntities.Channel.MemberViewModel == ManagedEntities.Member,
+        ManagedEntities.Message.MessageActionModel == ManagedEntities.MessageAction
 {
 
   // Managed Data
@@ -361,6 +363,51 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
       )
     }
   }
+  
+  // MARK: Messgage Action Tapped
+  
+  var messageActionTapped: ((MessageListComponentViewModel<ModelData, ManagedEntities>?, MessageReactionButtonComponent?, ManagedEntities.Message) -> Void)? = { (viewModel, messageActionView, message) in
+    guard let messageActionView = messageActionView else { return }
+
+    if messageActionView.isSelected {
+      // Decrement the count
+      messageActionView.currentCount -= 1
+      // Remove the message action
+      if let messageAction = message.messageActionViewModels.first(where: { $0.pubnubUserId == viewModel?.author.pubnubUserID }) {
+        do {
+          viewModel?.provider.dataProvider
+            .removeRemoteMessageAction(.init(messageAction: try messageAction.convert()), completion: nil)
+        } catch {
+          PubNub.log.error("Message Action Tapped failed to convert Message Action while preparing send remove request: \(message)")
+        }
+      }
+    } else {
+      // Increment the count
+      messageActionView.currentCount += 1
+      // Add the message action
+      do {
+        viewModel?.provider.dataProvider
+          .sendRemoteMessageAction(
+            .init(
+              parent: try message.convert(),
+              actionType: "reaction",
+              actionValue: messageActionView.reaction
+            )
+          ) { [weak messageActionView] result in
+            switch result {
+            case .success:
+              break
+            case let .failure(error):
+              // If there was an error, then roll-back the View changes
+              messageActionView?.currentCount -= 1
+              messageActionView?.isSelected = false
+            }
+          }
+      } catch {
+        PubNub.log.error("Message Action Tapped failed to convert Message while preparing send add request: \(message)")
+      }
+    }
+  }
 
   // MARK: - Cell Provider
   
@@ -409,6 +456,11 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
 
     cell.configure(message, theme: theme)
     
+    // Configure Message Reaction List
+    cell.configure(message, currentUser: author, onTapAction: { [weak self] (button, message) in
+      self?.messageActionTapped?(self, button, message)
+    })
+
     return cell
   }
   

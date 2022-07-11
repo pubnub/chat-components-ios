@@ -178,9 +178,9 @@ extension UIFont {
 extension UIColor {
   convenience init(_ hexCode: Int, alpha: CGFloat = 1.0) {
     self.init(
-      red: CGFloat((hexCode >> 16) & 0xff),
-      green: CGFloat((hexCode >> 8) & 0xff),
-      blue: CGFloat(hexCode & 0xff),
+      red: CGFloat((hexCode >> 16) & 0xff)/255.0,
+      green: CGFloat((hexCode >> 8) & 0xff)/255.0,
+      blue: CGFloat(hexCode & 0xff)/255.0,
       alpha: alpha
     )
   }

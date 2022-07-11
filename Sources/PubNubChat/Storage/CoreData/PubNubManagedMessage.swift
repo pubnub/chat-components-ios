@@ -118,28 +118,30 @@ extension PubNubManagedMessage: ManagedMessageEntity {
       }
       
       // Add and Remove Message Actions
-      // [1, 2, 3, 4, 5]
-      let existingActionIds = Set(existingMessage.actions.map { $0.id })
-      // [3, 4, 5, 6, 7]
-      let otherActionIds = Set(message.messageActions.map { $0.id })
+      if prcoessMessageActions {
+        // [1, 2, 3, 4, 5]
+        let existingActionIds = Set(existingMessage.actions.map { $0.id })
+        // [3, 4, 5, 6, 7]
+        let otherActionIds = Set(message.messageActions.map { $0.id })
 
-      // Remove: [1, 2]
-      let removeActionIds = existingActionIds.subtracting(otherActionIds)
-      let removeActions = existingMessage.actions.filter { removeActionIds.contains($0.id) }
-      existingMessage.actions.subtract(removeActions)
-      for action in removeActions {
-        context.delete(action)
-      }
-      
-      // Add: [6, 7]
-      let addActionIds = otherActionIds.subtracting(existingActionIds)
-      let addActions = message.messageActions.filter { addActionIds.contains($0.id) }
-      for action in addActions {
-        do {
-          existingMessage
-            .actions.insert(try PubNubManagedMessageAction.insertOrUpdate(messageAction: action, into: context))
-        } catch {
-          PubNub.log.error("Could not insert Message Action while updating Message \(error)")
+        // Remove: [1, 2]
+        let removeActionIds = existingActionIds.subtracting(otherActionIds)
+        let removeActions = existingMessage.actions.filter { removeActionIds.contains($0.id) }
+        existingMessage.actions.subtract(removeActions)
+        for action in removeActions {
+          context.delete(action)
+        }
+        
+        // Add: [6, 7]
+        let addActionIds = otherActionIds.subtracting(existingActionIds)
+        let addActions = message.messageActions.filter { addActionIds.contains($0.id) }
+        for action in addActions {
+          do {
+            existingMessage
+              .actions.insert(try PubNubManagedMessageAction.insertOrUpdate(messageAction: action, into: context))
+          } catch {
+            PubNub.log.error("Could not insert Message Action while updating Message \(error)")
+          }
         }
       }
 

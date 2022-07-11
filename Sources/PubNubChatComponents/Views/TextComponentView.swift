@@ -55,7 +55,8 @@ final public class TextComponentView: UIView {
     layoutMargins = .zero
     translatesAutoresizingMaskIntoConstraints = false
     insetsLayoutMarginsFromSafeArea = false
-    
+
+    textView.isUserInteractionEnabled = false
     textView.translatesAutoresizingMaskIntoConstraints = false
 
     textView.textContainer.lineFragmentPadding = 0

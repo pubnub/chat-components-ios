@@ -81,6 +81,7 @@
 		35B3B52C264C494300473120 /* ChatDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B3B52B264C494300473120 /* ChatDataProvider.swift */; };
 		35B3B5BA2656C21C00473120 /* ImageComponentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B3B5B92656C21C00473120 /* ImageComponentView.swift */; };
 		35B418BB26DE82D100DB49A7 /* LabelComponentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B418BA26DE82D100DB49A7 /* LabelComponentView.swift */; };
+		35BEA6D0287CACA300291D4D /* Tests+PubNubManagedMessageAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35BEA6CE287CAA3000291D4D /* Tests+PubNubManagedMessageAction.swift */; };
 		35C1A75C267AA9E10087241C /* PubNub+PubNubChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35C1A75B267AA9E10087241C /* PubNub+PubNubChat.swift */; };
 		35CA9033285BC1AD007C2F65 /* Tests+UserAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35CA9031285BC188007C2F65 /* Tests+UserAPI.swift */; };
 		35CA9035285BC1D1007C2F65 /* TestCustoms.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35CA9034285BC1D1007C2F65 /* TestCustoms.swift */; };
@@ -218,6 +219,7 @@
 		35B3B52B264C494300473120 /* ChatDataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatDataProvider.swift; sourceTree = "<group>"; };
 		35B3B5B92656C21C00473120 /* ImageComponentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageComponentView.swift; sourceTree = "<group>"; };
 		35B418BA26DE82D100DB49A7 /* LabelComponentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabelComponentView.swift; sourceTree = "<group>"; };
+		35BEA6CE287CAA3000291D4D /* Tests+PubNubManagedMessageAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tests+PubNubManagedMessageAction.swift"; sourceTree = "<group>"; };
 		35C1A75B267AA9E10087241C /* PubNub+PubNubChat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PubNub+PubNubChat.swift"; sourceTree = "<group>"; };
 		35CA9031285BC188007C2F65 /* Tests+UserAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tests+UserAPI.swift"; sourceTree = "<group>"; };
 		35CA9034285BC1D1007C2F65 /* TestCustoms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestCustoms.swift; sourceTree = "<group>"; };
@@ -632,6 +634,7 @@
 			isa = PBXGroup;
 			children = (
 				35DB0BBD286CB29C001E1F76 /* CoreData */,
+				35BEA6CE287CAA3000291D4D /* Tests+PubNubManagedMessageAction.swift */,
 			);
 			path = Storage;
 			sourceTree = "<group>";
@@ -940,6 +943,7 @@
 				353710862863B57C0023C4E3 /* Tests+DefaultSpaceListener.swift in Sources */,
 				3598B27D2645DCB000878118 /* Tests+ChatChannel.swift in Sources */,
 				3537107C28624D350023C4E3 /* Tests+MemberRequests.swift in Sources */,
+				35BEA6D0287CACA300291D4D /* Tests+PubNubManagedMessageAction.swift in Sources */,
 				35DB0C44286F8A2B001E1F76 /* CoreDataMigrationManager_Tests.swift in Sources */,
 				35DB0C45286F8A2E001E1F76 /* Bundle+Fix.swift in Sources */,
 				35CA9037285BC976007C2F65 /* MockPubNubAPI.swift in Sources */,

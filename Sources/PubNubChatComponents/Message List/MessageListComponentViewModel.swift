@@ -457,9 +457,14 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
     cell.configure(message, theme: theme)
     
     // Configure Message Reaction List
-    cell.configure(message, currentUser: author, onTapAction: { [weak self] (button, message) in
-      self?.messageActionTapped?(self, button, message)
-    })
+    cell.configure(
+      message,
+      currentUser: author,
+      isEnabled: theme.$enableReactions.eraseToAnyPublisher(),
+      onTapAction: { [weak self] (button, message) in
+        self?.messageActionTapped?(self, button, message)
+      }
+    )
 
     return cell
   }

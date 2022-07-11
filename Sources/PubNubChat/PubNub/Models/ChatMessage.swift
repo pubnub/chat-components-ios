@@ -33,9 +33,9 @@ import PubNub
 public typealias PubNubChatMessage = ChatMessage<VoidCustomData>
 
 @dynamicMemberLookup
-public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
+public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Hashable, Codable {
 
-  public struct MessagePayload: JSONCodable {
+  public struct MessagePayload: Hashable, JSONCodable {
     public var id: String
     public var text: String
     public var contentType: String?
@@ -103,6 +103,27 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
       try container.encodeIfPresent(content?.codableValue, forKey: .content)
       try container.encodeIfPresent(custom, forKey: .custom)
       try container.encode(createdAt, forKey: .createdAt)
+    }
+
+    public static func == (
+      lhs: ChatMessage<Custom>.MessagePayload,
+      rhs: ChatMessage<Custom>.MessagePayload
+    ) -> Bool {
+      return lhs.id == rhs.id &&
+        lhs.text == rhs.text &&
+        lhs.contentType == rhs.contentType &&
+        lhs.content?.codableValue == rhs.codableValue &&
+        lhs.custom == rhs.custom &&
+        lhs.createdAt == rhs.createdAt
+    }
+
+    public func hash(into hasher: inout Hasher) {
+      hasher.combine(id)
+      hasher.combine(text)
+      hasher.combine(contentType)
+      hasher.combine(content?.codableValue)
+      hasher.combine(custom)
+      hasher.combine(createdAt)
     }
   }
 

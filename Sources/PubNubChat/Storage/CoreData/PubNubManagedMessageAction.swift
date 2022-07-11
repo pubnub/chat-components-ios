@@ -60,19 +60,16 @@ public final class PubNubManagedMessageAction: NSManagedObject {
 // MARK: ManagedMessageEntity Impl.
 
 extension PubNubManagedMessageAction: ManagedMessageActionEntity {
-  
-  public typealias MessageEntity = PubNubManagedMessage
-  public typealias UserEntity = PubNubManagedUser
 
   public var pubnubActionTimetoken: Timetoken {
     return published
   }
 
-  public var managedUser: UserEntity {
+  public var managedUser: PubNubManagedUser {
     return author
   }
 
-  public var managedMessage: MessageEntity {
+  public var managedMessage: PubNubManagedMessage {
     return parent
   }
 
@@ -83,9 +80,7 @@ extension PubNubManagedMessageAction: ManagedMessageActionEntity {
       sourceType: sourceType,
       value: value,
       pubnubUserId: pubnubUserId,
-      userModel: author.convert(),
-      pubnubChannelId: parent.pubnubChannelId,
-      messageModel: try parent.convert()
+      pubnubChannelId: parent.pubnubChannelId
     )
   }
 
@@ -96,35 +91,32 @@ extension PubNubManagedMessageAction: ManagedMessageActionEntity {
     context: NSManagedObjectContext
   ) throws {
     self.init(context: context)
-    self.id = messageAction.id
-    self.published = messageAction.actionTimetoken
-    self.sourceType = messageAction.sourceType
-    self.value = messageAction.value
-    self.pubnubChannelId = messageAction.pubnubChannelId
-    
-    // Set, fetch, or insert the author
-    if let user = user {
-      self.author = user
-    } else if let userModel = messageAction.userModel {
-      self.author = try PubNubManagedUser.insertOrUpdate(user: userModel, into: context)
-    } else if let existingUser = try context.fetch(PubNubManagedUser.userBy(pubnubId: messageAction.pubnubUserId)).first {
-      self.author = existingUser
-    } else {
-      PubNub.log.error("Message Action failed to init due to missing stored message \(messageAction.messageTimetoken) on channel \(messageAction.pubnubChannelId)")
-      throw ChatError.missingRequiredData
-    }
-    
+
+    self.updateFields(from: messageAction)
+
     // Set, fetch, or insert the parent
     if let message = message {
       self.parent = message
+    } else if let messageModel = messageAction.messageModel {
+      self.parent = try PubNubManagedMessage.insertOrUpdate(message: messageModel, prcoessMessageActions: false, into: context)
     } else if let existingMessage = try context.fetch(
       PubNubManagedMessage.messageBy(pubnubTimetoken: messageAction.parentTimetoken, channelId: messageAction.pubnubChannelId)
     ).first {
       self.parent = existingMessage
-    } else if let messageModel = messageAction.messageModel {
-      self.parent = try PubNubManagedMessage.insertOrUpdate(message: messageModel, prcoessMessageActions: false, into: context)
     } else {
       PubNub.log.error("Message Action failed to init due to missing message \(messageAction.messageTimetoken) on channel \(messageAction.pubnubChannelId)")
+      throw ChatError.missingRequiredData
+    }
+    
+    // Set, fetch, or insert the author
+    if let user = user {
+      self.author = user
+    } else if let existingUser = try context.fetch(PubNubManagedUser.userBy(pubnubId: messageAction.pubnubUserId)).first {
+      self.author = existingUser
+    } else if let userModel = messageAction.userModel {
+      self.author = try PubNubManagedUser.insertOrUpdate(user: userModel, into: context)
+    }  else {
+      PubNub.log.error("Message Action failed to init due to missing user \(messageAction.pubnubUserId) on channel \(messageAction.pubnubChannelId)")
       throw ChatError.missingRequiredData
     }
   }
@@ -139,7 +131,7 @@ extension PubNubManagedMessageAction: ManagedMessageActionEntity {
     if let existingMessageAction = try? context.fetch(
       messageActionBy(messageAction: messageAction)
     ).first {
-      try existingMessageAction.update(from: messageAction)
+      existingMessageAction.updateFields(from: messageAction)
 
       if let messageModel = messageAction.messageModel {
         try PubNubManagedMessage.insertOrUpdate(message: messageModel, prcoessMessageActions: false, into: context)
@@ -149,50 +141,18 @@ extension PubNubManagedMessageAction: ManagedMessageActionEntity {
       }
 
       return existingMessageAction
-    } else {
-      // Create new object from context
-      return try insert(messageAction: messageAction, into: context)
     }
+    
+    // Create new object from context
+    return try PubNubManagedMessageAction(
+      chat: messageAction,
+      context: context
+    )
   }
 
-  public static func insert<Custom: ChatCustomData>(
-    messageAction: ChatMessageAction<Custom>,
-    into context: NSManagedObjectContext
-  ) throws -> PubNubManagedMessageAction {
-
-    // Insert or Update Message
-    let managedMessage: PubNubManagedMessage
-    if let messageModel = messageAction.messageModel {
-      managedMessage = try PubNubManagedMessage.insertOrUpdate(message: messageModel, prcoessMessageActions: false, into: context)
-    } else if let existingMessage = try context.fetch(PubNubManagedMessage.messageBy(pubnubTimetoken: messageAction.parentTimetoken, channelId: messageAction.pubnubChannelId)).first {
-      managedMessage = existingMessage
-    } else {
-      PubNub.log.error("Message Action failed to save due to missing stored message \(messageAction.messageTimetoken) on channel \(messageAction.pubnubChannelId)")
-      throw ChatError.missingRequiredData
-    }
-
-    // Insert or Update User
-    let managedUser: PubNubManagedUser
-    if let userModel = messageAction.userModel {
-      managedUser = try PubNubManagedUser.insertOrUpdate(user: userModel, into: context)
-    } else if let existingUser = try context.fetch(PubNubManagedUser.userBy(pubnubId: messageAction.pubnubUserId)).first {
-      managedUser = existingUser
-    } else {
-      PubNub.log.error("Message Action failed to save due to missing stored user \(messageAction.pubnubUserId)")
-      throw ChatError.missingRequiredData
-    }
-
-    return try context.insertNew { (object: PubNubManagedMessageAction) in
-      try object.update(from: messageAction)
-      // Ensure Relationships are also set
-      object.author = managedUser
-      object.parent = managedMessage
-    }
-  }
-
-  public func update<Custom: ChatCustomData>(
+  public func updateFields<Custom: ChatCustomData>(
     from action: ChatMessageAction<Custom>
-  ) throws {
+  ) {
     id = action.id
     value = action.value
     sourceType = action.sourceType
@@ -221,21 +181,32 @@ extension PubNubManagedMessageAction: ManagedMessageActionEntity {
 extension PubNubManagedMessageAction: ManagedMessageActionEntityFetches {
   public static func messageActionsBy(pubnubUserId: String) -> NSFetchRequest<PubNubManagedMessageAction> {
     let request = NSFetchRequest<PubNubManagedMessageAction>(entityName: entityName)
-    request.predicate = NSPredicate(format: "pubnubSenderId == %@", pubnubUserId)
+    request.predicate = NSPredicate(
+      format: "%K == %@",
+      #keyPath(PubNubManagedMessageAction.pubnubUserId),
+      pubnubUserId
+    )
 
     return request
   }
   
   public static func messageActionsBy(messageTimetoken: Timetoken, channelId: String) -> NSFetchRequest<PubNubManagedMessageAction> {
     let request = NSFetchRequest<PubNubManagedMessageAction>(entityName: entityName)
-    request.predicate = NSPredicate(format: "parentTimetoken == %@ && pubnubChannelId == %@", messageTimetoken, channelId)
+    request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+      NSPredicate(format: "%K == %ld", #keyPath(PubNubManagedMessageAction.pubnubParentTimetoken), messageTimetoken),
+      NSPredicate(format: "%K == %@", #keyPath(PubNubManagedMessageAction.pubnubChannelId), channelId)
+    ])
 
     return request
   }
 
   public static func messageActionsBy(messageId: String) -> NSFetchRequest<PubNubManagedMessageAction> {
     let request = NSFetchRequest<PubNubManagedMessageAction>(entityName: entityName)
-    request.predicate = NSPredicate(format: "pubnubParentId == %@", messageId)
+    request.predicate = NSPredicate(
+      format: "%K == %@",
+      #keyPath(PubNubManagedMessageAction.pubnubParentId),
+      messageId
+    )
 
     return request
   }
@@ -246,7 +217,11 @@ extension PubNubManagedMessageAction: ManagedMessageActionEntityFetches {
 
   public static func messageActionBy(messageActionId: String) -> NSFetchRequest<PubNubManagedMessageAction> {
     let request = NSFetchRequest<PubNubManagedMessageAction>(entityName: entityName)
-    request.predicate = NSPredicate(format: "id == %@", messageActionId)
+    request.predicate = NSPredicate(
+      format: "%K == %@",
+      #keyPath(PubNubManagedMessageAction.id),
+      messageActionId
+    )
     
     return request
   }

@@ -40,7 +40,7 @@ public class MessageListComponentTheme: ViewControllerComponentTheme {
   @Published public var authorItemTheme: MessageListCellComponentTheme
   
   @Published public var typingIndicatorCellTheme: TypingIndicatorCellTheme
-  
+
   public init(
     controllerType: ComponentViewController.Type,
     backgroundColor: UIColor?,
@@ -76,6 +76,7 @@ public class MessageListCellComponentTheme: CollectionViewCellTheme {
   @Published public var contentLinkTheme: LinkViewComponentTheme
   @Published public var itemTheme: BasicComponentTheme
   @Published public var dateFormatter: DateFormatter
+  @Published public var enableReactions: Bool
 
   public init(
     textMessageContentCellType: CollectionViewCellComponent.Type,
@@ -88,7 +89,8 @@ public class MessageListCellComponentTheme: CollectionViewCellTheme {
     contentTextTheme: TextViewComponentTheme,
     contentLinkTheme: LinkViewComponentTheme,
     itemTheme: BasicComponentTheme,
-    dateFormatter: DateFormatter
+    dateFormatter: DateFormatter,
+    enableReactions: Bool
   ) {
     self.alignment = alignment
     self.maxWidthPercentage = maxWidthPercentage
@@ -97,7 +99,8 @@ public class MessageListCellComponentTheme: CollectionViewCellTheme {
     self.contentLinkTheme = contentLinkTheme
     self.itemTheme = itemTheme
     self.dateFormatter = dateFormatter
-    
+    self.enableReactions = enableReactions
+
     super.init(
       customType: textMessageContentCellType,
       backgroundColor: backgroundColor,
@@ -191,7 +194,8 @@ extension MessageListCellComponentTheme {
         layoutMargin: UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
       ),
       itemTheme: .pubnubGroupChannelList,
-      dateFormatter: .messageInline
+      dateFormatter: .messageInline,
+      enableReactions: false
     )
   }
 }

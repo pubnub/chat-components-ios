@@ -175,6 +175,7 @@ open class CollectionViewCellComponent: UICollectionViewCell, ReloadCellDelegate
   open func configure<Message: ManagedMessageViewModel, User: ManagedUserViewModel>(
     _ message: Message,
     currentUser: User,
+    isEnabled: AnyPublisher<Bool, Never>,
     onTapAction: ((MessageReactionButtonComponent?, Message) -> Void)?
   ) {
 
@@ -298,8 +299,15 @@ open class MessageListItemCell: CollectionViewCellComponent {
   open override func configure<Message: ManagedMessageViewModel, User: ManagedUserViewModel>(
     _ message: Message,
     currentUser: User,
+    isEnabled: AnyPublisher<Bool, Never>,
     onTapAction: ((MessageReactionButtonComponent?, Message) -> Void)?
   ) {
+    isEnabled
+      .sink { [weak self] isEnabled in
+        self?.reactionListView?.isHidden = isEnabled
+      }
+      .store(in: &cancellables)
+    
     reactionListView?.configure(
       message,
       currentUserId: currentUser.pubnubId,

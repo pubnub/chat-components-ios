@@ -83,6 +83,7 @@ extension PubNubManagedMessage: ManagedMessageEntity {
   }
   
   public func convert<Custom: ChatCustomData>() throws -> ChatMessage<Custom> {
+
     return ChatMessage(
       id: self.id,
       timetoken: self.timetoken,
@@ -93,7 +94,8 @@ extension PubNubManagedMessage: ManagedMessageEntity {
       pubnubUserId: self.author.pubnubUserID,
       user: self.author.convert(),
       pubnubChannelId: self.channel.pubnubChannelID,
-      channel: self.channel.convert()
+      channel: self.channel.convert(),
+      messageActions: try actions.map { try $0.convert() }
     )
   }
   

@@ -32,7 +32,7 @@ import PubNub
 
 public typealias PubNubChatMessageAction = ChatMessageAction<VoidCustomData>
 
-public struct ChatMessageAction<CustomData: ChatCustomData>: Identifiable, Codable {
+public struct ChatMessageAction<CustomData: ChatCustomData>: Identifiable, Hashable, Codable {
   
   public var id: String {
      return "\(parentTimetoken)-\(actionTimetoken)"

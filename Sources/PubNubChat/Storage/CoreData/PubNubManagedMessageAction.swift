@@ -192,10 +192,17 @@ extension PubNubManagedMessageAction: ManagedMessageActionEntityFetches {
   
   public static func messageActionsBy(messageTimetoken: Timetoken, channelId: String) -> NSFetchRequest<PubNubManagedMessageAction> {
     let request = NSFetchRequest<PubNubManagedMessageAction>(entityName: entityName)
-    request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
-      NSPredicate(format: "%K == %ld", #keyPath(PubNubManagedMessageAction.pubnubParentTimetoken), messageTimetoken),
-      NSPredicate(format: "%K == %@", #keyPath(PubNubManagedMessageAction.pubnubChannelId), channelId)
-    ])
+    request.predicate = NSCompoundPredicate(
+      andPredicateWithSubpredicates: [
+        NSPredicate(
+          format: "%K == %ld",
+          #keyPath(PubNubManagedMessageAction.pubnubParentTimetoken),
+          messageTimetoken),
+        NSPredicate(
+          format: "%K == %@",
+          #keyPath(PubNubManagedMessageAction.pubnubChannelId),
+          channelId)
+      ])
 
     return request
   }

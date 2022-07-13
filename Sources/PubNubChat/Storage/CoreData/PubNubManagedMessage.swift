@@ -230,29 +230,50 @@ extension PubNubManagedMessage: ManagedMessageEntity {
 extension PubNubManagedMessage: ManagedMessageEntityFetches {
   public static func messagesBy(pubnubUserId: String) -> NSFetchRequest<PubNubManagedMessage> {
     let request = NSFetchRequest<PubNubManagedMessage>(entityName: entityName)
-    request.predicate = NSPredicate(format: "pubnubSenderId == %@", pubnubUserId)
+    request.predicate = NSPredicate(
+      format: "%K == %@",
+      #keyPath(PubNubManagedMessage.pubnubUserId),
+      pubnubUserId
+    )
     
     return request
   }
   
   public static func messagesBy(pubnubChannelId: String) -> NSFetchRequest<PubNubManagedMessage> {
     let request = NSFetchRequest<PubNubManagedMessage>(entityName: entityName)
-    request.predicate = NSPredicate(format: "pubnubChannelId == %@", pubnubChannelId)
+    request.predicate = NSPredicate(
+      format: "%K == %@",
+      #keyPath(PubNubManagedMessage.pubnubChannelId),
+      pubnubChannelId
+    )
     
     return request
   }
   
   public static func messageBy(messageId: String) -> NSFetchRequest<PubNubManagedMessage> {
     let request = NSFetchRequest<PubNubManagedMessage>(entityName: entityName)
-    request.predicate = NSPredicate(format: "id == %@", messageId)
+    request.predicate = NSPredicate(
+      format: "%K == %@",
+      #keyPath(PubNubManagedMessage.id),
+      messageId
+    )
     
     return request
   }
   
   public static func messageBy(pubnubTimetoken: Timetoken, channelId: String) -> NSFetchRequest<PubNubManagedMessage> {
     let request = NSFetchRequest<PubNubManagedMessage>(entityName: entityName)
-    request.predicate = NSPredicate(format: "%K == %d && %K == %@", "timetoken", pubnubTimetoken, "pubnubChannelId", channelId)
-    
+    request.predicate = NSCompoundPredicate(
+      andPredicateWithSubpredicates: [
+        NSPredicate(
+          format: "%K == %ld",
+          #keyPath(PubNubManagedMessage.timetoken),
+          pubnubTimetoken),
+        NSPredicate(
+          format: "%K == %@",
+          #keyPath(PubNubManagedMessage.pubnubChannelId),
+          channelId)
+      ])
     return request
   }
 }

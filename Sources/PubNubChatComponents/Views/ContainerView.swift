@@ -117,6 +117,11 @@ extension UIStackView {
     guard let view = view else { return }
     addArrangedSubview(view)
   }
+
+  func removeArrangedSubview(_ view: UIView?) {
+    guard let view = view else { return }
+    removeArrangedSubview(view)
+  }
   
   func setCustomSpacing(_ spacing: CGFloat, after arrangedSubview: UIView?) {
     guard let arrangedSubview = arrangedSubview else { return }

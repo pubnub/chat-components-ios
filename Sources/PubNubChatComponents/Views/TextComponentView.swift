@@ -39,7 +39,6 @@ final public class TextComponentView: UIView {
   private var maxWidthPercentage: CGFloat = 0.65
 
   public lazy var textView = MessageContentTextView()
-  private var textViewWidthConstraint: NSLayoutConstraint?
   
   override init(frame: CGRect) {
     super.init(frame: frame)
@@ -66,15 +65,6 @@ final public class TextComponentView: UIView {
     textView.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor).isActive = true
     textView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor).isActive = true
     textView.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor).isActive = true
-    textViewWidthConstraint = textView.widthAnchor.constraint(lessThanOrEqualToConstant: viewPortWidth)
-    textViewWidthConstraint?.isActive = true
-  }
-  
-  private func setupSize() {
-    UIView.performWithoutAnimation {
-      self.textViewWidthConstraint?.constant = viewPortWidth * maxWidthPercentage
-      setNeedsLayout()
-    }
   }
 }
 

@@ -436,31 +436,6 @@ open class AnimatedShapeArrayView: UIView {
     }
   }
   
-//  public func startAnimating(
-//    with theme: AnimatedTypingIndicatorCellTheme,
-//    cancelIn store: inout Set<AnyCancellable>
-//  ) {
-//    if theme.animationEnabled {
-//      startAnimating(
-//        bounce: theme.bounces,
-//        bounceDelay: theme.bounceDelay,
-//        bounceOffset: theme.bounceOffset,
-//        fade: theme.fades
-//      )
-//    } else {
-//      stopAnimating()
-//    }
-//
-//    theme.$backgroundColor
-//      .weakAssign(to: \.backgroundColor, on: self).store(in: &store)
-//
-//    theme.$dotColor
-//      .sink { [weak self] colorChange in
-//        self?.dotColor = colorChange
-//      }
-//      .store(in: &store)
-//  }
-  
   /// Sets the state of the `TypingIndicator` to animating and applies animation layers
   open func startAnimating(bounce: Bool, bounceDelay: TimeInterval, bounceOffset: CGFloat, fade: Bool) {
     defer { isAnimating = true }

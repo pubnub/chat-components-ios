@@ -134,6 +134,10 @@ open class PubNubAvatarComponentView: UIImageView, ImageComponentView {
   }
   
   internal func prepareView() {
+    translatesAutoresizingMaskIntoConstraints = false
+    insetsLayoutMarginsFromSafeArea = false
+    layoutMargins = .zero
+
     contentMode = .scaleAspectFit
     layer.masksToBounds = true
     clipsToBounds = true

@@ -180,7 +180,7 @@ extension PubNubManagedMember: ManagedMemberViewModel {
 
 // MARK:- Message
  
-public protocol ManagedMessageViewModel {
+public protocol ManagedMessageViewModel: AnyObject {
   associatedtype Entity: ManagedChatMessage
   associatedtype ChannelViewModel: ManagedChannelViewModel
   associatedtype UserViewModel: ManagedUserViewModel

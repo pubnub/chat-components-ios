@@ -225,10 +225,6 @@ public class ButtonImageStateTheme: ObservableObject {
 
 extension UIButton {
   public func theming(_ theme: ButtonComponentTheme, cancelIn store: inout Set<AnyCancellable>) {
-//    theme.$backgroundColor.sink { [weak self] colorChange in
-//      self?.backgroundColor = colorChange
-//      self?.inputAccessoryView?.backgroundColor = colorChange
-//    }.store(in: &store)
 
     theme.$backgroundColor.weakAssign(to: \.backgroundColor, on: self).store(in: &store)
     theme.$tintColor.weakAssign(to: \.tintColor, on: self).store(in: &store)

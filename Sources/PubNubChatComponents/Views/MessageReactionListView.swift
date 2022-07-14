@@ -42,122 +42,121 @@ public class MessageReactionListComponent: UIStackContainerView {
   lazy public var cryingFaceReactionView = MessageReactionButtonComponent(type: .custom)
   // 🔥 fire U+1F525
   lazy public var fireReactionView = MessageReactionButtonComponent(type: .custom)
-
+  
+  var reloadDelegate: ReloadCellDelegate?
+  
   open override func setupSubviews() {
     super.setupSubviews()
-    
+
     thumbsUpReactionView.reaction = "👍"
     redHeartReactionView.reaction = "❤️"
     faceWithTearsOfJoyReactionView.reaction = "😂"
     astonishedFaceReactionView.reaction = "😲"
     cryingFaceReactionView.reaction = "😢"
     fireReactionView.reaction = "🔥"
-  
+    
     stackView.alignment = .leading
     stackView.spacing = 5.0
     stackView.axis = .horizontal
-    
-    stackView.addArrangedSubview(thumbsUpReactionView)
-    stackView.addArrangedSubview(redHeartReactionView)
-    stackView.addArrangedSubview(faceWithTearsOfJoyReactionView)
-    stackView.addArrangedSubview(astonishedFaceReactionView)
-    stackView.addArrangedSubview(cryingFaceReactionView)
-    stackView.addArrangedSubview(fireReactionView)
-    
-    self.thumbsUpReactionView = thumbsUpReactionView
-    self.redHeartReactionView = redHeartReactionView
-    self.faceWithTearsOfJoyReactionView = faceWithTearsOfJoyReactionView
-    self.astonishedFaceReactionView = astonishedFaceReactionView
-    self.cryingFaceReactionView = cryingFaceReactionView
-    self.fireReactionView = fireReactionView
+
+    setupReactionViews([
+      thumbsUpReactionView,
+      redHeartReactionView,
+      faceWithTearsOfJoyReactionView,
+      astonishedFaceReactionView,
+      cryingFaceReactionView,
+      fireReactionView
+    ])
+  }
+
+  open func setupReactionViews(
+    _ reactionViews: [MessageReactionButtonComponent]
+  ) {
+    for reactionView in reactionViews {
+      reactionView.messageReactionComponent.currentCountPublisher
+        .sink { [weak reactionView, weak self] count in
+          guard let reactionView = reactionView, let self = self else { return }
+
+          switch (count == 0, self.stackView.arrangedSubviews.contains(reactionView)) {
+          case (true, true):
+            // Remove Reaction From View
+            UIView.animate(withDuration: 0.5, animations: {
+              reactionView.isHidden = true
+              self.stackView.removeArrangedSubview(reactionView)
+            })
+          case (true, false):
+            // Do Nothing
+            break
+          case (false, true):
+            // Do Nothing
+            break
+          case (false, false):
+            // Add Reaction to View
+            UIView.animate(withDuration: 0.5, animations: {
+              self.stackView.addArrangedSubview(reactionView)
+              reactionView.isHidden = false
+            })
+          }
+        }.store(in: &cancellables)
+    }
+  }
+  
+  open func configure<Message>(
+    _ messageActionButtons: [MessageReactionButtonComponent],
+    message: Message,
+    currentUserId: String,
+    onMessageActionTap: ((MessageReactionButtonComponent?, Message, (() -> Void)?) -> Void)?
+  ) where Message : ManagedMessageViewModel {
+    for messageActionButton in messageActionButtons {
+      messageActionButton.cancellables.forEach { $0.cancel() }
+
+      message.messageActionsPublisher
+        .map { [weak messageActionButton] in
+          // Filter out non-reactions and sourceType
+          $0.filter { $0.sourceType == "reaction" && $0.value == messageActionButton?.reaction }
+        }
+        .sink { [weak messageActionButton] reactions in
+          messageActionButton?.currentCount = reactions.count
+          messageActionButton?.isSelected = reactions.contains(where: { $0.pubnubUserId == currentUserId })
+        }
+        .store(in: &messageActionButton.cancellables)
+      
+      messageActionButton
+        .didTap({ [weak message] button in
+          guard let message = message else { return }
+          
+          // Disable Button
+          button?.isEnabled = false
+          
+          onMessageActionTap?(button, message) { [weak button] in
+            DispatchQueue.main.async {
+              button?.isEnabled = true
+            }
+          }
+        })
+        .store(in: &messageActionButton.cancellables)
+    }
   }
 
   open func configure<Message>(
     _ message: Message,
     currentUserId: String,
-    onMessageActionTap: ((MessageReactionButtonComponent?, Message) -> Void)?
+    onMessageActionTap: ((MessageReactionButtonComponent?, Message, (() -> Void)?) -> Void)?
   ) where Message : ManagedMessageViewModel {
-
+    
     // Thumbs Up
-    message.messageActionsPublisher
-      .map { [weak self] in
-        // Filter out non-reactions and sourceType
-        $0.filter {
-          $0.sourceType == "reaction" && $0.value == self?.thumbsUpReactionView.reaction
-        }
-      }
-      .sink { [weak self] reactions in
-        self?.thumbsUpReactionView.currentCount = reactions.count
-        self?.thumbsUpReactionView.isSelected = reactions.contains(where: { $0.pubnubUserId == currentUserId })
-      }
-      .store(in: &cancellables)
-    thumbsUpReactionView
-      .didTap({ button in
-        onMessageActionTap?(button, message)
-      })
-      .store(in: &cancellables)
-  
-    message.messageActionsPublisher
-      .map { [weak self] in
-        // Filter out non-reactions and sourceType
-        $0.filter { $0.sourceType == "reaction" && $0.value == self?.redHeartReactionView.reaction }
-      }
-      .sink { [weak self] reactions in
-        self?.redHeartReactionView.currentCount = reactions.count
-        self?.redHeartReactionView.isSelected = true
-      }
-      .store(in: &cancellables)
-    
-    message.messageActionsPublisher
-      .map { [weak self] in
-        // Filter out non-reactions and sourceType
-        $0.filter { $0.sourceType == "reaction" && $0.value == self?.faceWithTearsOfJoyReactionView.reaction }
-      }
-      .count()
-      .sink { [weak self] thumbsUpCount in
-        self?
-          .faceWithTearsOfJoyReactionView
-          .currentCount = thumbsUpCount
-      }
-      .store(in: &cancellables)
-    
-    message.messageActionsPublisher
-      .map { [weak self] in
-        // Filter out non-reactions and sourceType
-        $0.filter { $0.sourceType == "reaction" && $0.value == self?.astonishedFaceReactionView.reaction }
-      }
-      .count()
-      .sink { [weak self] thumbsUpCount in
-        self?
-          .astonishedFaceReactionView
-          .currentCount = thumbsUpCount
-      }
-      .store(in: &cancellables)
-    
-    message.messageActionsPublisher
-      .map { [weak self] in
-        // Filter out non-reactions and sourceType
-        $0.filter { $0.sourceType == "reaction" && $0.value == self?.cryingFaceReactionView.reaction }
-      }
-      .count()
-      .sink { [weak self] thumbsUpCount in
-        self?
-          .cryingFaceReactionView
-          .currentCount = thumbsUpCount
-      }
-      .store(in: &cancellables)
-    
-    message.messageActionsPublisher
-      .map { [weak self] in
-        // Filter out non-reactions and sourceType
-        $0.filter { $0.sourceType == "reaction" && $0.value == self?.fireReactionView.reaction }
-      }
-      .count()
-      .sink { [weak self] thumbsUpCount in
-        self?
-          .fireReactionView
-          .currentCount = thumbsUpCount
-      }
-      .store(in: &cancellables)
+    configure(
+      [
+        thumbsUpReactionView,
+        redHeartReactionView,
+        faceWithTearsOfJoyReactionView,
+        astonishedFaceReactionView,
+        cryingFaceReactionView,
+        fireReactionView
+      ],
+      message: message,
+      currentUserId: currentUserId,
+      onMessageActionTap: onMessageActionTap
+    )
   }
 }

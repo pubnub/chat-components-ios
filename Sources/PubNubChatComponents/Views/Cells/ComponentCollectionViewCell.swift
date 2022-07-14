@@ -175,8 +175,7 @@ open class CollectionViewCellComponent: UICollectionViewCell, ReloadCellDelegate
   open func configure<Message: ManagedMessageViewModel, User: ManagedUserViewModel>(
     _ message: Message,
     currentUser: User,
-    isEnabled: AnyPublisher<Bool, Never>,
-    onTapAction: ((MessageReactionButtonComponent?, Message) -> Void)?
+    onTapAction: ((MessageReactionButtonComponent?, Message, (() -> Void)?) -> Void)?
   ) {
 
   }
@@ -186,17 +185,17 @@ open class MessageListItemCell: CollectionViewCellComponent {
   
   // MARK: Subviews
   
-  open var authorAvatarView: ImageComponentView?
-  open var primaryLabel: LabelComponentView?
-  open var secondaryLabel: LabelComponentView?
-  open var tertiaryLabel: LabelComponentView?
-  open var quaternaryLabel: LabelComponentView?
+  lazy open var authorAvatarView: ImageComponentView = PubNubAvatarComponentView(frame: bounds)
+  lazy open var primaryLabel: LabelComponentView = PubNubLabelComponentView(frame: bounds)
+  lazy open var secondaryLabel: LabelComponentView = PubNubLabelComponentView(frame: bounds)
+  lazy open var tertiaryLabel: LabelComponentView = PubNubLabelComponentView(frame: bounds)
+  lazy open var quaternaryLabel: LabelComponentView = PubNubLabelComponentView(frame: bounds)
   
   // Text
-  open var bubbleContainer: BubbleContainerView?
-  open var messageTextContent: TextComponentView?
+  lazy open var bubbleContainer: BubbleContainerView = BubbleContainerView(frame: bounds)
+  lazy open var messageTextContent: TextComponentView = TextComponentView(frame: bounds)
   
-  open var reactionListView: MessageReactionListComponent?
+  lazy public var reactionListView = MessageReactionListComponent(frame: bounds)
   
   public var contentEdgeSpacing: CGFloat = .zero
   
@@ -206,22 +205,14 @@ open class MessageListItemCell: CollectionViewCellComponent {
   public let bottomContainer = UIStackView()
   
   public var customImageViewSpacing: CGFloat {
-    guard let imageView = authorAvatarView else { return 0 }
-    return stackView.customSpacing(after: imageView)
+    return stackView.customSpacing(after: authorAvatarView)
   }
   
   // MARK: - UICollectionViewLayoutAttributes
-  
+
   public override func setupSubviews() {
     super.setupSubviews()
-    
-    self.authorAvatarView = PubNubAvatarComponentView(frame: bounds)
-    self.primaryLabel = PubNubLabelComponentView(frame: bounds)
-    self.secondaryLabel = PubNubLabelComponentView(frame: bounds)
-    self.bubbleContainer = BubbleContainerView(frame: bounds)
-    self.messageTextContent = TextComponentView(frame: bounds)
-    self.reactionListView = MessageReactionListComponent(frame: bounds)
-    
+
     // Arrange Top Container
     topContainerStack.isLayoutMarginsRelativeArrangement = true
     topContainerStack.layoutMargins = .init(
@@ -242,14 +233,16 @@ open class MessageListItemCell: CollectionViewCellComponent {
     $cellAlignment.sink { [weak self] newAlignment in
       self?.contentContainer.alignment = newAlignment.stackViewAlignment
     }.store(in: &cancellables)
+
     contentContainer.isLayoutMarginsRelativeArrangement = true
+
     contentContainer.addArrangedSubview(topContainerStack)
     contentContainer.addArrangedSubview(bubbleContainer)
     contentContainer.setCustomSpacing(5.0, after: bubbleContainer)
     contentContainer.addArrangedSubview(bottomContainer)
 
-    authorAvatarView?.heightAnchor.constraint(equalToConstant: 30).isActive = true
-    authorAvatarView?.widthAnchor.constraint(equalToConstant: 30).isActive = true
+    authorAvatarView.heightAnchor.constraint(equalToConstant: 30).isActive = true
+    authorAvatarView.widthAnchor.constraint(equalToConstant: 30).isActive = true
     
     stackView.alignment = .bottom
     stackView.addArrangedSubview(authorAvatarView)
@@ -266,7 +259,7 @@ open class MessageListItemCell: CollectionViewCellComponent {
       self?.cellAlignment = newAlignment
     }.store(in: &contentCancellables)
     
-    authorAvatarView?
+    authorAvatarView
       .configure(
         message.userViewModel.userAvatarUrlPublisher,
         placeholder: theme.itemTheme.imageView.$localImage.eraseToAnyPublisher(),
@@ -274,11 +267,11 @@ open class MessageListItemCell: CollectionViewCellComponent {
       )
       .theming(theme.itemTheme.imageView, cancelIn: &contentCancellables)
 
-    primaryLabel?
+    primaryLabel
       .configure(message.userViewModel.userNamePublisher, cancelIn: &contentCancellables)
       .theming(theme.itemTheme.primaryLabel, cancelIn: &contentCancellables)
     
-    secondaryLabel?
+    secondaryLabel
       .configure(
         message.messageDateCreatedPublisher,
         formatter: theme.dateFormatter,
@@ -286,38 +279,26 @@ open class MessageListItemCell: CollectionViewCellComponent {
       )
       .theming(theme.itemTheme.secondaryLabel, cancelIn: &contentCancellables)
 
-    messageTextContent?.textView
+    messageTextContent.textView
       .configure(message.messageTextPublisher, cancelIn: &contentCancellables)
       .theming(theme.contentTextTheme, cancelIn: &contentCancellables)
 
-    bubbleContainer?
-      .configure(contentView: messageTextContent!)
-    bubbleContainer?
+    bubbleContainer
+      .configure(contentView: messageTextContent)
+    bubbleContainer
       .theming(theme.bubbleContainerTheme, cancelIn: &contentCancellables)
   }
 
   open override func configure<Message: ManagedMessageViewModel, User: ManagedUserViewModel>(
     _ message: Message,
     currentUser: User,
-    isEnabled: AnyPublisher<Bool, Never>,
-    onTapAction: ((MessageReactionButtonComponent?, Message) -> Void)?
+    onTapAction: ((MessageReactionButtonComponent?, Message, (() -> Void)?) -> Void)?
   ) {
-    isEnabled
-      .sink { [weak self] isEnabled in
-        self?.reactionListView?.isHidden = isEnabled
-      }
-      .store(in: &cancellables)
-    
-    reactionListView?.configure(
+    reactionListView.reloadDelegate = self
+    reactionListView.configure(
       message,
       currentUserId: currentUser.pubnubId,
       onMessageActionTap: onTapAction
     )
   }
-}
-
-open class MessageTextContentCell: MessageListItemCell {
-  
-  public lazy var textContent = TextComponentView(frame: bounds)
-  
 }

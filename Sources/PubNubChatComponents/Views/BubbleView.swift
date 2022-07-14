@@ -64,9 +64,7 @@ open class BubbleContainerView: UIView {
 
   public var viewPortWidth: CGFloat = 300
   public var maxWidthPercentage: CGFloat = 0.65
-
-  public var contentViewWidthConstraint: NSLayoutConstraint?
-  public var contentHeightConstraint: NSLayoutConstraint?
+  public var minWidthPercentage: CGFloat = 0.15
   
   open func configure(
     contentView: UIView,
@@ -83,22 +81,9 @@ open class BubbleContainerView: UIView {
     contentView.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor).isActive = true
     contentView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor).isActive = true
     contentView.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor).isActive = true
-    
-    if constantWidth {
-      contentViewWidthConstraint = contentView.widthAnchor.constraint(equalToConstant: 300)
-      contentHeightConstraint = contentView.heightAnchor.constraint(equalToConstant: 200)
-      contentHeightConstraint?.isActive = true
-    } else {
-      contentViewWidthConstraint = contentView.widthAnchor.constraint(lessThanOrEqualToConstant: viewPortWidth)
-    }
-    contentViewWidthConstraint?.isActive = true
-  }
-  
-  private func setupSize() {
-    UIView.performWithoutAnimation { [weak self] in
-      self?.contentViewWidthConstraint?.constant = viewPortWidth * maxWidthPercentage
-      setNeedsLayout()
-    }
+
+    contentView.widthAnchor.constraint(lessThanOrEqualToConstant: viewPortWidth * maxWidthPercentage).isActive = true
+    contentView.widthAnchor.constraint(greaterThanOrEqualToConstant: viewPortWidth * minWidthPercentage).isActive = true
   }
 }
 

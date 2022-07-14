@@ -40,7 +40,9 @@ public class MessageListComponentTheme: ViewControllerComponentTheme {
   @Published public var authorItemTheme: MessageListCellComponentTheme
   
   @Published public var typingIndicatorCellTheme: TypingIndicatorCellTheme
+  public var enableReactions: Bool
 
+  
   public init(
     controllerType: ComponentViewController.Type,
     backgroundColor: UIColor?,
@@ -49,7 +51,8 @@ public class MessageListComponentTheme: ViewControllerComponentTheme {
     messageInputComponent: MessageInputComponentTheme,
     incomingItemTheme: MessageListCellComponentTheme,
     authorItemTheme: MessageListCellComponentTheme?,
-    typingIndicatorCellTheme: TypingIndicatorCellTheme
+    typingIndicatorCellTheme: TypingIndicatorCellTheme,
+    enableReactions: Bool
   ) {
     self.messageInputComponent = messageInputComponent
     self.collectionViewTheme = collectionViewTheme
@@ -57,6 +60,8 @@ public class MessageListComponentTheme: ViewControllerComponentTheme {
     self.authorItemTheme = authorItemTheme ?? incomingItemTheme
     
     self.typingIndicatorCellTheme = typingIndicatorCellTheme
+    
+    self.enableReactions = enableReactions
     
     super.init(
       controllerType: controllerType,
@@ -76,7 +81,6 @@ public class MessageListCellComponentTheme: CollectionViewCellTheme {
   @Published public var contentLinkTheme: LinkViewComponentTheme
   @Published public var itemTheme: BasicComponentTheme
   @Published public var dateFormatter: DateFormatter
-  @Published public var enableReactions: Bool
 
   public init(
     textMessageContentCellType: CollectionViewCellComponent.Type,
@@ -89,8 +93,7 @@ public class MessageListCellComponentTheme: CollectionViewCellTheme {
     contentTextTheme: TextViewComponentTheme,
     contentLinkTheme: LinkViewComponentTheme,
     itemTheme: BasicComponentTheme,
-    dateFormatter: DateFormatter,
-    enableReactions: Bool
+    dateFormatter: DateFormatter
   ) {
     self.alignment = alignment
     self.maxWidthPercentage = maxWidthPercentage
@@ -99,7 +102,6 @@ public class MessageListCellComponentTheme: CollectionViewCellTheme {
     self.contentLinkTheme = contentLinkTheme
     self.itemTheme = itemTheme
     self.dateFormatter = dateFormatter
-    self.enableReactions = enableReactions
 
     super.init(
       customType: textMessageContentCellType,
@@ -136,7 +138,8 @@ extension MessageListComponentTheme {
         bounceDelay: 0.33,
         bounceOffset: 0.25,
         fades: true
-      )
+      ),
+      enableReactions: true
     )
   }
 }
@@ -194,8 +197,7 @@ extension MessageListCellComponentTheme {
         layoutMargin: UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
       ),
       itemTheme: .pubnubGroupChannelList,
-      dateFormatter: .messageInline,
-      enableReactions: false
+      dateFormatter: .messageInline
     )
   }
 }

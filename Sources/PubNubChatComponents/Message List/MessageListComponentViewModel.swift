@@ -366,24 +366,24 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
   
   // MARK: Messgage Action Tapped
   
-  var messageActionTapped: ((MessageListComponentViewModel<ModelData, ManagedEntities>?, MessageReactionButtonComponent?, ManagedEntities.Message) -> Void)? = { (viewModel, messageActionView, message) in
+  var messageActionTapped: ((MessageListComponentViewModel<ModelData, ManagedEntities>?, MessageReactionButtonComponent?, ManagedEntities.Message, (() -> Void)?) -> Void)? = { (viewModel, messageActionView, message, completion) in
     guard let messageActionView = messageActionView else { return }
-
+    
     if messageActionView.isSelected {
-      // Decrement the count
-      messageActionView.currentCount -= 1
       // Remove the message action
-      if let messageAction = message.messageActionViewModels.first(where: { $0.pubnubUserId == viewModel?.author.pubnubUserID }) {
+      if let messageAction = message.messageActionViewModels.first(
+        where: { $0.pubnubUserId == viewModel?.author.pubnubUserID && $0.value == messageActionView.reaction }
+      ) {
         do {
           viewModel?.provider.dataProvider
-            .removeRemoteMessageAction(.init(messageAction: try messageAction.convert()), completion: nil)
+            .removeRemoteMessageAction(.init(messageAction: try messageAction.convert())) { [weak messageActionView] _ in
+              completion?()
+            }
         } catch {
           PubNub.log.error("Message Action Tapped failed to convert Message Action while preparing send remove request: \(message)")
         }
       }
     } else {
-      // Increment the count
-      messageActionView.currentCount += 1
       // Add the message action
       do {
         viewModel?.provider.dataProvider
@@ -394,14 +394,7 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
               actionValue: messageActionView.reaction
             )
           ) { [weak messageActionView] result in
-            switch result {
-            case .success:
-              break
-            case let .failure(error):
-              // If there was an error, then roll-back the View changes
-              messageActionView?.currentCount -= 1
-              messageActionView?.isSelected = false
-            }
+            completion?()
           }
       } catch {
         PubNub.log.error("Message Action Tapped failed to convert Message while preparing send add request: \(message)")
@@ -457,14 +450,15 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
     cell.configure(message, theme: theme)
     
     // Configure Message Reaction List
-    cell.configure(
-      message,
-      currentUser: author,
-      isEnabled: theme.$enableReactions.eraseToAnyPublisher(),
-      onTapAction: { [weak self] (button, message) in
-        self?.messageActionTapped?(self, button, message)
-      }
-    )
+    if componentTheme.enableReactions {
+      cell.configure(
+        message,
+        currentUser: author,
+        onTapAction: { [weak self] (button, message, completion) in
+          self?.messageActionTapped?(self, button, message, completion)
+        }
+      )
+    }
 
     return cell
   }

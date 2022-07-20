@@ -156,10 +156,6 @@ extension UIStackView {
   }
 }
 
-extension UILayoutPriority {
-  static let overrideRequire = UILayoutPriority(rawValue: 900.0)
-}
-
 extension UIFont {
   func withTraits(traits: UIFontDescriptor.SymbolicTraits) -> UIFont {
     let descriptor = fontDescriptor.withSymbolicTraits(traits)
@@ -211,14 +207,35 @@ extension UICollectionViewCell {
   }
 }
 
+extension NSLayoutConstraint {
+  func priority(
+    _ priority: UILayoutPriority
+  ) -> NSLayoutConstraint {
+    self.priority = priority
+    return self
+  }
+}
+
 extension UIView {
   func priorityFill(axis: NSLayoutConstraint.Axis) -> Self {
     setContentHuggingPriority(.lowest, for: axis)
     return self
   }
+    
+  // Even though we do not set it animated - it can happen during the animated batch update
+  // http://www.openradar.me/25087688
+  // https://github.com/nkukushkin/StackView-Hiding-With-Animation-Bug-Example
+  var isHiddenSafe: Bool {
+    get { return isHidden }
+    set {
+      guard isHidden != newValue else { return }
+      isHidden = newValue
+    }
+  }
 }
 
 extension UILayoutPriority {
+  static let overrideRequire = UILayoutPriority(rawValue: 900.0)
   static let lowest = UILayoutPriority(defaultLow.rawValue / 2.0)
 }
 

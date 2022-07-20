@@ -189,6 +189,8 @@ public protocol ManagedMessageViewModel: AnyObject {
   var pubnubId: Timetoken { get }
   var managedObjectId: NSManagedObjectID { get }
   
+  var text: String { get }
+  
   var messageContentTypePublisher: AnyPublisher<String, Never> { get }
   var messageContentPublisher: AnyPublisher<Data, Never> { get }
   
@@ -198,6 +200,7 @@ public protocol ManagedMessageViewModel: AnyObject {
   var messageDateCreatedPublisher: AnyPublisher<Date, Never> { get }
   
   var messageActionsPublisher: AnyPublisher<Set<MessageActionModel>, Never> { get }
+  var messageActions: Set<MessageActionModel> { get }
   
   var userViewModel: UserViewModel { get }
   var channelViewModel: ChannelViewModel { get }
@@ -240,6 +243,10 @@ extension PubNubManagedMessage: ManagedMessageViewModel {
 
   public var messageActionsPublisher: AnyPublisher<Set<PubNubManagedMessageAction>, Never> {
     return publisher(for: \.actions).eraseToAnyPublisher()
+  }
+
+  public var messageActions: Set<PubNubManagedMessageAction> {
+    return actions
   }
   
   public var userViewModel: PubNubManagedUser {

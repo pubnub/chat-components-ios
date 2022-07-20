@@ -29,6 +29,8 @@ import UIKit
 import Combine
 import CoreData
 
+import ChatLayout
+
 import PubNub
 
 /// Base class for CollectionView Cell
@@ -40,9 +42,8 @@ open class CollectionViewCellComponent: UICollectionViewCell, ReloadCellDelegate
   public var contentCancellables = Set<AnyCancellable>()
   
   // Default Subviews
-  public lazy var stackView = UIStackView(frame: bounds)
-  
-  @Published public var cellAlignment: UICollectionViewCell.Alignment = .leading
+  // More information why StackViews are wrapped inside Views: https://stackoverflow.com/a/38237799
+  public lazy var cellContainer = UIStackContainerView()
   
   // ReloadCellDelegate
 
@@ -62,22 +63,22 @@ open class CollectionViewCellComponent: UICollectionViewCell, ReloadCellDelegate
   }
 
   open func setupSubviews() {
-    contentView.addSubview(stackView)
-    insetsLayoutMarginsFromSafeArea = false
-    layoutMargins = .zero
+    contentView.addSubview(cellContainer)
     
-    contentView.insetsLayoutMarginsFromSafeArea = false
-    contentView.layoutMargins = .zero
+    cellContainer.translatesAutoresizingMaskIntoConstraints = false
+    cellContainer.leadingAnchor
+      .constraint(equalTo: contentView.leadingAnchor).isActive = true
+    cellContainer.topAnchor
+      .constraint(equalTo: contentView.topAnchor).isActive = true
     
-    stackView.translatesAutoresizingMaskIntoConstraints = false
-    stackView.leadingAnchor
-      .constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor).isActive = true
-    stackView.trailingAnchor
-      .constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor).isActive = true
-    stackView.topAnchor
-      .constraint(equalTo: contentView.layoutMarginsGuide.topAnchor).isActive = true
-    stackView.bottomAnchor
-      .constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor).isActive = true
+    cellContainer.bottomAnchor
+      .constraint(equalTo: contentView.bottomAnchor)
+      .priority(.overrideRequire)
+      .isActive = true
+    cellContainer.trailingAnchor
+      .constraint(equalTo: contentView.trailingAnchor)
+      .priority(.overrideRequire)
+      .isActive = true
   }
   
   // MARK: - Resuse
@@ -90,14 +91,12 @@ open class CollectionViewCellComponent: UICollectionViewCell, ReloadCellDelegate
   
   // MARK: - UICollectionViewLayoutAttributes
   
-  public override func preferredLayoutAttributesFitting(_ layoutAttributes: UICollectionViewLayoutAttributes) -> UICollectionViewLayoutAttributes {
+  open override func preferredLayoutAttributesFitting(_ layoutAttributes: UICollectionViewLayoutAttributes) -> UICollectionViewLayoutAttributes {
     return super.preferredLayoutAttributesFitting(layoutAttributes)
   }
   
-  public override func apply(
-    _ layoutAttributes: UICollectionViewLayoutAttributes
-  ) {
-    
+  open override func apply(_ layoutAttributes: UICollectionViewLayoutAttributes) {
+    super.apply(layoutAttributes)
   }
   
   public override func willTransition(
@@ -115,7 +114,6 @@ open class CollectionViewCellComponent: UICollectionViewCell, ReloadCellDelegate
   }
   
   // MARK: CollectionView Inversion
-
 
   public static func registerCell(_ collectionView: UICollectionView) {
     collectionView.register(cell: Self.self)
@@ -180,74 +178,143 @@ open class CollectionViewCellComponent: UICollectionViewCell, ReloadCellDelegate
 
   }
 }
+
+open class MessageCollectionViewCellComponent: CollectionViewCellComponent {
+  
+  public weak var delegate: ContainerCollectionViewCellDelegate?
+
+  public override func prepareForReuse() {
+    super.prepareForReuse()
+
+    delegate?.prepareForReuse()
+  }
+  
+  open override func preferredLayoutAttributesFitting(_ layoutAttributes: UICollectionViewLayoutAttributes) -> UICollectionViewLayoutAttributes {
+    guard let chatLayoutAttributes = layoutAttributes as? ChatLayoutAttributes else {
+      return super.preferredLayoutAttributesFitting(layoutAttributes)
+    }
+    delegate?.apply(chatLayoutAttributes)
+    let resultingLayoutAttributes: ChatLayoutAttributes
+    if let preferredLayoutAttributes = delegate?.preferredLayoutAttributesFitting(chatLayoutAttributes) {
+      resultingLayoutAttributes = preferredLayoutAttributes
+    } else if let chatLayoutAttributes = super.preferredLayoutAttributesFitting(chatLayoutAttributes) as? ChatLayoutAttributes {
+      delegate?.modifyPreferredLayoutAttributesFitting(chatLayoutAttributes)
+      resultingLayoutAttributes = chatLayoutAttributes
+    } else {
+      resultingLayoutAttributes = chatLayoutAttributes
+    }
+
+    return resultingLayoutAttributes
+  }
+  
+  open override func apply(_ layoutAttributes: UICollectionViewLayoutAttributes) {
+    guard let chatLayoutAttributes = layoutAttributes as? ChatLayoutAttributes else {
+      return
+    }
+    if layoutAttributes.size.height == .zero || layoutAttributes.size.width == .zero {
+      return
+    }
+    super.apply(layoutAttributes)
+    delegate?.apply(chatLayoutAttributes)
+  }
+}
+
 /// Base `Message` cell that can be subclassed based on payload type
-open class MessageListItemCell: CollectionViewCellComponent {
+open class MessageListItemCell: MessageCollectionViewCellComponent {
   
   // MARK: Subviews
   
-  lazy open var authorAvatarView: ImageComponentView = PubNubAvatarComponentView(frame: bounds)
-  lazy open var primaryLabel: LabelComponentView = PubNubLabelComponentView(frame: bounds)
-  lazy open var secondaryLabel: LabelComponentView = PubNubLabelComponentView(frame: bounds)
-  lazy open var tertiaryLabel: LabelComponentView = PubNubLabelComponentView(frame: bounds)
-  lazy open var quaternaryLabel: LabelComponentView = PubNubLabelComponentView(frame: bounds)
+  lazy open var authorAvatarView = PubNubInlineAvatarComponentView(frame: bounds)
+  lazy open var primaryLabel = PubNubLabelComponentView(frame: bounds)
+  lazy open var secondaryLabel = PubNubLabelComponentView(frame: bounds)
+  lazy open var tertiaryLabel = PubNubLabelComponentView(frame: bounds)
+  lazy open var quaternaryLabel = PubNubLabelComponentView(frame: bounds)
   
   // Text
-  lazy open var bubbleContainer: BubbleContainerView = BubbleContainerView(frame: bounds)
-  lazy open var messageTextContent: TextComponentView = TextComponentView(frame: bounds)
-  
+  lazy public var bubbleContainer = BubbleContainerView(frame: bounds)
   lazy public var reactionListView = MessageReactionListComponent(frame: bounds)
   
   public var contentEdgeSpacing: CGFloat = .zero
   
   // MARK: UIStack Subview
-  public let topContainerStack = UIStackView()
-  public let contentContainer = UIStackView()
-  public let bottomContainer = UIStackView()
+  public let topContainerStack = UIStackContainerView()
+  public let leftContainerStack = UIStackContainerView()
+  public let contentContainer = UIStackContainerView()
+  public let bottomContainer = UIStackContainerView()
   
-  public var customImageViewSpacing: CGFloat {
-    return stackView.customSpacing(after: authorAvatarView)
-  }
-  
-  // MARK: - UICollectionViewLayoutAttributes
+  open override func preferredLayoutAttributesFitting(_ layoutAttributes: UICollectionViewLayoutAttributes) -> UICollectionViewLayoutAttributes {
+    let preferredLayout = super.preferredLayoutAttributesFitting(layoutAttributes)
 
+    if contentView.frame.size.height != preferredLayout.bounds.size.height {
+      var contentFrame = self.frame
+      contentFrame.size.height = preferredLayout.size.height
+
+      frame = contentFrame
+      contentView.frame = contentFrame
+    }
+
+    return preferredLayout
+  }
+
+  // MARK: - UICollectionViewLayoutAttributes
+    
   public override func setupSubviews() {
-    super.setupSubviews()
+    
+    topContainerStack.translatesAutoresizingMaskIntoConstraints = false
+    leftContainerStack.translatesAutoresizingMaskIntoConstraints = false
+    contentContainer.translatesAutoresizingMaskIntoConstraints = false
+    bottomContainer.translatesAutoresizingMaskIntoConstraints = false
 
     // Arrange Top Container
-    topContainerStack.isLayoutMarginsRelativeArrangement = true
-    topContainerStack.layoutMargins = .init(
-      top: .zero, left: -contentEdgeSpacing + 15.0, bottom: .zero, right: .zero
+    topContainerStack.stackView.isLayoutMarginsRelativeArrangement = true
+    topContainerStack.stackView.alignment = .leading
+    topContainerStack.stackView.directionalLayoutMargins = .init(
+      top: .zero, leading: -contentEdgeSpacing + 15.0, bottom: .zero, trailing: .zero
     )
-    topContainerStack.addArrangedSubview(primaryLabel)
-    topContainerStack.setCustomSpacing(5.0, after: primaryLabel)
-    topContainerStack.addArrangedSubview(secondaryLabel)
     
     // Arrange Bottom Container
-    bottomContainer.isLayoutMarginsRelativeArrangement = true
-    bottomContainer.layoutMargins = .init(
-      top: .zero, left: -contentEdgeSpacing + 15.0, bottom: .zero, right: .zero
+    bottomContainer.stackView.isLayoutMarginsRelativeArrangement = true
+    bottomContainer.stackView.alignment = .leading
+    bottomContainer.stackView.directionalLayoutMargins = .init(
+      top: .zero, leading: -contentEdgeSpacing + 15.0, bottom: .zero, trailing: .zero
     )
-    bottomContainer.addArrangedSubview(reactionListView)
 
-    contentContainer.axis = .vertical
-    $cellAlignment.sink { [weak self] newAlignment in
-      self?.contentContainer.alignment = newAlignment.stackViewAlignment
-    }.store(in: &cancellables)
+    contentContainer.stackView.axis = .vertical
+    contentContainer.stackView.distribution = .fill
+    contentContainer.stackView.alignment = .leading
+    contentContainer.stackView.isLayoutMarginsRelativeArrangement = true
 
-    contentContainer.isLayoutMarginsRelativeArrangement = true
-
-    contentContainer.addArrangedSubview(topContainerStack)
-    contentContainer.addArrangedSubview(bubbleContainer)
-    contentContainer.setCustomSpacing(5.0, after: bubbleContainer)
-    contentContainer.addArrangedSubview(bottomContainer)
-
-    authorAvatarView.heightAnchor.constraint(equalToConstant: 30).isActive = true
-    authorAvatarView.widthAnchor.constraint(equalToConstant: 30).isActive = true
+    leftContainerStack.stackView.axis = .vertical
+    leftContainerStack.stackView.alignment = .leading
+    leftContainerStack.stackView.isLayoutMarginsRelativeArrangement = true
     
-    stackView.alignment = .bottom
-    stackView.addArrangedSubview(authorAvatarView)
-    stackView.setCustomSpacing(contentEdgeSpacing, after: authorAvatarView)
-    stackView.addArrangedSubview(contentContainer)
+    leftContainerStack.setContentHuggingPriority(.lowest, for: .vertical)
+    leftContainerStack.setContentHuggingPriority(.lowest, for: .horizontal)
+
+    cellContainer.axis = .horizontal
+    cellContainer.alignment = .leading
+    cellContainer.distribution = .fill
+    cellContainer.isLayoutMarginsRelativeArrangement = false
+    
+    delegate = bubbleContainer.messageTextContent
+    
+    // Build the Stack Views
+    topContainerStack.stackView.addArrangedSubview(primaryLabel)
+    topContainerStack.stackView.setCustomSpacing(5.0, after: primaryLabel)
+    topContainerStack.stackView.addArrangedSubview(secondaryLabel)
+    
+    bottomContainer.stackView.addArrangedSubview(reactionListView)
+    
+    contentContainer.stackView.addArrangedSubview(topContainerStack)
+    contentContainer.stackView.addArrangedSubview(bubbleContainer)
+    contentContainer.stackView.setCustomSpacing(5.0, after: bubbleContainer)
+    contentContainer.stackView.addArrangedSubview(bottomContainer)
+    
+    cellContainer.addArrangedSubview(authorAvatarView)
+    cellContainer.setCustomSpacing(contentEdgeSpacing, after: authorAvatarView)
+    cellContainer.addArrangedSubview(contentContainer)
+    
+    super.setupSubviews()
   }
   
   // MARK: - Configure Message
@@ -256,10 +323,10 @@ open class MessageListItemCell: CollectionViewCellComponent {
     theme: MessageListCellComponentTheme
   ) {
     theme.$alignment.sink { [weak self] newAlignment in
-      self?.cellAlignment = newAlignment
+      self?.cellContainer.alignment = newAlignment.stackViewAlignment
     }.store(in: &contentCancellables)
     
-    authorAvatarView
+    authorAvatarView.imageView
       .configure(
         message.userViewModel.userAvatarUrlPublisher,
         placeholder: theme.itemTheme.imageView.$localImage.eraseToAnyPublisher(),
@@ -267,11 +334,11 @@ open class MessageListItemCell: CollectionViewCellComponent {
       )
       .theming(theme.itemTheme.imageView, cancelIn: &contentCancellables)
 
-    primaryLabel
+    primaryLabel.labelView
       .configure(message.userViewModel.userNamePublisher, cancelIn: &contentCancellables)
       .theming(theme.itemTheme.primaryLabel, cancelIn: &contentCancellables)
-    
-    secondaryLabel
+
+    secondaryLabel.labelView
       .configure(
         message.messageDateCreatedPublisher,
         formatter: theme.dateFormatter,
@@ -279,12 +346,10 @@ open class MessageListItemCell: CollectionViewCellComponent {
       )
       .theming(theme.itemTheme.secondaryLabel, cancelIn: &contentCancellables)
 
-    messageTextContent.textView
+    bubbleContainer.messageTextContent.textView
       .configure(message.messageTextPublisher, cancelIn: &contentCancellables)
       .theming(theme.contentTextTheme, cancelIn: &contentCancellables)
 
-    bubbleContainer
-      .configure(contentView: messageTextContent)
     bubbleContainer
       .theming(theme.bubbleContainerTheme, cancelIn: &contentCancellables)
   }
@@ -294,11 +359,18 @@ open class MessageListItemCell: CollectionViewCellComponent {
     currentUser: User,
     onTapAction: ((MessageReactionButtonComponent?, Message, (() -> Void)?) -> Void)?
   ) {
-    reactionListView.reloadDelegate = self
-    reactionListView.configure(
-      message,
-      currentUserId: currentUser.pubnubId,
-      onMessageActionTap: onTapAction
-    )
+    if message.messageActions.count == 0 {
+      // Remove
+      reactionListView.isHiddenSafe = true
+    } else {
+      // Update
+      reactionListView.configure(
+        message,
+        currentUserId: currentUser.pubnubId,
+        onMessageActionTap: onTapAction
+      )
+      
+      reactionListView.isHiddenSafe = false
+    }
   }
 }

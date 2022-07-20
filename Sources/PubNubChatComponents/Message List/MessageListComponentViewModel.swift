@@ -30,8 +30,13 @@ import UIKit
 import CoreData
 import Combine
 
+import ChatLayout
+
 import PubNubChat
 import PubNub
+
+
+extension UICollectionViewDiffableDataSource: ChatLayoutDelegate {}
 
 extension ChatProvider
   where ManagedEntities: ChatViewModels,
@@ -150,15 +155,17 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
     }.store(in: &cancellables)
     cancellables.formUnion(localCancellables)
 
+    let layout = messageListTheme.collectionViewTheme.layoutType.create(
+      usingSupplimentaryItems: layoutShouldContainSupplimentaryViews
+    )
+    
     let controller = ChatViewController(
       viewModel: self,
       collectionViewType: messageListTheme.collectionViewTheme.viewType,
-      collectionViewLayout: messageListTheme.collectionViewTheme.layoutType.create(
-        usingSupplimentaryItems: layoutShouldContainSupplimentaryViews
-      ),
+      collectionViewLayout: layout,
       messageInputComponent: messageInputComponent
     )
-
+    
     // Configure Message Input
     messageInputViewModel.$typingMemberIds
       .sink { [weak self] memberIds in
@@ -189,6 +196,10 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
       controller.collectionView,
       theme: messageListTheme.collectionViewTheme
     )
+    
+    if let chatLayout = layout as? CollectionViewChatLayout {
+      chatLayout.delegate = dataSource
+    }
 
     return controller
   }

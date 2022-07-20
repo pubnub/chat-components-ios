@@ -86,9 +86,9 @@ open class TableCollectionViewLayout: UICollectionViewLayout, CollectionViewLayo
 
 // MARK: - Message impl.
 
-extension ChatLayout: CollectionViewLayoutComponent {
+extension CollectionViewChatLayout: CollectionViewLayoutComponent {
   public static func create(usingSupplimentaryItems: Bool) -> UICollectionViewLayout {
-    let chatLayout = ChatLayout()
+    let chatLayout = CollectionViewChatLayout()
 
     chatLayout.settings.interItemSpacing = 8
     chatLayout.settings.interSectionSpacing = 8

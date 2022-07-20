@@ -78,7 +78,6 @@ public class MessageListCellComponentTheme: CollectionViewCellTheme {
   @Published public var maxWidthPercentage: CGFloat
   @Published public var bubbleContainerTheme: BubbleComponentTheme
   @Published public var contentTextTheme: TextViewComponentTheme
-  @Published public var contentLinkTheme: LinkViewComponentTheme
   @Published public var itemTheme: BasicComponentTheme
   @Published public var dateFormatter: DateFormatter
 
@@ -91,7 +90,6 @@ public class MessageListCellComponentTheme: CollectionViewCellTheme {
     maxWidthPercentage: CGFloat,
     bubbleContainerTheme: BubbleComponentTheme,
     contentTextTheme: TextViewComponentTheme,
-    contentLinkTheme: LinkViewComponentTheme,
     itemTheme: BasicComponentTheme,
     dateFormatter: DateFormatter
   ) {
@@ -99,7 +97,6 @@ public class MessageListCellComponentTheme: CollectionViewCellTheme {
     self.maxWidthPercentage = maxWidthPercentage
     self.bubbleContainerTheme = bubbleContainerTheme
     self.contentTextTheme = contentTextTheme
-    self.contentLinkTheme = contentLinkTheme
     self.itemTheme = itemTheme
     self.dateFormatter = dateFormatter
 
@@ -148,7 +145,7 @@ extension CollectionViewComponentTheme {
   public static var pubnubGroupChat: CollectionViewComponentTheme {
     return CollectionViewComponentTheme(
       viewType: UICollectionView.self,
-      layoutType: ChatLayout.self,
+      layoutType: CollectionViewChatLayout.self,
       headerType: ReusableLabelViewComponent.self,
       footerType: ReusableLabelViewComponent.self,
       backgroundColor: .secondarySystemBackground,
@@ -191,10 +188,6 @@ extension MessageListCellComponentTheme {
         isExclusiveTouch: false,
         scrollView: .disabled,
         textContainerInset: .zero
-      ),
-      contentLinkTheme: LinkViewComponentTheme(
-        cacheProvider: InMemoryCache.standard,
-        layoutMargin: UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
       ),
       itemTheme: .pubnubGroupChannelList,
       dateFormatter: .messageInline

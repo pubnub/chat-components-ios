@@ -30,16 +30,17 @@ import UIKit
 
 open class ChannelMemberComponentCell: CollectionViewCellComponent {
  
-  open var primaryImageView: ImageComponentView?
+  open var primaryImageView: PubNubInlineAvatarComponentView?
   open var primaryLabel: PubNubLabelComponentView?
   open var secondaryLabel: PubNubLabelComponentView?
   
+  // TODO: This might need to change to a wrapped stack component
   public let contentContainer = UIStackView()
   
   open override func setupSubviews() {
     super.setupSubviews()
     
-    let avatarView = PubNubAvatarComponentView(frame: bounds)
+    let avatarView = PubNubInlineAvatarComponentView(frame: bounds)
     self.primaryLabel = PubNubLabelComponentView(frame: bounds)
     self.secondaryLabel = PubNubLabelComponentView(frame: bounds)
 
@@ -49,12 +50,12 @@ open class ChannelMemberComponentCell: CollectionViewCellComponent {
     contentContainer.addArrangedSubview(primaryLabel)
     contentContainer.addArrangedSubview(secondaryLabel?.priorityFill(axis: .vertical))
 
-    stackView.alignment = .center
-    stackView.spacing = 5.0
-    stackView.addArrangedSubview(avatarView)
-    stackView.addArrangedSubview(contentContainer)
+    cellContainer.alignment = .center
+    cellContainer.spacing = 5.0
+    cellContainer.addArrangedSubview(avatarView)
+    cellContainer.addArrangedSubview(contentContainer)
     
-    avatarView.heightAnchor.constraint(equalTo: stackView.heightAnchor, multiplier: 0.75).isActive = true
+    avatarView.heightAnchor.constraint(equalTo: cellContainer.heightAnchor, multiplier: 0.75).isActive = true
     avatarView.widthAnchor.constraint(equalTo: avatarView.heightAnchor).isActive = true
   
     primaryImageView = avatarView
@@ -66,7 +67,7 @@ open class ChannelMemberComponentCell: CollectionViewCellComponent {
     _ channel: Channel,
     theme: ChannelListCellComponentTheme
   ) {
-    primaryImageView?
+    primaryImageView?.imageView
       .configure(
         channel.channelAvatarUrlPublisher,
         placeholder: theme.itemTheme.imageView.$localImage.eraseToAnyPublisher(),
@@ -74,13 +75,13 @@ open class ChannelMemberComponentCell: CollectionViewCellComponent {
       )
       .theming(theme.itemTheme.imageView, cancelIn: &contentCancellables)
     
-    primaryLabel?
+    primaryLabel?.labelView
       .configure(
         channel.channelNamePublisher.map({ $0 }).eraseToAnyPublisher(), cancelIn: &contentCancellables
       )
       .theming(theme.itemTheme.primaryLabel, cancelIn: &contentCancellables)
     
-    secondaryLabel?
+    secondaryLabel?.labelView
       .configure(
         channel.channelDetailsPublisher, cancelIn: &contentCancellables
       )
@@ -91,7 +92,7 @@ open class ChannelMemberComponentCell: CollectionViewCellComponent {
     _ member: Member,
     theme: MemberListCellComponentTheme
   ) {
-    primaryImageView?
+    primaryImageView?.imageView
       .configure(
         member.userViewModel.userAvatarUrlPublisher,
         placeholder: theme.itemTheme.imageView.$localImage.eraseToAnyPublisher(),
@@ -99,7 +100,7 @@ open class ChannelMemberComponentCell: CollectionViewCellComponent {
       )
       .theming(theme.itemTheme.imageView, cancelIn: &contentCancellables)
     
-    primaryLabel?
+    primaryLabel?.labelView
       .configure(
         member.userViewModel.userNamePublisher.map({ $0 }).eraseToAnyPublisher(), cancelIn: &contentCancellables
       )

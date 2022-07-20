@@ -47,32 +47,46 @@ public class MessageReactionComponent: UIStackContainerView {
   }
   @Published public var reaction = ""
   @Published public var isHighlighted = false
+
+  public override init(frame: CGRect) {
+    super.init(frame: frame)
+    
+    setupSubviews()
+  }
+  
+  public required init?(coder: NSCoder) {
+    super.init(coder: coder)
+    
+    setupSubviews()
+  }
   
   lazy public var emojiLabel = PubNubLabelComponentView(frame: bounds)
   lazy public var countLabel = PubNubLabelComponentView(frame: bounds)
   
   open override func setupSubviews() {
-    super.setupSubviews()
 
     stackView.alignment = .center
-    stackView.spacing = 2.0
     stackView.axis = .horizontal
     stackView.isLayoutMarginsRelativeArrangement = true
-    stackView.layoutMargins = UIEdgeInsets(top: 1, left: 3, bottom: 1, right: 7)
+    stackView.directionalLayoutMargins = .init(top: 2, leading: 3, bottom: 2, trailing: 7)
 
     layer.cornerRadius = 10
     layer.borderWidth = 1
     layer.borderColor = UIColor.black.cgColor
+  
+    emojiLabel.labelView.font = AppearanceTemplate.Font.footnote
+    emojiLabel.labelView.adjustsFontForContentSizeCategory = false
+    emojiLabel.labelView.translatesAutoresizingMaskIntoConstraints = false
 
-    emojiLabel.font = AppearanceTemplate.Font.footnote
-    emojiLabel.adjustsFontForContentSizeCategory = false
-    countLabel.font = AppearanceTemplate.Font.footnote
-    countLabel.adjustsFontForContentSizeCategory = false
+    countLabel.labelView.font = AppearanceTemplate.Font.footnote
+    countLabel.labelView.adjustsFontForContentSizeCategory = false
+    countLabel.labelView.translatesAutoresizingMaskIntoConstraints = false
 
     stackView.addArrangedSubview(emojiLabel)
+    stackView.setCustomSpacing(2.0, after: emojiLabel)
     stackView.addArrangedSubview(countLabel)
-
-    stackView.heightAnchor.constraint(equalToConstant: 20).isActive = true
+    
+    super.setupSubviews()
 
     $isHighlighted
       .sink { [weak self] status in
@@ -95,14 +109,13 @@ public class MessageReactionComponent: UIStackContainerView {
       }
       .store(in: &cancellables)
     
-    self.emojiLabel
+    emojiLabel.labelView
       .configure(
         $reaction.eraseToAnyPublisher(),
         cancelIn: &cancellables
       )
     
-    // Update the current count as the count changes
-    self.countLabel
+    countLabel.labelView
       .configure(
         currentCountPublisher.map({ $0.description }).eraseToAnyPublisher(),
         cancelIn: &cancellables
@@ -115,6 +128,8 @@ public class MessageReactionButtonComponent: UIButton {
   lazy var messageReactionComponent = MessageReactionComponent(frame: bounds)
 
   var cancellables = Set<AnyCancellable>()
+  
+  var externalCancellables = Set<AnyCancellable>()
 
   public override init(frame: CGRect) {
     super.init(frame: frame)
@@ -127,20 +142,29 @@ public class MessageReactionButtonComponent: UIButton {
     
     setupSubviews()
   }
+
+  open override var intrinsicContentSize: CGSize {
+    return CGSize(width: bounds.width, height: 20)
+  }
   
   open func setupSubviews() {
-    messageReactionComponent.isUserInteractionEnabled = false
 
     translatesAutoresizingMaskIntoConstraints = false
     insetsLayoutMarginsFromSafeArea = false
     layoutMargins = .zero
     
-    addSubview(messageReactionComponent)
+    messageReactionComponent.isUserInteractionEnabled = false
     
-    leadingAnchor.constraint(equalTo: messageReactionComponent.leadingAnchor).isActive = true
-    trailingAnchor.constraint(equalTo: messageReactionComponent.trailingAnchor).isActive = true
-    topAnchor.constraint(equalTo: messageReactionComponent.topAnchor).isActive = true
-    bottomAnchor.constraint(equalTo: messageReactionComponent.bottomAnchor).isActive = true
+    addSubview(messageReactionComponent)
+        
+    messageReactionComponent.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
+    messageReactionComponent.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+    messageReactionComponent.topAnchor.constraint(equalTo: topAnchor).isActive = true
+    messageReactionComponent.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+    
+    messageReactionComponent.publisher(for: \.isHidden).sink { [weak self] isHidden in
+      self?.isHidden = isHidden
+    }.store(in: &cancellables)
   }
 
   public func didTap(_ action: ((MessageReactionButtonComponent?) -> Void)?) -> AnyCancellable {
@@ -181,10 +205,4 @@ public class MessageReactionButtonComponent: UIButton {
       messageReactionComponent.isHighlighted = newValue
     }
   }
-
-//  public override var isHidden: Bool {
-//    willSet {
-//      messageReactionComponent.isHidden = newValue
-//    }
-//  }
 }

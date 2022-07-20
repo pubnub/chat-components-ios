@@ -32,7 +32,6 @@
 		350BFB0F27290DC400F0F95B /* ChannelMemberComponentCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350BFB0E27290DC300F0F95B /* ChannelMemberComponentCell.swift */; };
 		350BFB112729151500F0F95B /* UserInlineDetailComponentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350BFB102729151500F0F95B /* UserInlineDetailComponentView.swift */; };
 		350E046626F0041100DD28F1 /* String+Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350E046526F0041100DD28F1 /* String+Components.swift */; };
-		350E046826F00C8D00DD28F1 /* LinkComponentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350E046726F00C8D00DD28F1 /* LinkComponentView.swift */; };
 		350E046926F0182E00DD28F1 /* ManagedEntityViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35787FA22684F540006A775E /* ManagedEntityViewModel.swift */; };
 		351700A02686A4510019B615 /* ManagedChatEntities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3517009F2686A4510019B615 /* ManagedChatEntities.swift */; };
 		352A5D22270B953300B521A9 /* ChannelListComponentTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 352A5D21270B953300B521A9 /* ChannelListComponentTheme.swift */; };
@@ -168,7 +167,6 @@
 		350BFB102729151500F0F95B /* UserInlineDetailComponentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserInlineDetailComponentView.swift; sourceTree = "<group>"; };
 		350BFB16272A315E00F0F95B /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
 		350E046526F0041100DD28F1 /* String+Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Components.swift"; sourceTree = "<group>"; };
-		350E046726F00C8D00DD28F1 /* LinkComponentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkComponentView.swift; sourceTree = "<group>"; };
 		3517009F2686A4510019B615 /* ManagedChatEntities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedChatEntities.swift; sourceTree = "<group>"; };
 		352A5D21270B953300B521A9 /* ChannelListComponentTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelListComponentTheme.swift; sourceTree = "<group>"; };
 		352A5D23270B953F00B521A9 /* MemberListComponentTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemberListComponentTheme.swift; sourceTree = "<group>"; };
@@ -512,7 +510,6 @@
 				355AACFF26C716A8004E4231 /* TextComponentView.swift */,
 				35B3B5B92656C21C00473120 /* ImageComponentView.swift */,
 				35B418BA26DE82D100DB49A7 /* LabelComponentView.swift */,
-				350E046726F00C8D00DD28F1 /* LinkComponentView.swift */,
 				350BFB102729151500F0F95B /* UserInlineDetailComponentView.swift */,
 				35DB0C4E2875E094001E1F76 /* MessageReactionView.swift */,
 				35DB0C502875E0B6001E1F76 /* MessageReactionListView.swift */,
@@ -981,7 +978,6 @@
 				357F2243272A388000A6FBF7 /* MessageListViewController.swift in Sources */,
 				35074AD22720B52600462624 /* MessageInputComponentViewModel.swift in Sources */,
 				350E046926F0182E00DD28F1 /* ManagedEntityViewModel.swift in Sources */,
-				350E046826F00C8D00DD28F1 /* LinkComponentView.swift in Sources */,
 				35F436BE2700F81800033720 /* ChannelListComponentViewModel.swift in Sources */,
 				350AC791264355EA00C3D323 /* ComponentViewController.swift in Sources */,
 				352FA63726F7F5C20074D75C /* MessageListComponentViewModel.swift in Sources */,
@@ -1757,7 +1753,7 @@
 			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 6.3.0;
+				minimumVersion = 7.3.0;
 			};
 		};
 		35DB0BB3286CA6D3001E1F76 /* XCRemoteSwiftPackageReference "swift" */ = {
@@ -1772,8 +1768,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/ekazaev/ChatLayout.git";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.1.9;
+				kind = upToNextMinorVersion;
+				minimumVersion = 1.2.0;
 			};
 		};
 		35F46DFC26C1D90B0024FB67 /* XCRemoteSwiftPackageReference "InputBarAccessoryView" */ = {
@@ -1781,7 +1777,7 @@
 			repositoryURL = "https://github.com/nathantannar4/InputBarAccessoryView.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 5.3.1;
+				minimumVersion = 6.1.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

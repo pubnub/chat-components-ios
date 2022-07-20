@@ -130,7 +130,7 @@ extension ChannelListCellComponentTheme {
 extension ImageComponentTheme {
   public static var pubnubDefaultGroupInline: ImageComponentTheme {
     return ImageComponentTheme(
-      customType: PubNubAvatarComponentView.self,
+      customType: CircleImageComponentView.self,
       localImage: AppearanceTemplate.Image.avatar,
       cornerRadius: 15,
       margin: .init(top: .zero, left: 10.0, bottom: .zero, right: 5.0)
@@ -141,7 +141,7 @@ extension ImageComponentTheme {
 extension LabelComponentTheme {
   public static var pubnubDefaultGroupListItemPrimary: LabelComponentTheme {
     return LabelComponentTheme(
-      customType: PubNubLabelComponentView.self,
+      customType: UILabel.self,
       textFont: AppearanceTemplate.Font.caption1,
       textColor: AppearanceTemplate.Color.label,
       adjustsFontForContentSizeCategory: true,
@@ -152,7 +152,7 @@ extension LabelComponentTheme {
   
   public static var pubnubDefaultGroupListItemSecondary: LabelComponentTheme {
     return LabelComponentTheme(
-      customType: PubNubLabelComponentView.self,
+      customType: UILabel.self,
       textFont: AppearanceTemplate.Font.caption2,
       textColor: AppearanceTemplate.Color.secondaryLabel,
       adjustsFontForContentSizeCategory: true,
@@ -163,7 +163,7 @@ extension LabelComponentTheme {
   
   public static var pubnubDefaultGroupNavigationTitle: LabelComponentTheme {
     return LabelComponentTheme(
-      customType: PubNubLabelComponentView.self,
+      customType: UILabel.self,
       textFont: AppearanceTemplate.Font.title2.bold,
       textColor: AppearanceTemplate.Color.label,
       adjustsFontForContentSizeCategory: true,
@@ -174,7 +174,7 @@ extension LabelComponentTheme {
   
   public static var pubnubDefaultGroupSectionHeader: LabelComponentTheme {
     return LabelComponentTheme(
-      customType: PubNubLabelComponentView.self,
+      customType: UILabel.self,
       textFont: AppearanceTemplate.Font.title1.bold,
       textColor: AppearanceTemplate.Color.label,
       adjustsFontForContentSizeCategory: true,

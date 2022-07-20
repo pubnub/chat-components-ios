@@ -39,6 +39,19 @@ extension Publisher where Failure == Never {
   }
 }
 
+extension Publisher where Failure == Never, Output: Equatable {
+  func weakAssign<T: AnyObject>(
+    to keyPath: ReferenceWritableKeyPath<T, Output>,
+    on object: T
+  ) -> AnyCancellable {
+    sink { [weak object] value in
+      if value != object?[keyPath: keyPath] {
+        object?[keyPath: keyPath] = value
+      }
+    }
+  }
+}
+
 protocol CombineCompatible { }
 extension UIControl: CombineCompatible { }
 extension CombineCompatible where Self: UIControl {

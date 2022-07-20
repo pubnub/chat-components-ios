@@ -28,7 +28,7 @@
 import UIKit
 import Combine
 
-public class MessageReactionListComponent: UIStackContainerView {
+public class MessageReactionListComponent: UIView {//UIStackContainerView {
 
   // 👍 thumbs up U+1F44D
   lazy public var thumbsUpReactionView = MessageReactionButtonComponent(type: .custom)
@@ -42,11 +42,29 @@ public class MessageReactionListComponent: UIStackContainerView {
   lazy public var cryingFaceReactionView = MessageReactionButtonComponent(type: .custom)
   // 🔥 fire U+1F525
   lazy public var fireReactionView = MessageReactionButtonComponent(type: .custom)
+
+  var currentCount: Int = 0
   
-  var reloadDelegate: ReloadCellDelegate?
+  public override var intrinsicContentSize: CGSize {
+    return super.intrinsicContentSize
+  }
   
-  open override func setupSubviews() {
-    super.setupSubviews()
+  public override init(frame: CGRect) {
+    super.init(frame: frame)
+    
+    setupSubviews()
+  }
+  
+  public required init?(coder: NSCoder) {
+    super.init(coder: coder)
+    
+    setupSubviews()
+  }
+  
+  lazy public var stackViewContainer = UIStackContainerView()
+  
+  open func setupSubviews() {
+    translatesAutoresizingMaskIntoConstraints = false
 
     thumbsUpReactionView.reaction = "👍"
     redHeartReactionView.reaction = "❤️"
@@ -55,50 +73,21 @@ public class MessageReactionListComponent: UIStackContainerView {
     cryingFaceReactionView.reaction = "😢"
     fireReactionView.reaction = "🔥"
     
-    stackView.alignment = .leading
-    stackView.spacing = 5.0
-    stackView.axis = .horizontal
-
-    setupReactionViews([
-      thumbsUpReactionView,
-      redHeartReactionView,
-      faceWithTearsOfJoyReactionView,
-      astonishedFaceReactionView,
-      cryingFaceReactionView,
-      fireReactionView
-    ])
-  }
-
-  open func setupReactionViews(
-    _ reactionViews: [MessageReactionButtonComponent]
-  ) {
-    for reactionView in reactionViews {
-      reactionView.messageReactionComponent.currentCountPublisher
-        .sink { [weak reactionView, weak self] count in
-          guard let reactionView = reactionView, let self = self else { return }
-
-          switch (count == 0, self.stackView.arrangedSubviews.contains(reactionView)) {
-          case (true, true):
-            // Remove Reaction From View
-            UIView.animate(withDuration: 0.5, animations: {
-              reactionView.isHidden = true
-              self.stackView.removeArrangedSubview(reactionView)
-            })
-          case (true, false):
-            // Do Nothing
-            break
-          case (false, true):
-            // Do Nothing
-            break
-          case (false, false):
-            // Add Reaction to View
-            UIView.animate(withDuration: 0.5, animations: {
-              self.stackView.addArrangedSubview(reactionView)
-              reactionView.isHidden = false
-            })
-          }
-        }.store(in: &cancellables)
-    }
+    stackViewContainer.stackView.alignment = .leading
+    stackViewContainer.stackView.spacing = 5.0
+    stackViewContainer.stackView.axis = .horizontal
+    
+    addSubview(stackViewContainer)
+    stackViewContainer.translatesAutoresizingMaskIntoConstraints = false
+    stackViewContainer.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
+    stackViewContainer.topAnchor.constraint(equalTo: topAnchor).isActive = true
+    
+    stackViewContainer.trailingAnchor
+      .constraint(equalTo: trailingAnchor)
+      .priority(.overrideRequire).isActive = true
+    stackViewContainer.bottomAnchor
+      .constraint(equalTo: bottomAnchor)
+      .priority(.overrideRequire).isActive = true
   }
   
   open func configure<Message>(
@@ -107,22 +96,27 @@ public class MessageReactionListComponent: UIStackContainerView {
     currentUserId: String,
     onMessageActionTap: ((MessageReactionButtonComponent?, Message, (() -> Void)?) -> Void)?
   ) where Message : ManagedMessageViewModel {
+    
+    var newCount = 0
+    
     for messageActionButton in messageActionButtons {
-      messageActionButton.cancellables.forEach { $0.cancel() }
-
-      message.messageActionsPublisher
-        .map { [weak messageActionButton] in
-          // Filter out non-reactions and sourceType
-          $0.filter { $0.sourceType == "reaction" && $0.value == messageActionButton?.reaction }
-        }
-        .sink { [weak messageActionButton] reactions in
-          messageActionButton?.currentCount = reactions.count
-          messageActionButton?.isSelected = reactions.contains(where: { $0.pubnubUserId == currentUserId })
-        }
-        .store(in: &messageActionButton.cancellables)
+      messageActionButton.externalCancellables.forEach { $0.cancel() }
       
-      messageActionButton
-        .didTap({ [weak message] button in
+      // new way
+      let reactions = message.messageActions
+        .filter { $0.sourceType == "reaction" && $0.value == messageActionButton.reaction }
+      if reactions.count > 0 {
+        newCount += reactions.count
+        
+        messageActionButton.currentCount = reactions.count
+        messageActionButton.isSelected = reactions.contains(where: { $0.pubnubUserId == currentUserId })
+
+        if messageActionButton.superview == nil {
+          stackViewContainer.stackView.addArrangedSubview(messageActionButton)
+          setNeedsLayout()
+        }
+        
+        messageActionButton.didTap({ [weak message] button in
           guard let message = message else { return }
           
           // Disable Button
@@ -134,8 +128,20 @@ public class MessageReactionListComponent: UIStackContainerView {
             }
           }
         })
-        .store(in: &messageActionButton.cancellables)
+        .store(in: &messageActionButton.externalCancellables)
+      } else {
+        if messageActionButton.superview != nil {
+          messageActionButton.removeFromSuperview()
+          stackViewContainer.stackView.removeArrangedSubview(messageActionButton)
+          setNeedsLayout()
+        }
+      }
     }
+    currentCount = newCount
+    isHidden = newCount == 0 ? true : false
+    
+    stackViewContainer.layoutIfNeeded()
+    layoutIfNeeded()
   }
 
   open func configure<Message>(
@@ -143,8 +149,6 @@ public class MessageReactionListComponent: UIStackContainerView {
     currentUserId: String,
     onMessageActionTap: ((MessageReactionButtonComponent?, Message, (() -> Void)?) -> Void)?
   ) where Message : ManagedMessageViewModel {
-    
-    // Thumbs Up
     configure(
       [
         thumbsUpReactionView,

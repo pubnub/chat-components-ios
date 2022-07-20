@@ -36,7 +36,7 @@ import ChatLayout
 public protocol ImageComponentView: UIImageView {
   // Content
 //  var imageView: UIImageView { get }
-  func setCorner(radius: CGFloat?)
+//  func setCorner(radius: CGFloat?)
   
   @discardableResult
   func configure(
@@ -119,21 +119,23 @@ extension ImageComponentView {
   }
 }
 
-open class PubNubAvatarComponentView: UIImageView, ImageComponentView {
+extension UIImageView: ImageComponentView {}
+
+open class CircleImageComponentView: UIImageView {
 
   private var radius: CGFloat?
 
   public override init(frame: CGRect) {
     super.init(frame: frame)
-    prepareView()
+    setupSubviews()
   }
   
   public required init?(coder: NSCoder) {
     super.init(coder: coder)
-    prepareView()
+    setupSubviews()
   }
   
-  internal func prepareView() {
+  internal func setupSubviews() {
     translatesAutoresizingMaskIntoConstraints = false
     insetsLayoutMarginsFromSafeArea = false
     layoutMargins = .zero
@@ -142,30 +144,60 @@ open class PubNubAvatarComponentView: UIImageView, ImageComponentView {
     layer.masksToBounds = true
     clipsToBounds = true
     
-    setCorner(radius: nil)
+    setCorner()
   }
   
   // MARK: - Overridden Properties
   open override var frame: CGRect {
     didSet {
-      setCorner(radius: self.radius)
+      setCorner()
     }
   }
   
   open override var bounds: CGRect {
     didSet {
-      setCorner(radius: self.radius)
+      setCorner()
     }
   }
 
-  open func setCorner(radius: CGFloat?) {
-    guard let radius = radius else {
-      //if corner radius not set default to Circle
-      let cornerRadius = min(frame.width, frame.height)
-      layer.cornerRadius = cornerRadius/2
-      return
-    }
-    self.radius = radius
-    layer.cornerRadius = radius
+  open func setCorner() {
+    let cornerRadius = min(frame.width, frame.height)
+    layer.cornerRadius = cornerRadius/2
+  }
+}
+
+open class PubNubInlineAvatarComponentView: UIView {
+  
+  public lazy var imageView: ImageComponentView = CircleImageComponentView(frame: bounds)
+  
+  public override init(frame: CGRect) {
+    super.init(frame: frame)
+    setupSubviews()
+  }
+  
+  public required init?(coder aDecoder: NSCoder) {
+    super.init(coder: aDecoder)
+    setupSubviews()
+  }
+  
+  public override var intrinsicContentSize: CGSize {
+    return imageView.intrinsicContentSize
+  }
+  
+  open func setupSubviews() {
+    translatesAutoresizingMaskIntoConstraints = false
+    insetsLayoutMarginsFromSafeArea = false
+    layoutMargins = .zero
+    
+    addSubview(imageView)
+    
+    imageView.translatesAutoresizingMaskIntoConstraints = false
+    imageView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor).isActive = true
+    imageView.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor).isActive = true
+    imageView.topAnchor.constraint(equalTo: layoutMarginsGuide.topAnchor).isActive = true
+    imageView.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor).isActive = true
+    
+    imageView.heightAnchor.constraint(equalToConstant: 30).isActive = true
+    imageView.widthAnchor.constraint(equalToConstant: 30).isActive = true
   }
 }

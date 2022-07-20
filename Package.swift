@@ -56,9 +56,9 @@ let package = Package(
     // PubNubChat
     
     // PubNubChatComponents
-    .package(name: "Kingfisher", url: "https://github.com/onevcat/Kingfisher.git", from: "6.3.0"),
-    .package(name: "ChatLayout", url: "https://github.com/ekazaev/ChatLayout", .upToNextMinor(from: "1.1.10")),
-    .package(name: "InputBarAccessoryView", url: "https://github.com/nathantannar4/InputBarAccessoryView", from: "5.4.0")
+    .package(name: "Kingfisher", url: "https://github.com/onevcat/Kingfisher.git", from: "7.3.0"),
+    .package(name: "ChatLayout", url: "https://github.com/ekazaev/ChatLayout", .upToNextMinor(from: "1.2.0")),
+    .package(name: "InputBarAccessoryView", url: "https://github.com/nathantannar4/InputBarAccessoryView", from: "6.1.0")
   ],
   targets: [
     .target(

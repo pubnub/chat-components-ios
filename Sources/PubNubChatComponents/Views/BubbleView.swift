@@ -27,6 +27,8 @@
 
 import UIKit
 
+import ChatLayout
+
 import PubNubChat
 
 // MARK: Bezier View
@@ -50,40 +52,32 @@ public enum BubbleContainerType {
 
 open class BubbleContainerView: UIView {
 
+  lazy open var messageTextContent = PubNubMessageContentTextView(frame: bounds)
+  
   override init(frame: CGRect) {
     super.init(frame: frame)
+
+    setupSubviews()
   }
 
   required public init?(coder: NSCoder) {
     super.init(coder: coder)
+
+    setupSubviews()
   }
 
-  open override func layoutSubviews() {
-    super.layoutSubviews()
-  }
-
-  public var viewPortWidth: CGFloat = 300
-  public var maxWidthPercentage: CGFloat = 0.65
-  public var minWidthPercentage: CGFloat = 0.15
-  
-  open func configure(
-    contentView: UIView,
-    constantWidth: Bool = false
-  ) {
+  open func setupSubviews() {
     layoutMargins = .zero
     translatesAutoresizingMaskIntoConstraints = false
     insetsLayoutMarginsFromSafeArea = false
-    preservesSuperviewLayoutMargins = false
 
-    contentView.translatesAutoresizingMaskIntoConstraints = false
-    addSubview(contentView)
-    contentView.topAnchor.constraint(equalTo: layoutMarginsGuide.topAnchor).isActive = true
-    contentView.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor).isActive = true
-    contentView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor).isActive = true
-    contentView.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor).isActive = true
-
-    contentView.widthAnchor.constraint(lessThanOrEqualToConstant: viewPortWidth * maxWidthPercentage).isActive = true
-    contentView.widthAnchor.constraint(greaterThanOrEqualToConstant: viewPortWidth * minWidthPercentage).isActive = true
+    addSubview(messageTextContent)
+    messageTextContent.translatesAutoresizingMaskIntoConstraints = false
+    
+    messageTextContent.topAnchor.constraint(equalTo: layoutMarginsGuide.topAnchor).isActive = true
+    messageTextContent.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor).isActive = true
+    messageTextContent.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor).isActive = true
+    messageTextContent.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor).isActive = true
   }
 }
 

@@ -77,9 +77,6 @@ open class UIStackContainerView: UIView {
     stackView.translatesAutoresizingMaskIntoConstraints = false
     stackView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor).isActive = true
     stackView.topAnchor.constraint(equalTo: layoutMarginsGuide.topAnchor).isActive = true
-    
-    stackView.centerYAnchor.constraint(equalTo: layoutMarginsGuide.centerYAnchor).isActive = true
-    stackView.centerXAnchor.constraint(equalTo: layoutMarginsGuide.centerXAnchor).isActive = true
 
     stackView.bottomAnchor
       .constraint(equalTo: layoutMarginsGuide.bottomAnchor)

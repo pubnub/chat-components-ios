@@ -34,10 +34,6 @@ import Kingfisher
 import ChatLayout
 
 public protocol ImageComponentView: UIImageView {
-  // Content
-//  var imageView: UIImageView { get }
-//  func setCorner(radius: CGFloat?)
-  
   @discardableResult
   func configure(
     _ contentPublisher: AnyPublisher<URL?, Never>,
@@ -123,8 +119,6 @@ extension UIImageView: ImageComponentView {}
 
 open class CircleImageComponentView: UIImageView {
 
-  private var radius: CGFloat?
-
   public override init(frame: CGRect) {
     super.init(frame: frame)
     setupSubviews()
@@ -153,7 +147,7 @@ open class CircleImageComponentView: UIImageView {
       setCorner()
     }
   }
-  
+
   open override var bounds: CGRect {
     didSet {
       setCorner()
@@ -161,14 +155,13 @@ open class CircleImageComponentView: UIImageView {
   }
 
   open func setCorner() {
-    let cornerRadius = min(frame.width, frame.height)
-    layer.cornerRadius = cornerRadius/2
+    layer.cornerRadius = min(frame.width, frame.height)/2
   }
 }
 
 open class PubNubInlineAvatarComponentView: UIView {
   
-  public lazy var imageView: ImageComponentView = CircleImageComponentView(frame: bounds)
+  public lazy var imageView = CircleImageComponentView(frame: bounds)
   
   public override init(frame: CGRect) {
     super.init(frame: frame)
@@ -179,11 +172,7 @@ open class PubNubInlineAvatarComponentView: UIView {
     super.init(coder: aDecoder)
     setupSubviews()
   }
-  
-  public override var intrinsicContentSize: CGSize {
-    return imageView.intrinsicContentSize
-  }
-  
+
   open func setupSubviews() {
     translatesAutoresizingMaskIntoConstraints = false
     insetsLayoutMarginsFromSafeArea = false
@@ -192,12 +181,13 @@ open class PubNubInlineAvatarComponentView: UIView {
     addSubview(imageView)
     
     imageView.translatesAutoresizingMaskIntoConstraints = false
-    imageView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor).isActive = true
-    imageView.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor).isActive = true
-    imageView.topAnchor.constraint(equalTo: layoutMarginsGuide.topAnchor).isActive = true
-    imageView.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor).isActive = true
     
-    imageView.heightAnchor.constraint(equalToConstant: 30).isActive = true
-    imageView.widthAnchor.constraint(equalToConstant: 30).isActive = true
+    imageView.heightAnchor.constraint(equalTo: heightAnchor).isActive = true
+    imageView.widthAnchor.constraint(equalTo: widthAnchor).isActive = true
+    
+    imageView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor).isActive = true
+    imageView.topAnchor.constraint(equalTo: layoutMarginsGuide.topAnchor).isActive = true
+    imageView.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor).isActive = true
+    imageView.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor).isActive = true
   }
 }

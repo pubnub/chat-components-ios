@@ -224,11 +224,11 @@ open class MessageListItemCell: MessageCollectionViewCellComponent {
   
   // MARK: Subviews
   
-  lazy open var authorAvatarView = PubNubInlineAvatarComponentView(frame: bounds)
-  lazy open var primaryLabel = PubNubLabelComponentView(frame: bounds)
-  lazy open var secondaryLabel = PubNubLabelComponentView(frame: bounds)
-  lazy open var tertiaryLabel = PubNubLabelComponentView(frame: bounds)
-  lazy open var quaternaryLabel = PubNubLabelComponentView(frame: bounds)
+  lazy open var authorAvatarView = PubNubInlineAvatarComponentView()
+  lazy open var primaryLabel = PubNubLabelComponentView()
+  lazy open var secondaryLabel = PubNubLabelComponentView()
+  lazy open var tertiaryLabel = PubNubLabelComponentView()
+  lazy open var quaternaryLabel = PubNubLabelComponentView()
   
   // Text
   lazy public var bubbleContainer = BubbleContainerView(frame: bounds)
@@ -238,7 +238,6 @@ open class MessageListItemCell: MessageCollectionViewCellComponent {
   
   // MARK: UIStack Subview
   public let topContainerStack = UIStackContainerView()
-  public let leftContainerStack = UIStackContainerView()
   public let contentContainer = UIStackContainerView()
   public let bottomContainer = UIStackContainerView()
   
@@ -259,9 +258,8 @@ open class MessageListItemCell: MessageCollectionViewCellComponent {
   // MARK: - UICollectionViewLayoutAttributes
     
   public override func setupSubviews() {
-    
+    // Layout
     topContainerStack.translatesAutoresizingMaskIntoConstraints = false
-    leftContainerStack.translatesAutoresizingMaskIntoConstraints = false
     contentContainer.translatesAutoresizingMaskIntoConstraints = false
     bottomContainer.translatesAutoresizingMaskIntoConstraints = false
 
@@ -280,22 +278,16 @@ open class MessageListItemCell: MessageCollectionViewCellComponent {
     )
 
     contentContainer.stackView.axis = .vertical
-    contentContainer.stackView.distribution = .fill
     contentContainer.stackView.alignment = .leading
     contentContainer.stackView.isLayoutMarginsRelativeArrangement = true
 
-    leftContainerStack.stackView.axis = .vertical
-    leftContainerStack.stackView.alignment = .leading
-    leftContainerStack.stackView.isLayoutMarginsRelativeArrangement = true
-    
-    leftContainerStack.setContentHuggingPriority(.lowest, for: .vertical)
-    leftContainerStack.setContentHuggingPriority(.lowest, for: .horizontal)
-
     cellContainer.axis = .horizontal
-    cellContainer.alignment = .leading
     cellContainer.distribution = .fill
     cellContainer.isLayoutMarginsRelativeArrangement = false
     
+    authorAvatarView.heightAnchor.constraint(equalToConstant: 30).isActive = true
+    authorAvatarView.widthAnchor.constraint(equalToConstant: 30).isActive = true
+
     delegate = bubbleContainer.messageTextContent
     
     // Build the Stack Views
@@ -309,7 +301,7 @@ open class MessageListItemCell: MessageCollectionViewCellComponent {
     contentContainer.stackView.addArrangedSubview(bubbleContainer)
     contentContainer.stackView.setCustomSpacing(5.0, after: bubbleContainer)
     contentContainer.stackView.addArrangedSubview(bottomContainer)
-    
+
     cellContainer.addArrangedSubview(authorAvatarView)
     cellContainer.setCustomSpacing(contentEdgeSpacing, after: authorAvatarView)
     cellContainer.addArrangedSubview(contentContainer)

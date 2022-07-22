@@ -180,13 +180,16 @@ extension PubNubManagedMember: ManagedMemberViewModel {
 
 // MARK:- Message
  
-public protocol ManagedMessageViewModel {
+public protocol ManagedMessageViewModel: AnyObject {
   associatedtype Entity: ManagedChatMessage
   associatedtype ChannelViewModel: ManagedChannelViewModel
   associatedtype UserViewModel: ManagedUserViewModel
+  associatedtype MessageActionModel: ManagedMessageActionViewModel & Hashable
   
   var pubnubId: Timetoken { get }
   var managedObjectId: NSManagedObjectID { get }
+  
+  var text: String { get }
   
   var messageContentTypePublisher: AnyPublisher<String, Never> { get }
   var messageContentPublisher: AnyPublisher<Data, Never> { get }
@@ -196,8 +199,12 @@ public protocol ManagedMessageViewModel {
   
   var messageDateCreatedPublisher: AnyPublisher<Date, Never> { get }
   
+  var messageActionsPublisher: AnyPublisher<Set<MessageActionModel>, Never> { get }
+  var messageActions: Set<MessageActionModel> { get }
+  
   var userViewModel: UserViewModel { get }
   var channelViewModel: ChannelViewModel { get }
+  var messageActionViewModels: Set<MessageActionModel> { get }
 }
 
 extension PubNubManagedMessage: ManagedMessageViewModel {
@@ -233,6 +240,14 @@ extension PubNubManagedMessage: ManagedMessageViewModel {
   public var messageDateCreatedPublisher: AnyPublisher<Date, Never> {
     return publisher(for: \.dateCreated).eraseToAnyPublisher()
   }
+
+  public var messageActionsPublisher: AnyPublisher<Set<PubNubManagedMessageAction>, Never> {
+    return publisher(for: \.actions).eraseToAnyPublisher()
+  }
+
+  public var messageActions: Set<PubNubManagedMessageAction> {
+    return actions
+  }
   
   public var userViewModel: PubNubManagedUser {
     return author
@@ -240,6 +255,52 @@ extension PubNubManagedMessage: ManagedMessageViewModel {
   
   public var channelViewModel: PubNubManagedChannel {
     return channel
+  }
+
+  public var messageActionViewModels: Set<PubNubManagedMessageAction> {
+    return actions
+  }
+}
+
+// MARK:- Message Action
+
+public protocol ManagedMessageActionViewModel {
+  associatedtype Entity: ManagedChatMessageAction
+  associatedtype MessageViewModel: ManagedMessageViewModel
+  associatedtype UserViewModel: ManagedUserViewModel
+  
+  var pubnubActionTimetoken: Timetoken { get }
+  var pubnubParentTimetoken: Timetoken { get }
+  var pubnubChannelId: String { get }
+  var pubnubUserId: String { get }
+
+  var sourceType: String { get }
+  var value: String { get }
+
+  var managedObjectId: NSManagedObjectID { get }
+  
+  var valuePublisher: AnyPublisher<String, Never> { get }
+  
+  var userViewModel: UserViewModel { get }
+  var messageViewModel: MessageViewModel { get }
+}
+
+extension PubNubManagedMessageAction: ManagedMessageActionViewModel {
+  public typealias Entity = PubNubManagedMessageAction
+
+  public var managedObjectId: NSManagedObjectID { return objectID }
+
+  public var valuePublisher: AnyPublisher<String, Never> {
+    return publisher(for: \.value)
+      .eraseToAnyPublisher()
+  }
+
+  public var userViewModel: PubNubManagedUser {
+    return author
+  }
+
+  public var messageViewModel: PubNubManagedMessage {
+    return parent
   }
 }
 

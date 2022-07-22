@@ -84,4 +84,34 @@ extension LabelComponentView {
   }
 }
 
-open class PubNubLabelComponentView: UILabel, LabelComponentView {}
+extension UILabel: LabelComponentView {}
+
+open class PubNubLabelComponentView: UIView {
+  
+  public lazy var labelView: LabelComponentView = UILabel(frame: bounds)
+
+  public override init(frame: CGRect) {
+    super.init(frame: frame)
+    setupSubviews()
+  }
+  
+  public required init?(coder aDecoder: NSCoder) {
+    super.init(coder: aDecoder)
+    setupSubviews()
+  }
+  
+  open func setupSubviews() {
+    translatesAutoresizingMaskIntoConstraints = false
+    insetsLayoutMarginsFromSafeArea = false
+    layoutMargins = .zero
+
+    addSubview(labelView)
+
+    labelView.translatesAutoresizingMaskIntoConstraints = false
+    labelView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor).isActive = true
+    labelView.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor).isActive = true
+    labelView.topAnchor.constraint(equalTo: layoutMarginsGuide.topAnchor).isActive = true
+    labelView.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor).isActive = true
+  }
+}
+

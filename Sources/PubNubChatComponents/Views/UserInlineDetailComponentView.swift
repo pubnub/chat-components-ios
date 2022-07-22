@@ -29,13 +29,13 @@ import UIKit
 
 open class UserInlineDetailComponentView: UIStackContainerView {
   
-  open var primaryImageView: ImageComponentView?
+  open var primaryImageView: PubNubInlineAvatarComponentView?
   open var primaryLabel: PubNubLabelComponentView?
   
   open override func setupSubviews() {
     super.setupSubviews()
     
-    let avatarView = PubNubAvatarComponentView(frame: bounds)
+    let avatarView = PubNubInlineAvatarComponentView(frame: bounds)
     let nameLabel = PubNubLabelComponentView(frame: bounds)
     
 //    stackView.distribution = .fillEqually
@@ -57,7 +57,7 @@ open class UserInlineDetailComponentView: UIStackContainerView {
     _ user: User,
     theme: BasicComponentTheme
   ) {
-    primaryImageView?
+    primaryImageView?.imageView
       .configure(
         user.userAvatarUrlPublisher,
         placeholder: theme.imageView.$localImage.eraseToAnyPublisher(),
@@ -65,9 +65,8 @@ open class UserInlineDetailComponentView: UIStackContainerView {
       )
       .theming(theme.imageView, cancelIn: &cancellables)
     
-    primaryLabel?
+    primaryLabel?.labelView
       .configure(user.userNamePublisher.map({ $0 }).eraseToAnyPublisher(), cancelIn: &cancellables)
       .theming(theme.primaryLabel, cancelIn: &cancellables)
   }
 }
-

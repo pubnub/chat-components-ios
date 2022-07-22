@@ -49,13 +49,10 @@ extension ReloadCellDelegate {
 
 // MARK: - UI Stack Container VIew
 
+@dynamicMemberLookup
 open class UIStackContainerView: UIView {
 
-  public let stackView: UIStackView = {
-    let view = UIStackView()
-    view.translatesAutoresizingMaskIntoConstraints = false
-    return view
-  }()
+  public lazy var stackView = UIStackView()
 
   public var cancellables = Set<AnyCancellable>()
   
@@ -77,10 +74,33 @@ open class UIStackContainerView: UIView {
     layoutMargins = .zero
     
     addSubview(stackView)
+    stackView.translatesAutoresizingMaskIntoConstraints = false
     stackView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor).isActive = true
-    stackView.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor).isActive = true
     stackView.topAnchor.constraint(equalTo: layoutMarginsGuide.topAnchor).isActive = true
-    stackView.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor).isActive = true
+
+    stackView.bottomAnchor
+      .constraint(equalTo: layoutMarginsGuide.bottomAnchor)
+      .priority(.overrideRequire).isActive = true
+    stackView.trailingAnchor
+      .constraint(equalTo: layoutMarginsGuide.trailingAnchor)
+      .priority(.overrideRequire).isActive = true
+  }
+  
+  public subscript<T>(dynamicMember keyPath: WritableKeyPath<UIStackView, T>) -> T {
+    get { stackView[keyPath: keyPath] }
+    set { stackView[keyPath: keyPath] = newValue }
+  }
+
+  func addArrangedSubview(_ view: UIView?) {
+    stackView.addArrangedSubview(view)
+  }
+  
+  func removeArrangedSubview(_ view: UIView?) {
+    stackView.removeArrangedSubview(view)
+  }
+  
+  func setCustomSpacing(_ spacing: CGFloat, after arrangedSubview: UIView?) {
+    stackView.setCustomSpacing(spacing, after: arrangedSubview)
   }
   
   open func configure<Message: ManagedMessageViewModel>(
@@ -116,6 +136,11 @@ extension UIStackView {
   func addArrangedSubview(_ view: UIView?) {
     guard let view = view else { return }
     addArrangedSubview(view)
+  }
+
+  func removeArrangedSubview(_ view: UIView?) {
+    guard let view = view else { return }
+    removeArrangedSubview(view)
   }
   
   func setCustomSpacing(_ spacing: CGFloat, after arrangedSubview: UIView?) {

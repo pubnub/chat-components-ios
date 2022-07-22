@@ -33,9 +33,9 @@ import PubNub
 public typealias PubNubChatMessage = ChatMessage<VoidCustomData>
 
 @dynamicMemberLookup
-public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
+public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Hashable, Codable {
 
-  public struct MessagePayload: JSONCodable {
+  public struct MessagePayload: Hashable, JSONCodable {
     public var id: String
     public var text: String
     public var contentType: String?
@@ -104,6 +104,27 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
       try container.encodeIfPresent(custom, forKey: .custom)
       try container.encode(createdAt, forKey: .createdAt)
     }
+
+    public static func == (
+      lhs: ChatMessage<Custom>.MessagePayload,
+      rhs: ChatMessage<Custom>.MessagePayload
+    ) -> Bool {
+      return lhs.id == rhs.id &&
+        lhs.text == rhs.text &&
+        lhs.contentType == rhs.contentType &&
+        lhs.content?.codableValue == rhs.codableValue &&
+        lhs.custom == rhs.custom &&
+        lhs.createdAt == rhs.createdAt
+    }
+
+    public func hash(into hasher: inout Hasher) {
+      hasher.combine(id)
+      hasher.combine(text)
+      hasher.combine(contentType)
+      hasher.combine(content?.codableValue)
+      hasher.combine(custom)
+      hasher.combine(createdAt)
+    }
   }
 
   public var timetoken: Timetoken
@@ -119,6 +140,8 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
 
   public var pubnubChannelId: String
   public var channelModel: ChatChannel<Custom.Channel>?
+  
+  public var messageActions: [ChatMessageAction<Custom>]
 
   public init(
     content: MessagePayload,
@@ -126,7 +149,8 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
     pubnubUserId: String,
     user: ChatUser<Custom.User>? = nil,
     pubnubChannelId: String,
-    channel: ChatChannel<Custom.Channel>? = nil
+    channel: ChatChannel<Custom.Channel>? = nil,
+    messageActions: [ChatMessageAction<Custom>] = []
   ) {
     self.timetoken = timetoken
 
@@ -137,6 +161,8 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
 
     self.pubnubChannelId = pubnubChannelId
     self.channelModel = channel
+    
+    self.messageActions = messageActions
   }
 
   public init(
@@ -150,7 +176,8 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
     pubnubUserId: String,
     user: ChatUser<Custom.User>? = nil,
     pubnubChannelId: String,
-    channel: ChatChannel<Custom.Channel>? = nil
+    channel: ChatChannel<Custom.Channel>? = nil,
+    messageActions: [ChatMessageAction<Custom>] = []
   ) {
     self.init(
       content: MessagePayload(
@@ -165,7 +192,8 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Codable {
       pubnubUserId: pubnubUserId,
       user: user,
       pubnubChannelId: pubnubChannelId,
-      channel: channel
+      channel: channel,
+      messageActions: messageActions
     )
   }
 
@@ -201,10 +229,10 @@ extension ChatMessage: PubNubMessage {
 
   public var actions: [PubNubMessageAction] {
     get {
-      return []
+      return messageActions
     }
     set(newValue) {
-      // no-op
+      messageActions = newValue.compactMap({ try? .init(from: $0) })
     }
   }
 
@@ -267,7 +295,8 @@ extension ChatMessage: PubNubMessage {
       pubnubUserId: senderId,
       user: nil,
       pubnubChannelId: other.channel,
-      channel: nil
+      channel: nil,
+      messageActions: other.actions.compactMap { try? .init(from: $0) }
     )
   }
 }

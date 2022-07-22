@@ -305,13 +305,13 @@ public class ImageComponentTheme: ObservableObject {
   public var customType: ImageComponentView.Type
 
   @Published public var localImage: UIImage?
-  @Published public var cornerRadius: CGFloat?
+  @Published public var cornerRadius: CGFloat
   @Published public var margin: UIEdgeInsets
   
   public init(
-    customType: ImageComponentView.Type = PubNubAvatarComponentView.self,
+    customType: ImageComponentView.Type,
     localImage: UIImage? = nil,
-    cornerRadius: CGFloat,
+    cornerRadius: CGFloat = .zero,
     margin: UIEdgeInsets = .zero
   ) {
     self.customType = customType
@@ -322,7 +322,7 @@ public class ImageComponentTheme: ObservableObject {
   
   public static var empty: ImageComponentTheme {
     return ImageComponentTheme(
-      customType: PubNubAvatarComponentView.self,
+      customType: CircleImageComponentView.self,
       localImage: nil,
       cornerRadius: .zero,
       margin: .zero
@@ -336,12 +336,14 @@ extension ImageComponentView {
     _ theme: ImageComponentTheme,
     cancelIn store: inout Set<AnyCancellable>
   ) {
-    theme.$cornerRadius.sink { [weak self] radius in
-      self?.setCorner(radius: radius)
-    }.store(in: &store)
+//    theme.$cornerRadius.sink { [weak self] radius in
+//      if radius != self?.layer.cornerRadius {
+//        self?.layer.cornerRadius = radius
+//      }
+//    }.store(in: &store)
     
     theme.$margin.weakAssign(to: \.layoutMargins, on: self)
-    .store(in: &store)
+      .store(in: &store)
   }
 }
 
@@ -375,7 +377,7 @@ open class LabelComponentTheme: ObservableObject {
   
   public static var empty: LabelComponentTheme {
     return LabelComponentTheme(
-      customType: PubNubLabelComponentView.self,
+      customType: UILabel.self,
       textFont: nil,
       textColor: nil,
       adjustsFontForContentSizeCategory: true,

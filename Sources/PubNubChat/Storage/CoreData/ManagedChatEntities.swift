@@ -199,6 +199,7 @@ public protocol ManagedMessageEntity: ManagedEntity {
   @discardableResult
   static func insertOrUpdate<Custom: ChatCustomData>(
     message: ChatMessage<Custom>,
+    prcoessMessageActions: Bool,
     into context: NSManagedObjectContext
   ) throws -> Self
   
@@ -230,6 +231,9 @@ public protocol ManagedMessageActionEntity: ManagedEntity {
   var pubnubParentTimetoken: Timetoken { get }
   var pubnubChannelId: String { get }
   
+  var sourceType: String { get }
+  var value: String { get }
+  
   // Relationships
   
   var managedUser: UserEntity { get }
@@ -255,8 +259,10 @@ public protocol ManagedMessageActionEntity: ManagedEntity {
 public protocol ManagedMessageActionEntityFetches: NSFetchRequestResult {
   static func messageActionsBy(pubnubUserId: String) -> NSFetchRequest<Self>
   static func messageActionsBy(messageId: String) -> NSFetchRequest<Self>
-  
   static func messageActionsBy(messageTimetoken: Timetoken, channelId: String) -> NSFetchRequest<Self>
+  
+  static func messageActionBy<CustomData: ChatCustomData>(messageAction: ChatMessageAction<CustomData>) -> NSFetchRequest<PubNubManagedMessageAction>
+  static func messageActionBy(messageActionId: String) -> NSFetchRequest<PubNubManagedMessageAction>
 }
 
 // MARK: - Chat

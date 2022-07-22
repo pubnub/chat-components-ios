@@ -114,10 +114,10 @@ extension PubNubProvider {
     completion: ((Result<ChatMessageAction<Custom>, Error>) -> Void)?
   ) {
     pubnub.addMessageAction(
-      channel: request.parent.pubnubChannelId,
+      channel: request.channelId,
       type: request.actionType,
       value: request.actionValue,
-      messageTimetoken: request.parent.timetoken,
+      messageTimetoken: request.messageTimetoken,
       custom: .init(customConfiguration: request.config?.mergeChatConsumerID())
     ) { result in
       completion?(result.map { action in
@@ -127,8 +127,7 @@ extension PubNubProvider {
           sourceType: action.actionType,
           value: action.actionValue,
           pubnubUserId: action.publisher,
-          pubnubChannelId: action.channel,
-          messageModel: request.parent
+          pubnubChannelId: action.channel
         )
       })
     }
@@ -183,7 +182,8 @@ extension MessageActionRequest: Equatable {
 public struct MessageActionSendRequest<Custom: ChatCustomData> {
   public let requestId: String = UUID().uuidString
   
-  public var parent: ChatMessage<Custom>
+  public var channelId: String
+  public var messageTimetoken: Timetoken
   
   public var actionType: String
   public var actionValue: String
@@ -191,15 +191,32 @@ public struct MessageActionSendRequest<Custom: ChatCustomData> {
   public var config: PubNubConfiguration?
   
   public init(
+    messageTimetoken: Timetoken,
+    channelId: String,
+    actionType: String,
+    actionValue: String,
+    config: PubNubConfiguration? = nil
+  ) {
+    self.messageTimetoken = messageTimetoken
+    self.channelId = channelId
+    self.actionType = actionType
+    self.actionValue = actionValue
+    self.config = config
+  }
+  
+  public init(
     parent: ChatMessage<Custom>,
     actionType: String,
     actionValue: String,
     config: PubNubConfiguration? = nil
   ) {
-    self.parent = parent
-    self.actionType = actionType
-    self.actionValue = actionValue
-    self.config = config
+    self.init(
+      messageTimetoken: parent.timetoken,
+      channelId: parent.pubnubChannelId,
+      actionType: actionType,
+      actionValue: actionValue,
+      config: config
+    )
   }
 }
 

@@ -91,7 +91,7 @@ open class ReusableComponentView: UICollectionReusableView {
 }
 
 public class ReusableLabelViewComponent: ReusableComponentView {
-  private lazy var titleLabel: LabelComponentView = PubNubLabelComponentView(frame: bounds)
+  private lazy var titleLabel: LabelComponentView = UILabel(frame: bounds)
 
   open override func setupSubviews() {
     addSubview(titleLabel)

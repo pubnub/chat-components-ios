@@ -30,13 +30,19 @@ import UIKit
 import CoreData
 import Combine
 
+import ChatLayout
+
 import PubNubChat
 import PubNub
+
+
+extension UICollectionViewDiffableDataSource: ChatLayoutDelegate {}
 
 extension ChatProvider
   where ManagedEntities: ChatViewModels,
         ManagedEntities: ManagedChatEntities,
-        ManagedEntities.Channel.MemberViewModel == ManagedEntities.Member {
+        ManagedEntities.Channel.MemberViewModel == ManagedEntities.Member,
+        ManagedEntities.Message.MessageActionModel == ManagedEntities.MessageAction {
 
   open func messagesFrom(pubnubChannelId: String) -> NSFetchedResultsController<ManagedEntities.Message> {
 
@@ -86,7 +92,8 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
   where ModelData: ChatCustomData,
         ManagedEntities: ChatViewModels,
         ManagedEntities: ManagedChatEntities,
-        ManagedEntities.Channel.MemberViewModel == ManagedEntities.Member
+        ManagedEntities.Channel.MemberViewModel == ManagedEntities.Member,
+        ManagedEntities.Message.MessageActionModel == ManagedEntities.MessageAction
 {
 
   // Managed Data
@@ -148,15 +155,17 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
     }.store(in: &cancellables)
     cancellables.formUnion(localCancellables)
 
+    let layout = messageListTheme.collectionViewTheme.layoutType.create(
+      usingSupplimentaryItems: layoutShouldContainSupplimentaryViews
+    )
+    
     let controller = ChatViewController(
       viewModel: self,
       collectionViewType: messageListTheme.collectionViewTheme.viewType,
-      collectionViewLayout: messageListTheme.collectionViewTheme.layoutType.create(
-        usingSupplimentaryItems: layoutShouldContainSupplimentaryViews
-      ),
+      collectionViewLayout: layout,
       messageInputComponent: messageInputComponent
     )
-
+    
     // Configure Message Input
     messageInputViewModel.$typingMemberIds
       .sink { [weak self] memberIds in
@@ -187,6 +196,10 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
       controller.collectionView,
       theme: messageListTheme.collectionViewTheme
     )
+    
+    if let chatLayout = layout as? CollectionViewChatLayout {
+      chatLayout.delegate = dataSource
+    }
 
     return controller
   }
@@ -361,6 +374,44 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
       )
     }
   }
+  
+  // MARK: Messgage Action Tapped
+  
+  var messageActionTapped: ((MessageListComponentViewModel<ModelData, ManagedEntities>?, MessageReactionButtonComponent?, ManagedEntities.Message, (() -> Void)?) -> Void)? = { (viewModel, messageActionView, message, completion) in
+    guard let messageActionView = messageActionView else { return }
+    
+    if messageActionView.isSelected {
+      // Remove the message action
+      if let messageAction = message.messageActionViewModels.first(
+        where: { $0.pubnubUserId == viewModel?.author.pubnubUserID && $0.value == messageActionView.reaction }
+      ) {
+        do {
+          viewModel?.provider.dataProvider
+            .removeRemoteMessageAction(.init(messageAction: try messageAction.convert())) { [weak messageActionView] _ in
+              completion?()
+            }
+        } catch {
+          PubNub.log.error("Message Action Tapped failed to convert Message Action while preparing send remove request: \(message)")
+        }
+      }
+    } else {
+      // Add the message action
+      do {
+        viewModel?.provider.dataProvider
+          .sendRemoteMessageAction(
+            .init(
+              parent: try message.convert(),
+              actionType: "reaction",
+              actionValue: messageActionView.reaction
+            )
+          ) { [weak messageActionView] result in
+            completion?()
+          }
+      } catch {
+        PubNub.log.error("Message Action Tapped failed to convert Message while preparing send add request: \(message)")
+      }
+    }
+  }
 
   // MARK: - Cell Provider
   
@@ -409,6 +460,17 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
 
     cell.configure(message, theme: theme)
     
+    // Configure Message Reaction List
+    if componentTheme.enableReactions {
+      cell.configure(
+        message,
+        currentUser: author,
+        onTapAction: { [weak self] (button, message, completion) in
+          self?.messageActionTapped?(self, button, message, completion)
+        }
+      )
+    }
+
     return cell
   }
   

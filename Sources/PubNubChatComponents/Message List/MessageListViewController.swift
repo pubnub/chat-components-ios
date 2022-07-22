@@ -66,7 +66,7 @@ open class ChatViewController: CollectionViewComponent {
     to size: CGSize,
     with coordinator: UIViewControllerTransitionCoordinator
   ) {
-    guard let chatLayout = layout as? ChatLayout else { return }
+    guard let chatLayout = layout as? CollectionViewChatLayout else { return }
     
     let positionSnapshot = chatLayout.getContentOffsetSnapshot(from: .bottom)
     collectionView.collectionViewLayout.invalidateLayout()

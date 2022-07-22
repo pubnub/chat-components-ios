@@ -32,21 +32,50 @@ import PubNub
 
 public typealias PubNubChatMessageAction = ChatMessageAction<VoidCustomData>
 
-public struct ChatMessageAction<CustomData: ChatCustomData>: Identifiable, Codable {
+public struct ChatMessageAction<CustomData: ChatCustomData>: Identifiable, Hashable, Codable {
   
-  public var id: String {
-     return "\(parentTimetoken)-\(actionTimetoken)"
+  public private(set) var id: String
+  static func composeId(
+    userId: String,
+    parentTimetoken: Timetoken,
+    actionTimetoken: Timetoken
+  ) -> String {
+    return "\(userId)-\(parentTimetoken)-\(actionTimetoken)"
   }
 
-  public var actionTimetoken: Timetoken
-  public var parentTimetoken: Timetoken
+  public var actionTimetoken: Timetoken {
+    willSet {
+      id = ChatMessageAction<CustomData>.composeId(
+        userId: pubnubUserId,
+        parentTimetoken: parentTimetoken,
+        actionTimetoken: newValue
+      )
+    }
+  }
+  public var parentTimetoken: Timetoken {
+    willSet {
+      id = ChatMessageAction<CustomData>.composeId(
+        userId: pubnubUserId,
+        parentTimetoken: newValue,
+        actionTimetoken: actionTimetoken
+      )
+    }
+  }
   
   public var sourceType: String
   public var value: String
   
   public var pubnubChannelId: String
   
-  public var pubnubUserId: String
+  public var pubnubUserId: String {
+    willSet {
+      id = ChatMessageAction<CustomData>.composeId(
+        userId: newValue,
+        parentTimetoken: parentTimetoken,
+        actionTimetoken: actionTimetoken
+      )
+    }
+  }
   public var userModel: ChatUser<CustomData.User>?
 
   public var messageModel: ChatMessage<CustomData>?
@@ -61,6 +90,11 @@ public struct ChatMessageAction<CustomData: ChatCustomData>: Identifiable, Codab
     pubnubChannelId: String,
     messageModel: ChatMessage<CustomData>? = nil
   ) {
+    self.id = ChatMessageAction<CustomData>.composeId(
+      userId: pubnubUserId,
+      parentTimetoken: parentTimetoken,
+      actionTimetoken: actionTimetoken
+    )
     self.actionTimetoken = actionTimetoken
     self.parentTimetoken = parentTimetoken
     

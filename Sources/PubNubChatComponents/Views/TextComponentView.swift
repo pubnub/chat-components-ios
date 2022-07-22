@@ -33,13 +33,16 @@ import Kingfisher
 
 import PubNubChat
 
-final public class TextComponentView: UIView {
+final public class PubNubMessageContentTextView: UIView, ContainerCollectionViewCellDelegate {
 
-  private var viewPortWidth: CGFloat = 300
-  private var maxWidthPercentage: CGFloat = 0.65
+  public lazy var textView = MessageContentTextView(frame: bounds)
 
-  public lazy var textView = MessageContentTextView()
-  private var textViewWidthConstraint: NSLayoutConstraint?
+  public var viewPortWidth: CGFloat = 300
+  public var maxWidthPercentage: CGFloat = 0.65
+  public var minWidthPercentage: CGFloat = 0.15
+  
+  private var textViewMaxWidthConstraint: NSLayoutConstraint?
+  private var textViewMinWidthConstraint: NSLayoutConstraint?
   
   override init(frame: CGRect) {
     super.init(frame: frame)
@@ -66,19 +69,30 @@ final public class TextComponentView: UIView {
     textView.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor).isActive = true
     textView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor).isActive = true
     textView.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor).isActive = true
-    textViewWidthConstraint = textView.widthAnchor.constraint(lessThanOrEqualToConstant: viewPortWidth)
-    textViewWidthConstraint?.isActive = true
+    
+    textViewMaxWidthConstraint = textView.widthAnchor.constraint(lessThanOrEqualToConstant: viewPortWidth)
+    textViewMinWidthConstraint = textView.widthAnchor.constraint(greaterThanOrEqualToConstant: viewPortWidth)
+    
+    textViewMaxWidthConstraint?.isActive = true
+    textViewMinWidthConstraint?.isActive = true
+  }
+
+  public func apply(_ layoutAttributes: ChatLayoutAttributes) {
+    viewPortWidth = layoutAttributes.layoutFrame.width
+    setupSize()
   }
   
   private func setupSize() {
     UIView.performWithoutAnimation {
-      self.textViewWidthConstraint?.constant = viewPortWidth * maxWidthPercentage
+      textViewMaxWidthConstraint?.constant = viewPortWidth * maxWidthPercentage
+      textViewMinWidthConstraint?.constant = viewPortWidth * minWidthPercentage
+      
       setNeedsLayout()
     }
   }
 }
 
-public protocol TextViewComponentView: UITextView {
+public protocol TextComponentView: UITextView {
   // Content
   @discardableResult
   func configure(
@@ -107,7 +121,7 @@ cancelIn: inout Set<AnyCancellable>
   )
 }
 
-extension TextViewComponentView {
+extension TextComponentView {
   @discardableResult
   public func configure(
     _ datePublisher: AnyPublisher<Date, Never>,
@@ -140,7 +154,12 @@ cancelIn: inout Set<AnyCancellable>
 }
 
 /// UITextView with hacks to avoid selection
-public final class MessageContentTextView: UITextView, TextViewComponentView {
+public final class MessageContentTextView: UITextView, TextComponentView {
+  public override var isScrollEnabled: Bool {
+    get { return false }
+    set {}
+  }
+  
   public override var isFocused: Bool {
     return false
   }

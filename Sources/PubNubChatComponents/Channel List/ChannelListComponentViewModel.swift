@@ -37,7 +37,8 @@ extension ChatProvider
   where ManagedEntities: ChatViewModels,
         ManagedEntities: ManagedChatEntities,
         ManagedEntities.Member.ChannelViewModel == ManagedEntities.Channel,
-        ManagedEntities.Channel.MemberViewModel == ManagedEntities.Member
+        ManagedEntities.Channel.MemberViewModel == ManagedEntities.Member,
+        ManagedEntities.Message.MessageActionModel == ManagedEntities.MessageAction
 {
   open func channelMembershipsFrom(
     userId: String, sectionedByType: Bool
@@ -77,7 +78,8 @@ open class ChannelListComponentViewModel<ModelData, ManagedEntities>:
       ManagedEntities: ChatViewModels,
       ManagedEntities: ManagedChatEntities,
       ManagedEntities.Member.ChannelViewModel == ManagedEntities.Channel,
-      ManagedEntities.Channel.MemberViewModel == ManagedEntities.Member
+      ManagedEntities.Channel.MemberViewModel == ManagedEntities.Member,
+      ManagedEntities.Message.MessageActionModel == ManagedEntities.MessageAction
 {
 
   public private(set) var fetchedEntities: NSFetchedResultsController<ManagedEntities.Member>

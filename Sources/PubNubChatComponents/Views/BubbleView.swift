@@ -27,6 +27,8 @@
 
 import UIKit
 
+import ChatLayout
+
 import PubNubChat
 
 // MARK: Bezier View
@@ -50,55 +52,32 @@ public enum BubbleContainerType {
 
 open class BubbleContainerView: UIView {
 
+  lazy open var messageTextContent = PubNubMessageContentTextView(frame: bounds)
+  
   override init(frame: CGRect) {
     super.init(frame: frame)
+
+    setupSubviews()
   }
 
   required public init?(coder: NSCoder) {
     super.init(coder: coder)
+
+    setupSubviews()
   }
 
-  open override func layoutSubviews() {
-    super.layoutSubviews()
-  }
-
-  public var viewPortWidth: CGFloat = 300
-  public var maxWidthPercentage: CGFloat = 0.65
-
-  public var contentViewWidthConstraint: NSLayoutConstraint?
-  public var contentHeightConstraint: NSLayoutConstraint?
-  
-  open func configure(
-    contentView: UIView,
-    constantWidth: Bool = false
-  ) {
+  open func setupSubviews() {
     layoutMargins = .zero
     translatesAutoresizingMaskIntoConstraints = false
     insetsLayoutMarginsFromSafeArea = false
-    preservesSuperviewLayoutMargins = false
 
-    contentView.translatesAutoresizingMaskIntoConstraints = false
-    addSubview(contentView)
-    contentView.topAnchor.constraint(equalTo: layoutMarginsGuide.topAnchor).isActive = true
-    contentView.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor).isActive = true
-    contentView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor).isActive = true
-    contentView.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor).isActive = true
+    addSubview(messageTextContent)
+    messageTextContent.translatesAutoresizingMaskIntoConstraints = false
     
-    if constantWidth {
-      contentViewWidthConstraint = contentView.widthAnchor.constraint(equalToConstant: 300)
-      contentHeightConstraint = contentView.heightAnchor.constraint(equalToConstant: 200)
-      contentHeightConstraint?.isActive = true
-    } else {
-      contentViewWidthConstraint = contentView.widthAnchor.constraint(lessThanOrEqualToConstant: viewPortWidth)
-    }
-    contentViewWidthConstraint?.isActive = true
-  }
-  
-  private func setupSize() {
-    UIView.performWithoutAnimation { [weak self] in
-      self?.contentViewWidthConstraint?.constant = viewPortWidth * maxWidthPercentage
-      setNeedsLayout()
-    }
+    messageTextContent.topAnchor.constraint(equalTo: layoutMarginsGuide.topAnchor).isActive = true
+    messageTextContent.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor).isActive = true
+    messageTextContent.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor).isActive = true
+    messageTextContent.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor).isActive = true
   }
 }
 

@@ -163,7 +163,8 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
       viewModel: self,
       collectionViewType: messageListTheme.collectionViewTheme.viewType,
       collectionViewLayout: layout,
-      messageInputComponent: messageInputComponent
+      messageInputComponent: messageInputComponent,
+      enableReactions: messageListTheme.enableReactions
     )
     
     // Configure Message Input

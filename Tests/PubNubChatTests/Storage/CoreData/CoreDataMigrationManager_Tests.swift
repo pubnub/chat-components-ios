@@ -43,13 +43,17 @@ class CoreDataMigrationManager_Tests: XCTestCase {
     
     // Loads all available NSManagedObjectModel objects and sort them ascending by version identifier
     // Pick in your test cases any versions you want
-    managedObjectModels = try momFilesURL.map() { try XCTUnwrap(NSManagedObjectModel(contentsOf: URL(fileURLWithPath: $0))) }.sorted() { $0.versionID < $1.versionID }
+    managedObjectModels = try momFilesURL.map() {
+      try XCTUnwrap(NSManagedObjectModel(contentsOf: URL(fileURLWithPath: $0)))
+    }.sorted() {
+      $0.integerValue < $1.integerValue
+    }
     
-    // Creates a temporary location you should use when creating NSPersistentStore instances
+    // Creates a preferred location for the NSPersistentStore instance
+    // Use it in your test cases
     let storageDirectory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-    persistentStoreLocation = storageDirectory.appendingPathComponent("default")
-    
     try storageDirectory.createDirectory(withIntermediateDirectories: true)
+    persistentStoreLocation = storageDirectory.appendingPathComponent("default")
   }
   
   override func tearDownWithError() throws {
@@ -61,38 +65,51 @@ class CoreDataMigrationManager_Tests: XCTestCase {
   
   func testMigrationForPayloadAlignment_MigrationProcessDoesNotThrowAnError() throws {
     setUpTestCoreDataStack(for: managedObjectModels[0])
-    
-    let location = CoreDataProvider.StoreLocation.disk(dbURL: persistentStoreLocation)
-    let payloadAlignmentModelVersion = managedObjectModels[1]
-    let migrationManager = DefaultCoreDataMigrationManager(rootModel: managedObjectModels[0], nextModelVersions: [payloadAlignmentModelVersion], persistentStoreLocation: location.rawValue)
+        
+    let migrationManager = DefaultCoreDataMigrationManager(
+      modelBundle: Bundle.pubnubChat,
+      modelURL: try XCTUnwrap(URL(string: Bundle.pubnubChat.path(forResource: "PubNubChatModel", ofType: "momd"))),
+      persistentStoreLocation: persistentStoreLocation
+    )
     
     XCTAssertNoThrow(try migrationManager.migrateIfNeeded())
   }
     
   func testMigrationForPayloadAlignment_MessageTextIsMigrated() throws {
     setUpTestCoreDataStack(for: managedObjectModels[0])
-    
+
+    let payloadAlignmentModelVersion = managedObjectModels[1]
     let firstMessageDate = Date()
     let secondMessageDate = Date().addingTimeInterval(15000)
-    
-    createAndInsertMessageObject(id: "ID_1", dateCreated: firstMessageDate, content: try XCTUnwrap("{ \"text\": \"Lorem ipsum\" }".data(using: .utf8)))
-    createAndInsertMessageObject(id: "ID_2", dateCreated: secondMessageDate, content: try XCTUnwrap("{ \"text\": \"Dolor sit amet\" }".data(using: .utf8)))
-    
+
+    createAndInsertMessageObject(
+      id: "ID_1",
+      dateCreated: firstMessageDate,
+      content: try XCTUnwrap("{ \"text\": \"Lorem ipsum\" }".data(using: .utf8))
+    )
+    createAndInsertMessageObject(
+      id: "ID_2",
+      dateCreated: secondMessageDate,
+      content: try XCTUnwrap("{ \"text\": \"Dolor sit amet\" }".data(using: .utf8))
+    )
+
     try container.viewContext.save()
-    
-    let payloadAlignmentModelVersion = managedObjectModels[1]
-    let location = CoreDataProvider.StoreLocation.disk(dbURL: persistentStoreLocation)
-    let migrationManager = DefaultCoreDataMigrationManager(rootModel: managedObjectModels[0], nextModelVersions: [payloadAlignmentModelVersion], persistentStoreLocation: location.rawValue)
+
+    let migrationManager = DefaultCoreDataMigrationManager(
+      modelBundle: Bundle.pubnubChat,
+      modelURL: try XCTUnwrap(URL(string: Bundle.pubnubChat.path(forResource: "PubNubChatModel", ofType: "momd"))),
+      persistentStoreLocation: persistentStoreLocation
+    )
     
     try migrationManager.migrateIfNeeded()
 
     // Reloads the CoreData stack because NSManagedObjectModel version has changed after the migration
     setUpTestCoreDataStack(for: payloadAlignmentModelVersion)
-    
+
     let messages = try XCTUnwrap(container.viewContext.fetch(NSFetchRequest<PubNubManagedMessage>(entityName: "PubNubManagedMessage")))
     let expectedFirstMessage = messages.first(where: { $0.id == "ID_1" })!
     let expectedSecondMessage = messages.last(where: { $0.id == "ID_2" })!
-    
+
     XCTAssertEqual(expectedFirstMessage.id, "ID_1")
     XCTAssertEqual(expectedFirstMessage.text, "Lorem ipsum")
     XCTAssertEqual(expectedFirstMessage.dateCreated, firstMessageDate)
@@ -101,61 +118,87 @@ class CoreDataMigrationManager_Tests: XCTestCase {
     XCTAssertEqual(expectedSecondMessage.text, "Dolor sit amet")
     XCTAssertEqual(expectedSecondMessage.dateCreated, secondMessageDate)
   }
-  
+
   func testMigrationForPayloadAlignment_MessageOtherThanTextIsStillPreserved() throws {
     setUpTestCoreDataStack(for: managedObjectModels[0])
-    
+
     let date = Date()
     let linkContent = try XCTUnwrap("{ \"link\": \"https://www.pubnub.com\" }".data(using: .utf8))
-    
-    createAndInsertMessageObject(id: "ID_1", dateCreated: date, content: linkContent)
-    
+    let payloadAlignmentModelVersion = managedObjectModels[1]
+
+    createAndInsertMessageObject(
+      id: "ID_1",
+      dateCreated: date,
+      content: linkContent
+    )
+
     try container.viewContext.save()
     
-    let location = CoreDataProvider.StoreLocation.disk(dbURL: persistentStoreLocation)
-    let payloadAlignmentModelVersion = managedObjectModels[1]
-    let migrationManager = DefaultCoreDataMigrationManager(rootModel: managedObjectModels[0], nextModelVersions: [payloadAlignmentModelVersion], persistentStoreLocation: location.rawValue)
-    
+    let migrationManager = DefaultCoreDataMigrationManager(
+      modelBundle: Bundle.pubnubChat,
+      modelURL: try XCTUnwrap(URL(string: Bundle.pubnubChat.path(forResource: "PubNubChatModel", ofType: "momd"))),
+      persistentStoreLocation: persistentStoreLocation
+    )
+
     try migrationManager.migrateIfNeeded()
-    
+
     // Reloads the CoreData stack because NSManagedObjectModel version has changed after the migration
     setUpTestCoreDataStack(for: payloadAlignmentModelVersion)
-    
+
     let messages = try XCTUnwrap(container.viewContext.fetch(NSFetchRequest<PubNubManagedMessage>(entityName: "PubNubManagedMessage")))
     let expectedMessage = messages.first(where: { $0.id == "ID_1" })!
-    
+
     XCTAssertEqual(expectedMessage.id, "ID_1")
     XCTAssertEqual(expectedMessage.text, "")
     XCTAssertEqual(expectedMessage.dateCreated, date)
     XCTAssertEqual(expectedMessage.content, linkContent)
   }
-  
+
   func testMigration_DefaultCoreDataMigrationDoesNotThrowAnErrorForInvalidLocation() throws {
     let malformedLocation = persistentStoreLocation.appendingPathComponent("!@#$")
-    let payloadAlignmentModelVersion = managedObjectModels[1]
-    let migrationManager = DefaultCoreDataMigrationManager(rootModel: managedObjectModels[0], nextModelVersions: [payloadAlignmentModelVersion], persistentStoreLocation: malformedLocation)
+    
+    let migrationManager = DefaultCoreDataMigrationManager(
+      modelBundle: Bundle.pubnubChat,
+      modelURL: malformedLocation,
+      persistentStoreLocation: persistentStoreLocation
+    )
 
     XCTAssertNoThrow(try migrationManager.migrateIfNeeded())
   }
-  
+
   func testMigration_DefaultCoreDataMigrationWorksForAllModelVersions() throws {
-    XCTAssertNoThrow(try CoreDataProvider(bundle: Bundle.fixedModule, dataModelFilename: "PubNubChatModel", location: CoreDataProvider.StoreLocation.disk(dbURL: persistentStoreLocation)))
+    setUpTestCoreDataStack(for: managedObjectModels[0])
+    
+    XCTAssertNoThrow(
+      try CoreDataProvider(
+        bundle: Bundle.pubnubChat,
+        dataModelFilename: "PubNubChatModel",
+        location: CoreDataProvider.StoreLocation.disk(dbURL: persistentStoreLocation)
+      )
+    )
   }
-  
+
   func testMigration_CustomMigrationManagerIsInvoked() throws {
     let expectation = expectation(description: "CustomMigrationManager")
     let location = CoreDataProvider.StoreLocation.disk(dbURL: persistentStoreLocation)
-    
-    XCTAssertNoThrow(try CoreDataProvider(bundle: Bundle.fixedModule, dataModelFilename: "PubNubChatModel", location: location, migrationManager: CustmoMigrationManager(onMigrateIfNeededMethodInvoked: {
-      expectation.fulfill()
-    })))
-    
+
+    XCTAssertNoThrow(
+      try CoreDataProvider(
+        bundle: Bundle.pubnubChat,
+        dataModelFilename: "PubNubChatModel",
+        location: location,
+        migrationManager: CustmoMigrationManager(onMigrateIfNeededMethodInvoked: {
+          expectation.fulfill()
+        })
+      )
+    )
     wait(for: [expectation], timeout: 0.5)
   }
 }
 
-private extension CoreDataMigrationManager_Tests {
-  func setUpTestCoreDataStack(for model: NSManagedObjectModel)  {
+extension CoreDataMigrationManager_Tests {
+  
+  private func setUpTestCoreDataStack(for model: NSManagedObjectModel)  {
     container = NSPersistentContainer(name: "PubNubChatModel", managedObjectModel: model)
     
     let storeDescription = NSPersistentStoreDescription()
@@ -168,8 +211,13 @@ private extension CoreDataMigrationManager_Tests {
     })
   }
   
-  func createAndInsertMessageObject(id: String, dateCreated: Date, content: Data) {
-    let message = PubNubManagedMessage(entity: container.managedObjectModel.entitiesByName["PubNubManagedMessage"]!, insertInto: container.viewContext)
+  private func createAndInsertMessageObject(id: String, dateCreated: Date, content: Data) {
+
+    let message = PubNubManagedMessage(
+      entity: container.managedObjectModel.entitiesByName["PubNubManagedMessage"]!,
+      insertInto: container.viewContext
+    )
+    
     message.id = id
     message.dateCreated = dateCreated
     message.content = content

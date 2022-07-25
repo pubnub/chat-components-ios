@@ -38,23 +38,24 @@ public protocol CoreDataMigrationManager {
 }
 
 extension NSManagedObjectModel {
-  var versionID: Int {
+  var integerValue: Int {
     return Int(versionIdentifiers.first as? String ?? String()) ?? 0
   }
 }
 
 class DefaultCoreDataMigrationManager: CoreDataMigrationManager {
-  private let rootModel: NSManagedObjectModel
-  private let nextModelVersions: [NSManagedObjectModel]
+  
+  private let modelBundle: Bundle
+  private let modelURL: URL
   private let persistentStoreLocation: URL
   
   init(
-    rootModel: NSManagedObjectModel,
-    nextModelVersions: [NSManagedObjectModel],
+    modelBundle: Bundle,
+    modelURL: URL,
     persistentStoreLocation: URL
   ) {
-    self.rootModel = rootModel
-    self.nextModelVersions = nextModelVersions
+    self.modelBundle = modelBundle
+    self.modelURL = modelURL
     self.persistentStoreLocation = persistentStoreLocation
   }
   
@@ -63,20 +64,45 @@ class DefaultCoreDataMigrationManager: CoreDataMigrationManager {
       return
     }
     
-    for modelVersion in nextModelVersions {
+    let allVersionFiles = modelBundle.paths(
+      forResourcesOfType: "mom",
+      inDirectory: modelURL.lastPathComponent
+    )
+    
+    let sortedManagedObjectModels = allVersionFiles.compactMap() {
+      NSManagedObjectModel(contentsOf: URL(fileURLWithPath: $0))
+    }.sorted() {
+      $0.integerValue < $1.integerValue
+    }
+    
+    let currentStoreMetadata = try NSPersistentStoreCoordinator.metadataForPersistentStore(
+      ofType: NSSQLiteStoreType,
+      at: persistentStoreLocation
+    )
+    
+    let versionIdsFromTheStore = (currentStoreMetadata["NSStoreModelVersionIdentifiers"] as? [String] ?? []).first ?? String()
+    let integerVersionFromTheStore = Int(versionIdsFromTheStore) ?? 0
+    let modelVersionMatchingStore = sortedManagedObjectModels.first(where: { $0.integerValue == integerVersionFromTheStore })!
+    
+    var currentlyProcessedModel = modelVersionMatchingStore
+    
+    for modelVersion in sortedManagedObjectModels.filter({ $0.integerValue > integerVersionFromTheStore }) {
+      
       let storeMetadata = try NSPersistentStoreCoordinator.metadataForPersistentStore(
         ofType: NSSQLiteStoreType,
         at: persistentStoreLocation
       )
+      
       if !modelVersion.isConfiguration(
         withName: nil,
         compatibleWithStoreMetadata: storeMetadata
       ) {
         try autoreleasepool {
           try performMigration(
-            from: rootModel,
+            from: currentlyProcessedModel,
             to: modelVersion
           )
+          currentlyProcessedModel = modelVersion
         }
       }
     }
@@ -123,16 +149,26 @@ class DefaultCoreDataMigrationManager: CoreDataMigrationManager {
     between sourceModel: NSManagedObjectModel,
     and destinationModel: NSManagedObjectModel
   ) throws -> NSMappingModel? {
-    let mappingModel = try NSMappingModel.inferredMappingModel(forSourceModel: sourceModel, destinationModel: destinationModel)
-    // Pick the correct strategy by checking both model versions
-    PayloadAlignmentMigration.configure(mappingModel: mappingModel)
-    // Returns configured mapping model
+    
+    let mappingModel = try NSMappingModel.inferredMappingModel(
+      forSourceModel: sourceModel,
+      destinationModel: destinationModel
+    )
+    
+    // Picks the correct strategy by checking both model versions.
+    // Returns an inferred mapping model if the migration is not needed
+    if sourceModel.integerValue == 0 && destinationModel.integerValue == 1 {
+      PayloadAlignmentMigration.alter(mappingModel: mappingModel)
+    }
+    
     return mappingModel
   }
 }
 
 class PayloadAlignmentMigration {
-  static func configure(mappingModel: NSMappingModel) {
+  
+  static func alter(mappingModel: NSMappingModel) {
+    
     let entityMapping = mappingModel.entityMappings.first { $0.sourceEntityName == "PubNubManagedMessage" && $0.destinationEntityName == "PubNubManagedMessage" }!
     entityMapping.entityMigrationPolicyClassName = "PubNubChat.PayloadAlignmentMessageEntityMigration"
     entityMapping.mappingType = .customEntityMappingType
@@ -152,7 +188,9 @@ class PayloadAlignmentMigration {
 
 @objc(PayloadAlignmentMessageEntityMigration)
 class PayloadAlignmentMessageEntityMigration: NSEntityMigrationPolicy {
+  
   @objc func resolveTextProperty(_ content: Data) -> String {
+    
     let decodedContent = try? Constant.jsonDecoder.decode(AnyJSON.self, from: content)
     let currentTextValue = decodedContent?["text"]?.stringOptional
     

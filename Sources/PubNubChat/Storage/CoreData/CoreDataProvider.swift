@@ -90,11 +90,11 @@ public class CoreDataProvider: NSPersistentContainer {
       if let migrationManager = migrationManager {
         try migrationManager.migrateIfNeeded()
       } else {
-        let momFiles = bundle.paths(forResourcesOfType: "mom", inDirectory: modelURL.lastPathComponent)
-        var models = momFiles.compactMap() { NSManagedObjectModel(contentsOf: URL(fileURLWithPath: $0)) }.sorted() { $0.versionID < $1.versionID }
-        let defaultMigrationManager = DefaultCoreDataMigrationManager(rootModel: models.removeFirst(), nextModelVersions: models, persistentStoreLocation: location.rawValue)
-        
-        try defaultMigrationManager.migrateIfNeeded()
+        try DefaultCoreDataMigrationManager(
+          modelBundle: bundle,
+          modelURL: modelURL,
+          persistentStoreLocation: location.rawValue
+        ).migrateIfNeeded()
       }
     }
     

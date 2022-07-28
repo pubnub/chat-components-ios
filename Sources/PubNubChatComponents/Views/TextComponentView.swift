@@ -58,7 +58,8 @@ final public class PubNubMessageContentTextView: UIView, ContainerCollectionView
     layoutMargins = .zero
     translatesAutoresizingMaskIntoConstraints = false
     insetsLayoutMarginsFromSafeArea = false
-    
+
+    textView.isUserInteractionEnabled = false
     textView.translatesAutoresizingMaskIntoConstraints = false
 
     textView.textContainer.lineFragmentPadding = 0

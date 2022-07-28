@@ -62,6 +62,17 @@ public class MessageReactionListComponent: UIView {//UIStackContainerView {
   }
   
   lazy public var stackViewContainer = UIStackContainerView()
+
+  var allReactions: [MessageReactionButtonComponent] {
+    [
+      thumbsUpReactionView,
+      redHeartReactionView,
+      faceWithTearsOfJoyReactionView,
+      astonishedFaceReactionView,
+      cryingFaceReactionView,
+      fireReactionView
+    ]
+  }
   
   open func setupSubviews() {
     translatesAutoresizingMaskIntoConstraints = false

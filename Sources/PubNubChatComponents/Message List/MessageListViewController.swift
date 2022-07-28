@@ -36,21 +36,41 @@ import InputBarAccessoryView
 import PubNub
 import PubNubChat
 
-open class ChatViewController: CollectionViewComponent {
+open class ChatViewController<ModelData, ManagedEntities>: CollectionViewComponent, UIViewControllerTransitioningDelegate
+  where ModelData: ChatCustomData,
+    ManagedEntities: ChatViewModels,
+    ManagedEntities: ManagedChatEntities,
+    ManagedEntities.Channel.MemberViewModel == ManagedEntities.Member,
+    ManagedEntities.Message.MessageActionModel == ManagedEntities.MessageAction
+{
   
+  public var cancellables = Set<AnyCancellable>()
+
   // Message Input Component
 
   public let messageInputComponent: MessageInputComponent
   private var messageInputComponentBottomConstraint: NSLayoutConstraint?
   
+  // A message cell that was long pressed
+  
+  private weak var gestureRecognizedCell: MessageListItemCell?
+  
+  // A property that stores preferred emoji picker view size
+  
+  private var preferredPickerViewSize: CGSize = .zero
+  
+  private let enableReactions: Bool
+  
   public init(
-    viewModel: CollectionViewComponentViewModel,
+    viewModel: MessageListComponentViewModel<ModelData, ManagedEntities>,
     collectionViewType: UICollectionView.Type,
     collectionViewLayout: UICollectionViewLayout,
-    messageInputComponent: MessageInputComponent
+    messageInputComponent: MessageInputComponent,
+    enableReactions: Bool
   ) {
     
     self.messageInputComponent = messageInputComponent
+    self.enableReactions = enableReactions
     
     super.init(
       viewModel: viewModel,
@@ -82,6 +102,67 @@ open class ChatViewController: CollectionViewComponent {
     })
   }
   
+  open override func onLongPressGestureRecognized(gesture: UIGestureRecognizer) {
+    
+    if enableReactions && gesture.state == .began {
+      
+      // Finds the cell that was pressed
+      guard let affectedCell = collectionView.visibleCells.first(where: {
+        $0.frame.contains(gesture.location(in: collectionView))
+      }) as? MessageListItemCell else {
+        return
+      }
+      
+      let reactionList = affectedCell.reactionListView.allReactions.map() { $0.reaction }
+      let pickerView = AddMessageReactionComponent.DefaultPickerView(reactionList: reactionList)
+      
+      // Creates and configures a view controller responsible for displaying the emoji picker view
+      let viewController = AddMessageReactionComponent(pickerView: pickerView, reactionList: reactionList)
+      viewController.modalPresentationStyle = .custom
+      viewController.transitioningDelegate = self
+      
+      // Captures selection from the emoji picker view
+      viewController
+        .selectedReactionValue
+        .sink(receiveValue: { [weak self, weak affectedCell] value in
+          self?.onMessageReactionSelected(with: value, for: affectedCell)
+      }).store(in: &cancellables)
+      
+      gestureRecognizedCell = affectedCell
+      preferredPickerViewSize = pickerView.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize)
+            
+      present(viewController, animated: true)
+    }
+  }
+  
+  private func onMessageReactionSelected(
+    with value: String,
+    for cell: MessageListItemCell?
+  ) {
+    guard
+      let cell = cell,
+      let indexPath = collectionView.indexPath(for: cell),
+      let viewModel = viewModel as? MessageListComponentViewModel<ModelData, ManagedEntities>
+    else {
+      return
+    }
+    
+    let message = viewModel.fetchedEntities.object(at: indexPath) as ManagedEntities.Message
+    let buttonComponent = cell.reactionListView.allReactions.first(where: { $0.reaction == value} )
+    
+    if let buttonComponent = buttonComponent {
+      viewModel.messageActionTapped?(
+        viewModel,
+        buttonComponent,
+        message,
+        nil
+      )
+    } else {
+      preconditionFailure("Not supported yet")
+    }
+    dismiss(animated: true)
+  }
+    
   // MARK: - View Lifecycle
 
   open override func configureConstraints() {
@@ -132,5 +213,38 @@ open class ChatViewController: CollectionViewComponent {
   
   fileprivate var isUserInitiatedScrolling: Bool {
     return collectionView.isDragging || collectionView.isDecelerating
+  }
+  
+  // MARK: UIViewControllerTransitioningDelegate
+  
+  @objc(presentationControllerForPresentedViewController:presentingViewController:sourceViewController:)
+  public func presentationController(
+    forPresented presented: UIViewController,
+    presenting: UIViewController?,
+    source: UIViewController
+  ) -> UIPresentationController? {
+    guard let gestureRecognizedCell = gestureRecognizedCell else {
+      return nil
+    }
+    return AddMessageReaction.PresentationController(
+      presentedViewController: presented,
+      presentingViewController: presenting,
+      messageCell: gestureRecognizedCell,
+      messageReactionsComponentSize: preferredPickerViewSize
+    )
+  }
+  
+  @objc(animationControllerForPresentedController:presentingController:sourceController:)
+  public func animationController(
+    forPresented presented: UIViewController,
+    presenting: UIViewController,
+    source: UIViewController
+  ) -> UIViewControllerAnimatedTransitioning? {
+    AddMessageReaction.AnimationController(duration: 0.25, isBeingPresented: true)
+  }
+  
+  @objc(animationControllerForDismissedController:)
+  public func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+    AddMessageReaction.AnimationController(duration: 0.15, isBeingPresented: false)
   }
 }

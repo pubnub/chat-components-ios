@@ -113,6 +113,8 @@ open class CollectionViewComponent: ComponentViewController  {
     configureConstraints()
 
     configureNavigationItem?(navigationItem)
+    
+    configureGestureRecognizers()
   }
   
   open func configureConstraints() {
@@ -124,5 +126,23 @@ open class CollectionViewComponent: ComponentViewController  {
     collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0).isActive = true
     collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 0).isActive = true
     collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 0).isActive = true
+  }
+  
+  open func configureGestureRecognizers() {
+    let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(onLongPressGestureRecognized(gesture:)))
+    let swipeGestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(onSwipeGestureRecognized(gesture:)))
+    
+    collectionView.addGestureRecognizer(longPressGesture)
+    collectionView.addGestureRecognizer(swipeGestureRecognizer)
+  }
+  
+  @objc
+  open func onLongPressGestureRecognized(gesture: UIGestureRecognizer) {
+    
+  }
+  
+  @objc
+  open func onSwipeGestureRecognized(gesture: UIGestureRecognizer) {
+    
   }
 }

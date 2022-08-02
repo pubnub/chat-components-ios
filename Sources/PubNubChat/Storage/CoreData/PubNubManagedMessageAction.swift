@@ -98,7 +98,7 @@ extension PubNubManagedMessageAction: ManagedMessageActionEntity {
     if let message = message {
       self.parent = message
     } else if let messageModel = messageAction.messageModel {
-      self.parent = try PubNubManagedMessage.insertOrUpdate(message: messageModel, prcoessMessageActions: false, into: context)
+      self.parent = try PubNubManagedMessage.insertOrUpdate(message: messageModel, processMessageActions: false, into: context)
     } else if let existingMessage = try context.fetch(
       PubNubManagedMessage.messageBy(pubnubTimetoken: messageAction.parentTimetoken, channelId: messageAction.pubnubChannelId)
     ).first {
@@ -134,7 +134,7 @@ extension PubNubManagedMessageAction: ManagedMessageActionEntity {
       existingMessageAction.updateFields(from: messageAction)
 
       if let messageModel = messageAction.messageModel {
-        try PubNubManagedMessage.insertOrUpdate(message: messageModel, prcoessMessageActions: false, into: context)
+        try PubNubManagedMessage.insertOrUpdate(message: messageModel, processMessageActions: false, into: context)
       }
       if let userModel = messageAction.userModel {
         try PubNubManagedUser.insertOrUpdate(user: userModel, into: context)

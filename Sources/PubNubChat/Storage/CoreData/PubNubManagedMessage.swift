@@ -104,7 +104,7 @@ extension PubNubManagedMessage: ManagedMessageEntity {
   @discardableResult
   public static func insertOrUpdate<Custom: ChatCustomData>(
     message: ChatMessage<Custom>,
-    prcoessMessageActions: Bool,
+    processMessageActions: Bool,
     into context: NSManagedObjectContext
   ) throws -> PubNubManagedMessage {
     if let existingMessage = try? context.fetch(
@@ -120,7 +120,7 @@ extension PubNubManagedMessage: ManagedMessageEntity {
       }
       
       // Add and Remove Message Actions
-      if prcoessMessageActions {
+      if processMessageActions {
         // [1, 2, 3, 4, 5]
         let existingActionIds = Set(existingMessage.actions.map { $0.id })
         // [3, 4, 5, 6, 7]

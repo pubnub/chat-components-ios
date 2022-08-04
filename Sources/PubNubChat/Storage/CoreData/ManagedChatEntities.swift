@@ -199,7 +199,7 @@ public protocol ManagedMessageEntity: ManagedEntity {
   @discardableResult
   static func insertOrUpdate<Custom: ChatCustomData>(
     message: ChatMessage<Custom>,
-    prcoessMessageActions: Bool,
+    processMessageActions: Bool,
     into context: NSManagedObjectContext
   ) throws -> Self
   

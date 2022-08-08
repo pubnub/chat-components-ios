@@ -136,7 +136,7 @@ extension MessageListComponentTheme {
         bounceOffset: 0.25,
         fades: true
       ),
-      enableReactions: true
+      enableReactions: false
     )
   }
 }

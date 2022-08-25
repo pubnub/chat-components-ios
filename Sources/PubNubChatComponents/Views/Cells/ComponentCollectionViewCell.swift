@@ -232,7 +232,7 @@ open class MessageListItemCell: MessageCollectionViewCellComponent {
   
   // Text
   lazy public var bubbleContainer = BubbleContainerView(frame: bounds)
-  lazy public var reactionListView = MessageReactionListComponent(frame: bounds)
+  lazy public var reactionListView = MessageReactionListComponent()
   
   public var contentEdgeSpacing: CGFloat = .zero
   

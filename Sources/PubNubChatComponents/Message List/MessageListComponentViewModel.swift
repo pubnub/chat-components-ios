@@ -322,10 +322,8 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
     }
   }
   
-  // MARK: Scroll to Bottom
-  
   // MARK: Typing Indicator
-
+    
   open func typingIndicatorCell(
     collectionView: UICollectionView,
     indexPath: IndexPath,

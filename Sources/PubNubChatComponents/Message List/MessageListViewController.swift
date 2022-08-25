@@ -113,7 +113,7 @@ open class ChatViewController<ModelData, ManagedEntities>: CollectionViewCompone
         return
       }
       
-      let reactionList = affectedCell.reactionListView.allReactions.map() { $0.reaction }
+      let reactionList = affectedCell.reactionListView.allReactions
       let pickerView = AddMessageReactionComponent.DefaultPickerView(reactionList: reactionList)
       
       // Creates and configures a view controller responsible for displaying the emoji picker view
@@ -148,7 +148,7 @@ open class ChatViewController<ModelData, ManagedEntities>: CollectionViewCompone
     }
     
     let message = viewModel.fetchedEntities.object(at: indexPath) as ManagedEntities.Message
-    let buttonComponent = cell.reactionListView.allReactions.first(where: { $0.reaction == value} )
+    let buttonComponent = cell.reactionListView.buttonFor(value)
     
     if let buttonComponent = buttonComponent {
       viewModel.messageActionTapped?(

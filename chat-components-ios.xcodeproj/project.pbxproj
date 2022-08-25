@@ -110,6 +110,8 @@
 		35FD758126A0DD10007D7435 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35FD758026A0DD10007D7435 /* ChatMessage.swift */; };
 		84D5E8DC28B63AD9000DDE7E /* AddMessageReactionComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D5E8DB28B63AD9000DDE7E /* AddMessageReactionComponent.swift */; };
 		84D5E8DE28B63CDA000DDE7E /* AddMessageReactionAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D5E8DD28B63CDA000DDE7E /* AddMessageReactionAnimation.swift */; };
+		84D5E91E28B7B068000DDE7E /* ReactionProvider+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D5E91C28B7AFE9000DDE7E /* ReactionProvider+Extensions.swift */; };
+		84D5E91F28B7B06D000DDE7E /* ReactionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D5E91A28B7AB0E000DDE7E /* ReactionProvider.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -244,6 +246,8 @@
 		84D5E8DB28B63AD9000DDE7E /* AddMessageReactionComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddMessageReactionComponent.swift; sourceTree = "<group>"; };
 		84D5E8DD28B63CDA000DDE7E /* AddMessageReactionAnimation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddMessageReactionAnimation.swift; sourceTree = "<group>"; };
 		84D5E91728B772F9000DDE7E /* PubNubChatModel-V3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "PubNubChatModel-V3.xcdatamodel"; sourceTree = "<group>"; };
+		84D5E91A28B7AB0E000DDE7E /* ReactionProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionProvider.swift; sourceTree = "<group>"; };
+		84D5E91C28B7AFE9000DDE7E /* ReactionProvider+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ReactionProvider+Extensions.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -305,7 +309,9 @@
 				350AC6D52643464F00C3D323 /* Products */,
 				350AC6EA2643467800C3D323 /* Frameworks */,
 			);
+			indentWidth = 2;
 			sourceTree = "<group>";
+			tabWidth = 2;
 		};
 		350AC6D52643464F00C3D323 /* Products */ = {
 			isa = PBXGroup;
@@ -696,11 +702,21 @@
 		84D5E91828B78980000DDE7E /* Reaction */ = {
 			isa = PBXGroup;
 			children = (
+				84D5E91928B7AB01000DDE7E /* Provider */,
 				35DB0C4E2875E094001E1F76 /* MessageReactionView.swift */,
 				35DB0C502875E0B6001E1F76 /* MessageReactionListView.swift */,
 				84D5E8DB28B63AD9000DDE7E /* AddMessageReactionComponent.swift */,
 			);
 			path = Reaction;
+			sourceTree = "<group>";
+		};
+		84D5E91928B7AB01000DDE7E /* Provider */ = {
+			isa = PBXGroup;
+			children = (
+				84D5E91A28B7AB0E000DDE7E /* ReactionProvider.swift */,
+				84D5E91C28B7AFE9000DDE7E /* ReactionProvider+Extensions.swift */,
+			);
+			path = Provider;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -968,6 +984,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				35074AD42721B79100462624 /* AnimatedTypingIndicatorView.swift in Sources */,
+				84D5E91E28B7B068000DDE7E /* ReactionProvider+Extensions.swift in Sources */,
 				355526D026D454BD009698E3 /* BubbleView.swift in Sources */,
 				350BFB112729151500F0F95B /* UserInlineDetailComponentView.swift in Sources */,
 				3544C611268AF0FB0047DBB7 /* UIKit+Components.swift in Sources */,
@@ -980,6 +997,7 @@
 				35DB0C512875E0B6001E1F76 /* MessageReactionListView.swift in Sources */,
 				350BFB0F27290DC400F0F95B /* ChannelMemberComponentCell.swift in Sources */,
 				35F436CA2702236600033720 /* ThemeProvider.swift in Sources */,
+				84D5E91F28B7B06D000DDE7E /* ReactionProvider.swift in Sources */,
 				35F436D02704BB0000033720 /* Combine+PubNub.swift in Sources */,
 				35074ACE271878DE00462624 /* MessageInputComponentTheme.swift in Sources */,
 				35074AD92725EE5900462624 /* ComponentCollectionViewCell.swift in Sources */,

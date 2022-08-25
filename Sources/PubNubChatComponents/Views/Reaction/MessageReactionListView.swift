@@ -28,61 +28,40 @@
 import UIKit
 import Combine
 
-public class MessageReactionListComponent: UIView {//UIStackContainerView {
-
-  // 👍 thumbs up U+1F44D
-  lazy public var thumbsUpReactionView = MessageReactionButtonComponent(type: .custom)
-  // ❤️ red heart U+2764
-  lazy public var redHeartReactionView = MessageReactionButtonComponent(type: .custom)
-  // 😂 face with tears of joy U+1F602
-  lazy public var faceWithTearsOfJoyReactionView = MessageReactionButtonComponent(type: .custom)
-  // 😲 astonished face U+1F632
-  lazy public var astonishedFaceReactionView = MessageReactionButtonComponent(type: .custom)
-  // 😢 crying face U+1F622
-  lazy public var cryingFaceReactionView = MessageReactionButtonComponent(type: .custom)
-  // 🔥 fire U+1F525
-  lazy public var fireReactionView = MessageReactionButtonComponent(type: .custom)
-
+public class MessageReactionListComponent: UIView {
+  let provider: ReactionProvider
+  private let reactionButtons: [MessageReactionButtonComponent]
+  
   var currentCount: Int = 0
   
-  public override var intrinsicContentSize: CGSize {
-    return super.intrinsicContentSize
-  }
-  
-  public override init(frame: CGRect) {
-    super.init(frame: frame)
+  public init(provider: ReactionProvider = DefaultReactionProvider()) {
+    self.provider = provider
+    self.reactionButtons = provider.makeMessageReactionComponents()
     
+    super.init(frame: .zero)
     setupSubviews()
   }
   
   public required init?(coder: NSCoder) {
-    super.init(coder: coder)
+    self.provider = DefaultReactionProvider()
+    self.reactionButtons = provider.makeMessageReactionComponents()
     
+    super.init(coder: coder)
     setupSubviews()
   }
   
   lazy public var stackViewContainer = UIStackContainerView()
 
-  var allReactions: [MessageReactionButtonComponent] {
-    [
-      thumbsUpReactionView,
-      redHeartReactionView,
-      faceWithTearsOfJoyReactionView,
-      astonishedFaceReactionView,
-      cryingFaceReactionView,
-      fireReactionView
-    ]
+  var allReactions: [String] {
+    provider.reactions
+  }
+  
+  func buttonFor(_ reaction: String) -> MessageReactionButtonComponent? {
+    reactionButtons.first(where: { $0.reaction == reaction })
   }
   
   open func setupSubviews() {
     translatesAutoresizingMaskIntoConstraints = false
-
-    thumbsUpReactionView.reaction = "👍"
-    redHeartReactionView.reaction = "❤️"
-    faceWithTearsOfJoyReactionView.reaction = "😂"
-    astonishedFaceReactionView.reaction = "😲"
-    cryingFaceReactionView.reaction = "😢"
-    fireReactionView.reaction = "🔥"
     
     stackViewContainer.stackView.alignment = .leading
     stackViewContainer.stackView.spacing = 5.0
@@ -161,14 +140,7 @@ public class MessageReactionListComponent: UIView {//UIStackContainerView {
     onMessageActionTap: ((MessageReactionButtonComponent?, Message, (() -> Void)?) -> Void)?
   ) where Message : ManagedMessageViewModel {
     configure(
-      [
-        thumbsUpReactionView,
-        redHeartReactionView,
-        faceWithTearsOfJoyReactionView,
-        astonishedFaceReactionView,
-        cryingFaceReactionView,
-        fireReactionView
-      ],
+      provider.makeMessageReactionComponents(),
       message: message,
       currentUserId: currentUserId,
       onMessageActionTap: onMessageActionTap

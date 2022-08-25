@@ -117,7 +117,7 @@ open class ChatViewController<ModelData, ManagedEntities>: CollectionViewCompone
       let pickerView = AddMessageReactionComponent.DefaultPickerView(reactionList: reactionList)
       
       // Creates and configures a view controller responsible for displaying the emoji picker view
-      let viewController = AddMessageReactionComponent(pickerView: pickerView, reactionList: reactionList)
+      let viewController = AddMessageReactionComponent(pickerView: pickerView)
       viewController.modalPresentationStyle = .custom
       viewController.transitioningDelegate = self
       

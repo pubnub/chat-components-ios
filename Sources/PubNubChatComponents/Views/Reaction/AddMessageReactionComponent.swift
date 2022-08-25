@@ -36,18 +36,13 @@ public protocol AnyMessageReactionComponent {
 }
 
 open class AddMessageReactionComponent: UIViewController, AnyMessageReactionComponent {
-
-  private var reactionList: [String]
   private var pickerView: UIView & AnyMessageReactionComponent
   private var cancellables = Set<AnyCancellable>()
 
   init(
-    pickerView view: UIView & AnyMessageReactionComponent,
-    reactionList list: [String]
+    pickerView view: UIView & AnyMessageReactionComponent
   ) {
     pickerView = view
-    reactionList = list
-    
     super.init(nibName: nil, bundle: nil)
   }
   

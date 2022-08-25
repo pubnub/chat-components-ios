@@ -508,6 +508,7 @@
 		355526CE26D449FE009698E3 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				84D5E91828B78980000DDE7E /* Reaction */,
 				350BFB0D27290CF700F0F95B /* Reusable Views */,
 				35074AD72725EE4700462624 /* Cells */,
 				355526CF26D454BD009698E3 /* BubbleView.swift */,
@@ -516,9 +517,6 @@
 				35B3B5B92656C21C00473120 /* ImageComponentView.swift */,
 				35B418BA26DE82D100DB49A7 /* LabelComponentView.swift */,
 				350BFB102729151500F0F95B /* UserInlineDetailComponentView.swift */,
-				35DB0C4E2875E094001E1F76 /* MessageReactionView.swift */,
-				35DB0C502875E0B6001E1F76 /* MessageReactionListView.swift */,
-				84D5E8DB28B63AD9000DDE7E /* AddMessageReactionComponent.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -693,6 +691,16 @@
 				35B3B523264B38E500473120 /* SubscribeAPI.swift */,
 			);
 			path = APIs;
+			sourceTree = "<group>";
+		};
+		84D5E91828B78980000DDE7E /* Reaction */ = {
+			isa = PBXGroup;
+			children = (
+				35DB0C4E2875E094001E1F76 /* MessageReactionView.swift */,
+				35DB0C502875E0B6001E1F76 /* MessageReactionListView.swift */,
+				84D5E8DB28B63AD9000DDE7E /* AddMessageReactionComponent.swift */,
+			);
+			path = Reaction;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

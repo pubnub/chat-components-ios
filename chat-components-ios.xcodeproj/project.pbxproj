@@ -108,6 +108,8 @@
 		35F46DFE26C1D90B0024FB67 /* InputBarAccessoryView in Frameworks */ = {isa = PBXBuildFile; productRef = 35F46DFD26C1D90B0024FB67 /* InputBarAccessoryView */; };
 		35FD757E269F8714007D7435 /* PubNubManagedMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35FD757D269F8714007D7435 /* PubNubManagedMessage.swift */; };
 		35FD758126A0DD10007D7435 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35FD758026A0DD10007D7435 /* ChatMessage.swift */; };
+		84D5E8DC28B63AD9000DDE7E /* AddMessageReactionComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D5E8DB28B63AD9000DDE7E /* AddMessageReactionComponent.swift */; };
+		84D5E8DE28B63CDA000DDE7E /* AddMessageReactionAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D5E8DD28B63CDA000DDE7E /* AddMessageReactionAnimation.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -239,6 +241,9 @@
 		35F436D72707B40300033720 /* MessageInputComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MessageInputComponent.swift; path = "../Message Input/MessageInputComponent.swift"; sourceTree = "<group>"; };
 		35FD757D269F8714007D7435 /* PubNubManagedMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PubNubManagedMessage.swift; sourceTree = "<group>"; };
 		35FD758026A0DD10007D7435 /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
+		84D5E8DB28B63AD9000DDE7E /* AddMessageReactionComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddMessageReactionComponent.swift; sourceTree = "<group>"; };
+		84D5E8DD28B63CDA000DDE7E /* AddMessageReactionAnimation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddMessageReactionAnimation.swift; sourceTree = "<group>"; };
+		84D5E91728B772F9000DDE7E /* PubNubChatModel-V3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "PubNubChatModel-V3.xcdatamodel"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -513,6 +518,7 @@
 				350BFB102729151500F0F95B /* UserInlineDetailComponentView.swift */,
 				35DB0C4E2875E094001E1F76 /* MessageReactionView.swift */,
 				35DB0C502875E0B6001E1F76 /* MessageReactionListView.swift */,
+				84D5E8DB28B63AD9000DDE7E /* AddMessageReactionComponent.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -520,6 +526,7 @@
 		355AACF726C46C06004E4231 /* Message List */ = {
 			isa = PBXGroup;
 			children = (
+				84D5E8DD28B63CDA000DDE7E /* AddMessageReactionAnimation.swift */,
 				357F2242272A388000A6FBF7 /* MessageListViewController.swift */,
 				352FA63626F7F5C20074D75C /* MessageListComponentViewModel.swift */,
 			);
@@ -958,6 +965,7 @@
 				3544C611268AF0FB0047DBB7 /* UIKit+Components.swift in Sources */,
 				35B418BB26DE82D100DB49A7 /* LabelComponentView.swift in Sources */,
 				35F436CC2702417C00033720 /* CollectionViewLayoutComponent.swift in Sources */,
+				84D5E8DE28B63CDA000DDE7E /* AddMessageReactionAnimation.swift in Sources */,
 				352A5D24270B953F00B521A9 /* MemberListComponentTheme.swift in Sources */,
 				352A5D22270B953300B521A9 /* ChannelListComponentTheme.swift in Sources */,
 				3501A587265D8BDF00063403 /* AppearanceTemplate.swift in Sources */,
@@ -980,6 +988,7 @@
 				350E046926F0182E00DD28F1 /* ManagedEntityViewModel.swift in Sources */,
 				35F436BE2700F81800033720 /* ChannelListComponentViewModel.swift in Sources */,
 				350AC791264355EA00C3D323 /* ComponentViewController.swift in Sources */,
+				84D5E8DC28B63AD9000DDE7E /* AddMessageReactionComponent.swift in Sources */,
 				352FA63726F7F5C20074D75C /* MessageListComponentViewModel.swift in Sources */,
 				350BFB0C27290C3D00F0F95B /* LinkMetadataService.swift in Sources */,
 				355526D226D456C2009698E3 /* ContainerView.swift in Sources */,
@@ -1824,10 +1833,11 @@
 		35DB0C3D286F895B001E1F76 /* PubNubChatModel.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				84D5E91728B772F9000DDE7E /* PubNubChatModel-V3.xcdatamodel */,
 				35DB0C3E286F895B001E1F76 /* PubNubChatModel-V2.xcdatamodel */,
 				35DB0C3F286F895B001E1F76 /* PubNubChatModel.xcdatamodel */,
 			);
-			currentVersion = 35DB0C3E286F895B001E1F76 /* PubNubChatModel-V2.xcdatamodel */;
+			currentVersion = 84D5E91728B772F9000DDE7E /* PubNubChatModel-V3.xcdatamodel */;
 			path = PubNubChatModel.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;

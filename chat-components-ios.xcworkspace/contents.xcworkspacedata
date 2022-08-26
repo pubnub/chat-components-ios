@@ -4,7 +4,4 @@
    <FileRef
       location = "container:chat-components-ios.xcodeproj">
    </FileRef>
-   <FileRef
-      location = "group:../sdk/swift">
-   </FileRef>
 </Workspace>

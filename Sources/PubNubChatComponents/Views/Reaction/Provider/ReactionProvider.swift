@@ -11,7 +11,7 @@ public protocol ReactionProvider {
   var reactions: [String] { get }
 }
 
-public final class DefaultReactionProvider: ReactionProvider {
+public struct DefaultReactionProvider: ReactionProvider {
   public let reactions: [String]
   
   public init() {
@@ -19,7 +19,7 @@ public final class DefaultReactionProvider: ReactionProvider {
   }
 }
 
-public final class CustomReactionProvider: ReactionProvider {
+public struct CustomReactionProvider: ReactionProvider {
   public let reactions: [String]
   
   public init(reactions: [String]) {

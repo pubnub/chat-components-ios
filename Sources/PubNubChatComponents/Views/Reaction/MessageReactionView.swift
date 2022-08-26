@@ -124,7 +124,6 @@ public class MessageReactionComponent: UIStackContainerView {
 }
 
 public class MessageReactionButtonComponent: UIButton {
-  
   lazy var messageReactionComponent = MessageReactionComponent(frame: bounds)
 
   var cancellables = Set<AnyCancellable>()

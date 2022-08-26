@@ -140,7 +140,7 @@ public class MessageReactionListComponent: UIView {
     onMessageActionTap: ((MessageReactionButtonComponent?, Message, (() -> Void)?) -> Void)?
   ) where Message : ManagedMessageViewModel {
     configure(
-      provider.makeMessageReactionComponents(),
+      reactionButtons,
       message: message,
       currentUserId: currentUserId,
       onMessageActionTap: onMessageActionTap

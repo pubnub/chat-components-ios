@@ -29,8 +29,8 @@ import UIKit
 import Combine
 
 public class MessageReactionListComponent: UIView {
-  let provider: ReactionProvider
-  private let reactionButtons: [MessageReactionButtonComponent]
+  private let provider: ReactionProvider
+  private var reactionButtons: [MessageReactionButtonComponent] = []
   
   var currentCount: Int = 0
   
@@ -95,6 +95,7 @@ public class MessageReactionListComponent: UIView {
       // new way
       let reactions = message.messageActions
         .filter { $0.sourceType == "reaction" && $0.value == messageActionButton.reaction }
+      
       if reactions.count > 0 {
         newCount += reactions.count
         
@@ -111,7 +112,6 @@ public class MessageReactionListComponent: UIView {
           
           // Disable Button
           button?.isEnabled = false
-          
           onMessageActionTap?(button, message) { [weak button] in
             DispatchQueue.main.async {
               button?.isEnabled = true

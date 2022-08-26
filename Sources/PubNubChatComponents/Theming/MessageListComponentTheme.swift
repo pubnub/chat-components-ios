@@ -38,11 +38,9 @@ public class MessageListComponentTheme: ViewControllerComponentTheme {
   @Published public var messageInputComponent: MessageInputComponentTheme
   @Published public var incomingItemTheme: MessageListCellComponentTheme
   @Published public var authorItemTheme: MessageListCellComponentTheme
-  
   @Published public var typingIndicatorCellTheme: TypingIndicatorCellTheme
   public var enableReactions: Bool
 
-  
   public init(
     controllerType: ComponentViewController.Type,
     backgroundColor: UIColor?,
@@ -58,9 +56,7 @@ public class MessageListComponentTheme: ViewControllerComponentTheme {
     self.collectionViewTheme = collectionViewTheme
     self.incomingItemTheme = incomingItemTheme
     self.authorItemTheme = authorItemTheme ?? incomingItemTheme
-    
     self.typingIndicatorCellTheme = typingIndicatorCellTheme
-    
     self.enableReactions = enableReactions
     
     super.init(

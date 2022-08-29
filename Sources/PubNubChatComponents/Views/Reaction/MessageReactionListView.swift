@@ -29,22 +29,20 @@ import UIKit
 import Combine
 
 public class MessageReactionListComponent: UIView {
-  private let provider: ReactionProvider
+  var reactionProvider: ReactionProvider
   private var reactionButtons: [MessageReactionButtonComponent] = []
   
   var currentCount: Int = 0
   
   public init(provider: ReactionProvider = DefaultReactionProvider()) {
-    self.provider = provider
-    self.reactionButtons = provider.makeMessageReactionComponents()
+    self.reactionProvider = provider
     
     super.init(frame: .zero)
     setupSubviews()
   }
   
   public required init?(coder: NSCoder) {
-    self.provider = DefaultReactionProvider()
-    self.reactionButtons = provider.makeMessageReactionComponents()
+    self.reactionProvider = DefaultReactionProvider()
     
     super.init(coder: coder)
     setupSubviews()
@@ -53,11 +51,7 @@ public class MessageReactionListComponent: UIView {
   lazy public var stackViewContainer = UIStackContainerView()
 
   var allReactions: [String] {
-    provider.reactions
-  }
-  
-  func buttonFor(_ reaction: String) -> MessageReactionButtonComponent? {
-    reactionButtons.first(where: { $0.reaction == reaction })
+    reactionProvider.reactions
   }
   
   open func setupSubviews() {
@@ -87,51 +81,29 @@ public class MessageReactionListComponent: UIView {
     onMessageActionTap: ((MessageReactionButtonComponent?, Message, (() -> Void)?) -> Void)?
   ) where Message : ManagedMessageViewModel {
     
-    var newCount = 0
+    let reactions = message.messageActions
+      .filter { $0.sourceType == "reaction" }
+      .map { (reaction: $0.value, userID: $0.pubnubUserId) }
     
-    for messageActionButton in messageActionButtons {
-      messageActionButton.externalCancellables.forEach { $0.cancel() }
-      
-      // new way
-      let reactions = message.messageActions
-        .filter { $0.sourceType == "reaction" && $0.value == messageActionButton.reaction }
-      
-      if reactions.count > 0 {
-        newCount += reactions.count
-        
-        messageActionButton.currentCount = reactions.count
-        messageActionButton.isSelected = reactions.contains(where: { $0.pubnubUserId == currentUserId })
-
-        if messageActionButton.superview == nil {
-          stackViewContainer.stackView.addArrangedSubview(messageActionButton)
-          setNeedsLayout()
-        }
-        
-        messageActionButton.didTap({ [weak message] button in
-          guard let message = message else { return }
-          
-          // Disable Button
-          button?.isEnabled = false
-          onMessageActionTap?(button, message) { [weak button] in
-            DispatchQueue.main.async {
-              button?.isEnabled = true
-            }
-          }
-        })
-        .store(in: &messageActionButton.externalCancellables)
-      } else {
-        if messageActionButton.superview != nil {
-          messageActionButton.removeFromSuperview()
-          stackViewContainer.stackView.removeArrangedSubview(messageActionButton)
-          setNeedsLayout()
-        }
-      }
+    updateWith(reactions: reactions.map { $0.reaction } )
+    
+    reactionButtons.forEach { button in
+      button.isSelected = reactions.contains(where: { $0.userID == currentUserId && $0.reaction == button.reaction })
     }
-    currentCount = newCount
-    isHidden = newCount == 0 ? true : false
     
-    stackViewContainer.layoutIfNeeded()
-    layoutIfNeeded()
+    reactionButtons.forEach { button in
+      button.didTap({ [weak message] button in
+        guard let message = message else { return }
+        
+        button?.isEnabled = false
+        onMessageActionTap?(button, message) { [weak button] in
+          DispatchQueue.main.async {
+            button?.isEnabled = true
+          }
+        }
+      })
+      .store(in: &button.externalCancellables)
+    }
   }
 
   open func configure<Message>(
@@ -145,5 +117,66 @@ public class MessageReactionListComponent: UIView {
       currentUserId: currentUserId,
       onMessageActionTap: onMessageActionTap
     )
+  }
+  
+  func buttonFor(_ reaction: String) -> MessageReactionButtonComponent {
+    if let button = reactionButtons.first(where: { $0.reaction == reaction }) {
+      return button
+    }
+    
+    let newButton = reactionProvider.makeMessageReactionComponentWith(reaction)
+    reactionButtons.append(newButton)
+    stackViewContainer.stackView.addArrangedSubview(newButton)
+    setNeedsLayout()
+    return newButton
+  }
+}
+
+//MARK: - Private
+private extension MessageReactionListComponent {
+  private func makeCountsDictionary(with reactions: [String]) -> [String: Int] {
+    Dictionary( reactions.map { ($0, 1) }, uniquingKeysWith: +)
+  }
+  
+  private func update(with reaction: String, count: Int) {
+    let button = buttonFor(reaction)
+    button.externalCancellables.forEach { $0.cancel() }
+    button.currentCount = count
+  }
+  
+  private func removeUnusedButtons(for reactions: [String]) {
+    var indexes = [Int]()
+    reactionButtons.enumerated().forEach { (index, button) in
+      if !reactions.contains (where: { $0 == button.reaction }) {
+        button.removeFromSuperview()
+        stackViewContainer.stackView.removeArrangedSubview(button)
+        indexes.append(index)
+      }
+    }
+    
+    indexes.reversed().forEach {
+      reactionButtons.remove(at: $0)
+    }
+
+    setNeedsLayout()
+  }
+  
+  private func updateWith(reactions: [String]) {
+    let counts = makeCountsDictionary(with: reactions)
+    let countSum = counts.keys.reduce(0) { $0 + (counts[$1] ?? 0) }
+    currentCount = countSum
+    
+    isHidden = countSum == 0
+
+    removeUnusedButtons(for: reactions)
+    
+    counts.keys.forEach { reaction in
+      if let count = counts[reaction] {
+        update(with: reaction, count: count)
+      }
+    }
+    
+    stackViewContainer.layoutIfNeeded()
+    layoutIfNeeded()
   }
 }

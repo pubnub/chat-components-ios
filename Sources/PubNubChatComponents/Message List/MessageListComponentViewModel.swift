@@ -66,6 +66,7 @@ extension ChatProvider
     customTheme: MessageListComponentTheme? = nil,
     customInputTheme: MessageInputComponentTheme? = nil
   ) throws -> MessageListComponentViewModel<ModelData, ManagedEntities> {
+    
     let sender = try fetchCurrentUser()
     
     guard let channel = try fetchChannel(byPubNubId: pubnubChannelId) else {

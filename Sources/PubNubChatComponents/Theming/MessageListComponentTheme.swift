@@ -76,7 +76,6 @@ public class MessageListCellComponentTheme: CollectionViewCellTheme {
   @Published public var contentTextTheme: TextViewComponentTheme
   @Published public var itemTheme: BasicComponentTheme
   @Published public var dateFormatter: DateFormatter
-  @Published public var reactionProvider: ReactionProvider
 
   public init(
     textMessageContentCellType: CollectionViewCellComponent.Type,
@@ -88,8 +87,7 @@ public class MessageListCellComponentTheme: CollectionViewCellTheme {
     bubbleContainerTheme: BubbleComponentTheme,
     contentTextTheme: TextViewComponentTheme,
     itemTheme: BasicComponentTheme,
-    dateFormatter: DateFormatter,
-    reactionProvider: ReactionProvider = DefaultReactionProvider()
+    dateFormatter: DateFormatter
   ) {
     self.alignment = alignment
     self.maxWidthPercentage = maxWidthPercentage
@@ -97,7 +95,6 @@ public class MessageListCellComponentTheme: CollectionViewCellTheme {
     self.contentTextTheme = contentTextTheme
     self.itemTheme = itemTheme
     self.dateFormatter = dateFormatter
-    self.reactionProvider = reactionProvider
 
     super.init(
       customType: textMessageContentCellType,

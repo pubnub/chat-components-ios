@@ -10,15 +10,9 @@ import Foundation
 extension ReactionProvider {
   func makeMessageReactionComponents() -> [MessageReactionButtonComponent] {
     reactions.map {
-      makeMessageReactionComponentWith($0)
+      let result = MessageReactionButtonComponent(type: .custom)
+      result.reaction = $0
+      return result
     }
-  }
-  
-  func makeMessageReactionComponentWith(_ reaction: String) -> MessageReactionButtonComponent {
-    //probably we should check if reaction is possible!
-    
-    let result = MessageReactionButtonComponent(type: .custom)
-    result.reaction = reaction
-    return result
   }
 }

@@ -150,13 +150,16 @@ open class ChatViewController<ModelData, ManagedEntities>: CollectionViewCompone
     let message = viewModel.fetchedEntities.object(at: indexPath) as ManagedEntities.Message
     let buttonComponent = cell.reactionListView.buttonFor(value)
     
-    viewModel.messageActionTapped?(
-      viewModel,
-      buttonComponent,
-      message,
-      nil
-    )
-    
+    if let buttonComponent = buttonComponent {
+      viewModel.messageActionTapped?(
+        viewModel,
+        buttonComponent,
+        message,
+        nil
+      )
+    } else {
+      preconditionFailure("Not supported yet")
+    }
     dismiss(animated: true)
   }
     

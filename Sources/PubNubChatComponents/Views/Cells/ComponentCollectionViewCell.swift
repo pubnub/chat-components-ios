@@ -315,8 +315,6 @@ open class MessageListItemCell: MessageCollectionViewCellComponent {
     theme: MessageListCellComponentTheme
   ) {
     
-    reactionListView.reactionProvider = theme.reactionProvider
-    
     theme.$alignment.sink { [weak self] newAlignment in
       self?.cellContainer.alignment = newAlignment.stackViewAlignment
     }.store(in: &contentCancellables)

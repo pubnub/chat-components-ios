@@ -165,7 +165,7 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
       collectionViewType: messageListTheme.collectionViewTheme.viewType,
       collectionViewLayout: layout,
       messageInputComponent: messageInputComponent,
-      enableReactions: messageListTheme.enableReactions
+      reactionTheme: messageListTheme.reactionTheme
     )
     
     // Configure Message Input
@@ -461,7 +461,7 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
     cell.configure(message, theme: theme)
     
     // Configure Message Reaction List
-    if componentTheme.enableReactions {
+    if componentTheme.reactionTheme != nil {
       cell.configure(
         message,
         currentUser: author,

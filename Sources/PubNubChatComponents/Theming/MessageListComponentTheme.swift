@@ -27,9 +27,7 @@
 
 import UIKit
 import Combine
-
 import PubNubChat
-
 import ChatLayout
 
 public class MessageListComponentTheme: ViewControllerComponentTheme {
@@ -39,7 +37,7 @@ public class MessageListComponentTheme: ViewControllerComponentTheme {
   @Published public var incomingItemTheme: MessageListCellComponentTheme
   @Published public var authorItemTheme: MessageListCellComponentTheme
   @Published public var typingIndicatorCellTheme: TypingIndicatorCellTheme
-  public var enableReactions: Bool
+  @Published public var reactionTheme: ReactionTheme?
 
   public init(
     controllerType: ComponentViewController.Type,
@@ -50,14 +48,14 @@ public class MessageListComponentTheme: ViewControllerComponentTheme {
     incomingItemTheme: MessageListCellComponentTheme,
     authorItemTheme: MessageListCellComponentTheme?,
     typingIndicatorCellTheme: TypingIndicatorCellTheme,
-    enableReactions: Bool
+    reactionTheme: ReactionTheme? = nil
   ) {
     self.messageInputComponent = messageInputComponent
     self.collectionViewTheme = collectionViewTheme
     self.incomingItemTheme = incomingItemTheme
     self.authorItemTheme = authorItemTheme ?? incomingItemTheme
     self.typingIndicatorCellTheme = typingIndicatorCellTheme
-    self.enableReactions = enableReactions
+    self.reactionTheme = reactionTheme
     
     super.init(
       controllerType: controllerType,
@@ -76,7 +74,7 @@ public class MessageListCellComponentTheme: CollectionViewCellTheme {
   @Published public var contentTextTheme: TextViewComponentTheme
   @Published public var itemTheme: BasicComponentTheme
   @Published public var dateFormatter: DateFormatter
-  @Published public var reactionProvider: ReactionProvider
+  
 
   public init(
     textMessageContentCellType: CollectionViewCellComponent.Type,
@@ -88,8 +86,7 @@ public class MessageListCellComponentTheme: CollectionViewCellTheme {
     bubbleContainerTheme: BubbleComponentTheme,
     contentTextTheme: TextViewComponentTheme,
     itemTheme: BasicComponentTheme,
-    dateFormatter: DateFormatter,
-    reactionProvider: ReactionProvider = DefaultReactionProvider()
+    dateFormatter: DateFormatter
   ) {
     self.alignment = alignment
     self.maxWidthPercentage = maxWidthPercentage
@@ -97,7 +94,6 @@ public class MessageListCellComponentTheme: CollectionViewCellTheme {
     self.contentTextTheme = contentTextTheme
     self.itemTheme = itemTheme
     self.dateFormatter = dateFormatter
-    self.reactionProvider = reactionProvider
 
     super.init(
       customType: textMessageContentCellType,
@@ -134,8 +130,7 @@ extension MessageListComponentTheme {
         bounceDelay: 0.33,
         bounceOffset: 0.25,
         fades: true
-      ),
-      enableReactions: false
+      )
     )
   }
 }

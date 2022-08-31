@@ -72,11 +72,12 @@ open class AddMessageReactionComponent: UIViewController, AnyMessageReactionComp
     private let stackView = UIStackView()
     private let scrollView = UIScrollView()
     
-    private let reactionList: [String]
+    private let theme: ReactionTheme
+    private var reactionList: [String] { theme.reactions }
     private let selectedReactionSubject: PassthroughSubject<String, Never>
     
-    init(reactionList list: [String]) {
-      reactionList = list
+    init(theme: ReactionTheme) {
+      self.theme = theme
       selectedReactionSubject = PassthroughSubject<String, Never>()
       
       super.init(frame: .zero)
@@ -141,7 +142,7 @@ open class AddMessageReactionComponent: UIViewController, AnyMessageReactionComp
     private func setup() {
       translatesAutoresizingMaskIntoConstraints = false
       NSLayoutConstraint.activate([
-        widthAnchor.constraint(lessThanOrEqualToConstant: 200).priority(.defaultHigh)
+        widthAnchor.constraint(lessThanOrEqualToConstant: theme.pickerMaxWidth).priority(.defaultHigh)
       ])
       
       backgroundColor = .lightGray

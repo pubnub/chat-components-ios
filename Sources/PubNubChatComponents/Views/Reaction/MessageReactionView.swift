@@ -118,7 +118,7 @@ public class MessageReactionComponent: UIStackContainerView {
     countLabel.labelView
       .configure(
         currentCountPublisher.map({
-          $0 > 99 ? "99+" : $0.description
+          $0 > 99 ? "99+" : String($0)
         }).eraseToAnyPublisher(),
         cancelIn: &cancellables
       )

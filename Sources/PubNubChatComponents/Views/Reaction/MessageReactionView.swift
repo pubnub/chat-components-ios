@@ -117,11 +117,15 @@ public class MessageReactionComponent: UIStackContainerView {
     
     countLabel.labelView
       .configure(
-        currentCountPublisher.map({ $0.description }).eraseToAnyPublisher(),
+        currentCountPublisher.map({
+          $0 > 99 ? "99+" : $0.description
+        }).eraseToAnyPublisher(),
         cancelIn: &cancellables
       )
   }
 }
+
+//MARK: - MessageReactionButtonComponent
 
 public class MessageReactionButtonComponent: UIButton {
   lazy var messageReactionComponent = MessageReactionComponent(frame: bounds)

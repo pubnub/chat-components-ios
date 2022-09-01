@@ -173,6 +173,7 @@ open class CollectionViewCellComponent: UICollectionViewCell, ReloadCellDelegate
   open func configure<Message: ManagedMessageViewModel, User: ManagedUserViewModel>(
     _ message: Message,
     currentUser: User,
+    reactionProvider: ReactionProvider,
     onTapAction: ((MessageReactionButtonComponent?, Message, (() -> Void)?) -> Void)?
   ) {
 
@@ -350,6 +351,7 @@ open class MessageListItemCell: MessageCollectionViewCellComponent {
   open override func configure<Message: ManagedMessageViewModel, User: ManagedUserViewModel>(
     _ message: Message,
     currentUser: User,
+    reactionProvider: ReactionProvider,
     onTapAction: ((MessageReactionButtonComponent?, Message, (() -> Void)?) -> Void)?
   ) {
     if message.messageActions.count == 0 {
@@ -357,9 +359,11 @@ open class MessageListItemCell: MessageCollectionViewCellComponent {
       reactionListView.isHiddenSafe = true
     } else {
       // Update
+      
       reactionListView.configure(
         message,
         currentUserId: currentUser.pubnubId,
+        reactionProvider: reactionProvider,
         onMessageActionTap: onTapAction
       )
       

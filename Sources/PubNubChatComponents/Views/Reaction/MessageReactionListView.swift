@@ -34,7 +34,7 @@ public class MessageReactionListComponent: UIView {
   
   var currentCount: Int = 0
   
-  public init(provider: ReactionProvider = DefaultReactionProvider()) {
+  public init(provider: ReactionProvider = CustomReactionProvider(reactions: [])) {
     self.reactionProvider = provider
     
     super.init(frame: .zero)
@@ -78,8 +78,11 @@ public class MessageReactionListComponent: UIView {
     _ messageActionButtons: [MessageReactionButtonComponent],
     message: Message,
     currentUserId: String,
+    reactionProvider: ReactionProvider,
     onMessageActionTap: ((MessageReactionButtonComponent?, Message, (() -> Void)?) -> Void)?
   ) where Message : ManagedMessageViewModel {
+    
+    self.reactionProvider = reactionProvider
     
     let reactions = message.messageActions
       .filter { $0.sourceType == "reaction" }
@@ -109,12 +112,14 @@ public class MessageReactionListComponent: UIView {
   open func configure<Message>(
     _ message: Message,
     currentUserId: String,
+    reactionProvider: ReactionProvider,
     onMessageActionTap: ((MessageReactionButtonComponent?, Message, (() -> Void)?) -> Void)?
   ) where Message : ManagedMessageViewModel {
     configure(
       reactionButtons,
       message: message,
       currentUserId: currentUserId,
+      reactionProvider: reactionProvider,
       onMessageActionTap: onMessageActionTap
     )
   }
@@ -127,6 +132,7 @@ public class MessageReactionListComponent: UIView {
     let newButton = reactionProvider.makeMessageReactionComponentWith(reaction)
     reactionButtons.append(newButton)
     stackViewContainer.stackView.addArrangedSubview(newButton)
+    
     setNeedsLayout()
     return newButton
   }
@@ -139,9 +145,12 @@ private extension MessageReactionListComponent {
   }
   
   private func update(with reaction: String, count: Int) {
+    guard reactionProvider.reactions.contains(reaction) else { return }
+    
     let button = buttonFor(reaction)
     button.externalCancellables.forEach { $0.cancel() }
     button.currentCount = count
+    button.isHidden = false
   }
   
   private func removeUnusedButtons(for reactions: [String]) {

@@ -11,6 +11,23 @@ public protocol ReactionProvider {
   var reactions: [String] { get }
 }
 
+extension ReactionProvider {
+  func makeMessageReactionComponents() -> [MessageReactionButtonComponent] {
+    reactions.map {
+      makeMessageReactionComponentWith($0)
+    }
+  }
+  
+  func makeMessageReactionComponentWith(_ reaction: String) -> MessageReactionButtonComponent {
+    //probably we should check if reaction is possible!
+    
+    let result = MessageReactionButtonComponent(type: .custom)
+    result.reaction = reaction
+    return result
+  }
+}
+
+
 public struct DefaultReactionProvider: ReactionProvider {
   public let reactions: [String]
   

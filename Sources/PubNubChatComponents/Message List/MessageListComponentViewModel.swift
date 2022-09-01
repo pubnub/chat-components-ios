@@ -461,10 +461,11 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
     cell.configure(message, theme: theme)
     
     // Configure Message Reaction List
-    if componentTheme.reactionTheme != nil {
+    if let reactionTheme = componentTheme.reactionTheme {
       cell.configure(
         message,
         currentUser: author,
+        reactionProvider: reactionTheme.provider,
         onTapAction: { [weak self] (button, message, completion) in
           self?.messageActionTapped?(self, button, message, completion)
         }

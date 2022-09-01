@@ -48,7 +48,7 @@ public class MessageListComponentTheme: ViewControllerComponentTheme {
     incomingItemTheme: MessageListCellComponentTheme,
     authorItemTheme: MessageListCellComponentTheme?,
     typingIndicatorCellTheme: TypingIndicatorCellTheme,
-    reactionTheme: ReactionTheme? = nil
+    reactionTheme: ReactionTheme? = ReactionTheme()
   ) {
     self.messageInputComponent = messageInputComponent
     self.collectionViewTheme = collectionViewTheme

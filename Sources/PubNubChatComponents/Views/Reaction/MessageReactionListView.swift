@@ -29,7 +29,7 @@ import UIKit
 import Combine
 
 public class MessageReactionListComponent: UIView {
-  var reactionProvider: ReactionProvider
+  private var reactionProvider: ReactionProvider
   private var reactionButtons: [MessageReactionButtonComponent] = []
   
   var currentCount: Int = 0

@@ -37,7 +37,8 @@ public struct VoidCustomData: Codable, Hashable,
   UserCustomData,
   ChannelCustomData,
   MemberCustomData,
-  MessageCustomData
+  MessageCustomData,
+  MessageContentData
 {
   public init() {}
   public init(flatJSON: [String: JSONCodableScalar]) { }
@@ -48,12 +49,14 @@ public protocol UserCustomData: CustomFlatJSONData {}
 public protocol ChannelCustomData: CustomFlatJSONData {}
 public protocol MemberCustomData: CustomFlatJSONData {}
 public protocol MessageCustomData: CustomJSONData {}
+public protocol MessageContentData: CustomJSONData {}
 
 public protocol ChatCustomData {
   associatedtype User: UserCustomData = VoidCustomData
   associatedtype Channel: ChannelCustomData = VoidCustomData
   associatedtype Member: MemberCustomData = VoidCustomData
   associatedtype Message: MessageCustomData = VoidCustomData
+  associatedtype MessageContent: MessageContentData = VoidCustomData
 }
 
 public protocol Defaultable {

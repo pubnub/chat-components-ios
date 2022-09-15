@@ -124,7 +124,7 @@ public class MessageReactionListComponent: UIView {
     )
   }
   
-  func buttonFor(_ reaction: String) -> MessageReactionButtonComponent {
+  func button(for reaction: String) -> MessageReactionButtonComponent {
     if let button = reactionButtons.first(where: { $0.reaction == reaction }) {
       return button
     }
@@ -138,7 +138,7 @@ public class MessageReactionListComponent: UIView {
   }
 }
 
-//MARK: - Private
+// MARK: - Private
 private extension MessageReactionListComponent {
   private func makeCountsDictionary(with reactions: [String]) -> [String: Int] {
     Dictionary( reactions.map { ($0, 1) }, uniquingKeysWith: +)
@@ -147,7 +147,7 @@ private extension MessageReactionListComponent {
   private func update(with reaction: String, count: Int) {
     guard reactionProvider.reactions.contains(reaction) else { return }
     
-    let button = buttonFor(reaction)
+    let button = button(for: reaction)
     button.externalCancellables.forEach { $0.cancel() }
     button.currentCount = count
     button.isHidden = false

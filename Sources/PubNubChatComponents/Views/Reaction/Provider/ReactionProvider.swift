@@ -19,8 +19,6 @@ extension ReactionProvider {
   }
   
   func makeMessageReactionComponentWith(_ reaction: String) -> MessageReactionButtonComponent {
-    //probably we should check if reaction is possible!
-    
     let result = MessageReactionButtonComponent(type: .custom)
     result.reaction = reaction
     return result

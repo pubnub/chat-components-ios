@@ -146,7 +146,7 @@ open class ChatViewController<ModelData, ManagedEntities>: CollectionViewCompone
     }
     
     let message = viewModel.fetchedEntities.object(at: indexPath) as ManagedEntities.Message
-    let buttonComponent = cell.reactionListView.buttonFor(value)
+    let buttonComponent = cell.reactionListView.button(for: value)
     
     viewModel.messageActionTapped?(
       viewModel,

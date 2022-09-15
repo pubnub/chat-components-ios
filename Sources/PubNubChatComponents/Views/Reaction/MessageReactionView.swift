@@ -31,7 +31,7 @@ import Combine
 import PubNub
 
 public class MessageReactionComponent: UIStackContainerView {
-  
+
   var currentCountPublisher = CurrentValueSubject<Int, Never>(0)
   public var currentCount: Int {
     get {

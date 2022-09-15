@@ -1,5 +1,5 @@
 //
-//  MessageReactionView.swift
+//  ReactionTheme.swift
 //
 //  PubNub Real-time Cloud-Hosted Push API and Push Notification Client Frameworks
 //  Copyright © 2022 PubNub Inc.

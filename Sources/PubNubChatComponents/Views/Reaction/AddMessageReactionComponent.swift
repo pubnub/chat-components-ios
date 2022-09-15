@@ -74,12 +74,11 @@ open class AddMessageReactionComponent: UIViewController, AnyMessageReactionComp
     
     private let theme: ReactionTheme
     private var reactionList: [String] { theme.reactions }
-    private let selectedReactionSubject: PassthroughSubject<String, Never>
+    private let selectedReactionSubject = PassthroughSubject<String, Never>()
     
     init(theme: ReactionTheme) {
       self.theme = theme
-      selectedReactionSubject = PassthroughSubject<String, Never>()
-      
+
       super.init(frame: .zero)
       
       setup()

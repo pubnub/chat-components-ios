@@ -108,6 +108,9 @@
 		35F46DFE26C1D90B0024FB67 /* InputBarAccessoryView in Frameworks */ = {isa = PBXBuildFile; productRef = 35F46DFD26C1D90B0024FB67 /* InputBarAccessoryView */; };
 		35FD757E269F8714007D7435 /* PubNubManagedMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35FD757D269F8714007D7435 /* PubNubManagedMessage.swift */; };
 		35FD758126A0DD10007D7435 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35FD758026A0DD10007D7435 /* ChatMessage.swift */; };
+		3D9F174928DA0B2D00D9BF17 /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D9F174628DA0B2D00D9BF17 /* PreviewData.swift */; };
+		3D9F174A28DA0B2D00D9BF17 /* UIKitPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D9F174728DA0B2D00D9BF17 /* UIKitPreview.swift */; };
+		3D9F174B28DA0B2D00D9BF17 /* UIKitPreviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D9F174828DA0B2D00D9BF17 /* UIKitPreviews.swift */; };
 		84D5E8DC28B63AD9000DDE7E /* AddMessageReactionComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D5E8DB28B63AD9000DDE7E /* AddMessageReactionComponent.swift */; };
 		84D5E8DE28B63CDA000DDE7E /* AddMessageReactionAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D5E8DD28B63CDA000DDE7E /* AddMessageReactionAnimation.swift */; };
 /* End PBXBuildFile section */
@@ -241,6 +244,9 @@
 		35F436D72707B40300033720 /* MessageInputComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MessageInputComponent.swift; path = "../Message Input/MessageInputComponent.swift"; sourceTree = "<group>"; };
 		35FD757D269F8714007D7435 /* PubNubManagedMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PubNubManagedMessage.swift; sourceTree = "<group>"; };
 		35FD758026A0DD10007D7435 /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
+		3D9F174628DA0B2D00D9BF17 /* PreviewData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PreviewData.swift; sourceTree = "<group>"; };
+		3D9F174728DA0B2D00D9BF17 /* UIKitPreview.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIKitPreview.swift; sourceTree = "<group>"; };
+		3D9F174828DA0B2D00D9BF17 /* UIKitPreviews.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIKitPreviews.swift; sourceTree = "<group>"; };
 		84D5E8DB28B63AD9000DDE7E /* AddMessageReactionComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddMessageReactionComponent.swift; sourceTree = "<group>"; };
 		84D5E8DD28B63CDA000DDE7E /* AddMessageReactionAnimation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddMessageReactionAnimation.swift; sourceTree = "<group>"; };
 		84D5E91728B772F9000DDE7E /* PubNubChatModel-V3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "PubNubChatModel-V3.xcdatamodel"; sourceTree = "<group>"; };
@@ -369,6 +375,7 @@
 				35F436D9270A3A1800033720 /* Theming */,
 				3583AE5726FBD3CA006D74A3 /* Helpers */,
 				359EBE8B265C3B6000D9F363 /* Extensions */,
+				3D9F174528DA0B2D00D9BF17 /* Previews */,
 				350AC71E2643496300C3D323 /* PubNubChatComponents.h */,
 				350AC71F2643496300C3D323 /* Info.plist */,
 			);
@@ -695,6 +702,16 @@
 			path = APIs;
 			sourceTree = "<group>";
 		};
+		3D9F174528DA0B2D00D9BF17 /* Previews */ = {
+			isa = PBXGroup;
+			children = (
+				3D9F174628DA0B2D00D9BF17 /* PreviewData.swift */,
+				3D9F174728DA0B2D00D9BF17 /* UIKitPreview.swift */,
+				3D9F174828DA0B2D00D9BF17 /* UIKitPreviews.swift */,
+			);
+			path = Previews;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -970,6 +987,7 @@
 				352A5D22270B953300B521A9 /* ChannelListComponentTheme.swift in Sources */,
 				3501A587265D8BDF00063403 /* AppearanceTemplate.swift in Sources */,
 				35DB0C512875E0B6001E1F76 /* MessageReactionListView.swift in Sources */,
+				3D9F174B28DA0B2D00D9BF17 /* UIKitPreviews.swift in Sources */,
 				350BFB0F27290DC400F0F95B /* ChannelMemberComponentCell.swift in Sources */,
 				35F436CA2702236600033720 /* ThemeProvider.swift in Sources */,
 				35F436D02704BB0000033720 /* Combine+PubNub.swift in Sources */,
@@ -981,6 +999,7 @@
 				35B3B5BA2656C21C00473120 /* ImageComponentView.swift in Sources */,
 				35F436C427017B3100033720 /* ReusableLabelViewComponent.swift in Sources */,
 				35F436C02700FA9C00033720 /* MemberListComponentViewModel.swift in Sources */,
+				3D9F174A28DA0B2D00D9BF17 /* UIKitPreview.swift in Sources */,
 				35F436BC26FEB0CB00033720 /* ManagedEntityListViewModel.swift in Sources */,
 				355AAD0126C719C3004E4231 /* TextComponentView.swift in Sources */,
 				357F2243272A388000A6FBF7 /* MessageListViewController.swift in Sources */,
@@ -991,6 +1010,7 @@
 				84D5E8DC28B63AD9000DDE7E /* AddMessageReactionComponent.swift in Sources */,
 				352FA63726F7F5C20074D75C /* MessageListComponentViewModel.swift in Sources */,
 				350BFB0C27290C3D00F0F95B /* LinkMetadataService.swift in Sources */,
+				3D9F174928DA0B2D00D9BF17 /* PreviewData.swift in Sources */,
 				355526D226D456C2009698E3 /* ContainerView.swift in Sources */,
 				35F436D82707B40300033720 /* MessageInputComponent.swift in Sources */,
 				350E046626F0041100DD28F1 /* String+Components.swift in Sources */,

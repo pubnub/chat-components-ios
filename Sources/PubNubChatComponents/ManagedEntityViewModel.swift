@@ -98,7 +98,13 @@ extension PubNubManagedChannel: ManagedChannelViewModel {
       .eraseToAnyPublisher()
   }
   
-  public var messagesPublisher: AnyPublisher<Set<MessageViewModel>, Never> {
+  // This line shouldn't be changed.
+  // I got the compiler error while adopting `ManagedMessageViewModel` for my custom struct defined in SharedPreviewData.swift
+  // That's why I haven't solved it yet and created a temporary workaround. The error message says:
+  //
+  // "Reference to invalid associated type MessageViewModel of type PubNubManagedChannel"
+  //
+  public var messagesPublisher: AnyPublisher<Set<PubNubManagedMessage>, Never> {
     return publisher(for: \.messages).eraseToAnyPublisher()
   }
   

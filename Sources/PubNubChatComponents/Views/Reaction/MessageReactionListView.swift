@@ -34,7 +34,7 @@ public class MessageReactionListComponent: UIView {
   
   var currentCount: Int = 0
   
-  public init(provider: ReactionProvider = CustomReactionProvider(reactions: [])) {
+  public init(provider: ReactionProvider = DefaultReactionProvider()) {
     self.reactionProvider = provider
     
     super.init(frame: .zero)

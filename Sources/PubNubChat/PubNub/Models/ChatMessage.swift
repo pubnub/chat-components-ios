@@ -39,7 +39,7 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Hashable, Codab
     public var id: String
     public var text: String
     public var contentType: String?
-    public var content: JSONCodable?
+    public var content: Custom.MessageContent
     public var custom: Custom.Message
     public var createdAt: Date
 
@@ -56,7 +56,7 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Hashable, Codab
       id: String = UUID().uuidString,
       text: String = String(),
       contentType: String? = nil,
-      content: JSONCodable? = nil,
+      content: Custom.MessageContent = Custom.MessageContent(),
       custom: Custom.Message = Custom.Message(),
       createdAt: Date = Date()
     ) {
@@ -74,7 +74,7 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Hashable, Codab
       id = try container.decode(String.self, forKey: .id)
       text = try container.decode(String.self, forKey: .text)
       contentType = try container.decodeIfPresent(String.self, forKey: .contentType)
-      content = try container.decodeIfPresent(AnyJSON.self, forKey: .content)
+      content = try container.decodeIfPresent(Custom.MessageContent.self, forKey: .content) ?? Custom.MessageContent()
       custom = try container.decodeIfPresent(Custom.Message.self, forKey: .custom) ?? Custom.Message()
       createdAt = try container.decode(Date.self, forKey: .createdAt)
     }
@@ -100,7 +100,7 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Hashable, Codab
       try container.encode(id, forKey: .id)
       try container.encode(text, forKey: .text)
       try container.encodeIfPresent(contentType, forKey: .contentType)
-      try container.encodeIfPresent(content?.codableValue, forKey: .content)
+      try container.encodeIfPresent(content.codableValue, forKey: .content)
       try container.encodeIfPresent(custom, forKey: .custom)
       try container.encode(createdAt, forKey: .createdAt)
     }
@@ -112,7 +112,7 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Hashable, Codab
       return lhs.id == rhs.id &&
         lhs.text == rhs.text &&
         lhs.contentType == rhs.contentType &&
-        lhs.content?.codableValue == rhs.codableValue &&
+        lhs.content.codableValue == rhs.codableValue &&
         lhs.custom == rhs.custom &&
         lhs.createdAt == rhs.createdAt
     }
@@ -121,7 +121,7 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Hashable, Codab
       hasher.combine(id)
       hasher.combine(text)
       hasher.combine(contentType)
-      hasher.combine(content?.codableValue)
+      hasher.combine(content.codableValue)
       hasher.combine(custom)
       hasher.combine(createdAt)
     }
@@ -171,7 +171,7 @@ public struct ChatMessage<Custom: ChatCustomData>: Identifiable, Hashable, Codab
     dateCreated: Date = Date(),
     text: String,
     contentType: String? = nil,
-    content: JSONCodable? = nil,
+    content: Custom.MessageContent = Custom.MessageContent(),
     custom: Custom.Message = Custom.Message(),
     pubnubUserId: String,
     user: ChatUser<Custom.User>? = nil,

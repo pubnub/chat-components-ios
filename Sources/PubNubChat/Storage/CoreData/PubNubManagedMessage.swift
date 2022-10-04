@@ -84,12 +84,12 @@ extension PubNubManagedMessage: ManagedMessageEntity {
   
   public func convert<Custom: ChatCustomData>() throws -> ChatMessage<Custom> {
 
-    return ChatMessage(
+    return ChatMessage<Custom>(
       id: self.id,
       timetoken: self.timetoken,
       dateCreated: self.dateCreated,
       text: self.text,
-      content: try Constant.jsonDecoder.decode(AnyJSON.self, from: self.content),
+      content: try Constant.jsonDecoder.decode(Custom.MessageContent.self, from: self.content),
       custom: (try? Constant.jsonDecoder.decode(Custom.Message.self, from: custom)) ?? Custom.Message(),
       pubnubUserId: self.author.pubnubUserID,
       user: self.author.convert(),

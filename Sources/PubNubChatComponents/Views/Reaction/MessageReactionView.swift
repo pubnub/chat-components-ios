@@ -31,7 +31,7 @@ import Combine
 import PubNub
 
 public class MessageReactionComponent: UIStackContainerView {
-  
+
   var currentCountPublisher = CurrentValueSubject<Int, Never>(0)
   public var currentCount: Int {
     get {
@@ -117,14 +117,17 @@ public class MessageReactionComponent: UIStackContainerView {
     
     countLabel.labelView
       .configure(
-        currentCountPublisher.map({ $0.description }).eraseToAnyPublisher(),
+        currentCountPublisher.map({
+          $0 > 99 ? "99+" : String($0)
+        }).eraseToAnyPublisher(),
         cancelIn: &cancellables
       )
   }
 }
 
+//MARK: - MessageReactionButtonComponent
+
 public class MessageReactionButtonComponent: UIButton {
-  
   lazy var messageReactionComponent = MessageReactionComponent(frame: bounds)
 
   var cancellables = Set<AnyCancellable>()

@@ -108,8 +108,11 @@
 		35F46DFE26C1D90B0024FB67 /* InputBarAccessoryView in Frameworks */ = {isa = PBXBuildFile; productRef = 35F46DFD26C1D90B0024FB67 /* InputBarAccessoryView */; };
 		35FD757E269F8714007D7435 /* PubNubManagedMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35FD757D269F8714007D7435 /* PubNubManagedMessage.swift */; };
 		35FD758126A0DD10007D7435 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35FD758026A0DD10007D7435 /* ChatMessage.swift */; };
+		84862C9E28C0EFB2004C4B9E /* MessageReactionComponentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84862C9D28C0EFB2004C4B9E /* MessageReactionComponentTests.swift */; };
+		84A7D3E328BF8DCB003F06E9 /* ReactionTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84A7D3E128BF8DAF003F06E9 /* ReactionTheme.swift */; };
 		84D5E8DC28B63AD9000DDE7E /* AddMessageReactionComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D5E8DB28B63AD9000DDE7E /* AddMessageReactionComponent.swift */; };
 		84D5E8DE28B63CDA000DDE7E /* AddMessageReactionAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D5E8DD28B63CDA000DDE7E /* AddMessageReactionAnimation.swift */; };
+		84D5E91F28B7B06D000DDE7E /* ReactionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D5E91A28B7AB0E000DDE7E /* ReactionProvider.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -241,9 +244,12 @@
 		35F436D72707B40300033720 /* MessageInputComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MessageInputComponent.swift; path = "../Message Input/MessageInputComponent.swift"; sourceTree = "<group>"; };
 		35FD757D269F8714007D7435 /* PubNubManagedMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PubNubManagedMessage.swift; sourceTree = "<group>"; };
 		35FD758026A0DD10007D7435 /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
+		84862C9D28C0EFB2004C4B9E /* MessageReactionComponentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageReactionComponentTests.swift; sourceTree = "<group>"; };
+		84A7D3E128BF8DAF003F06E9 /* ReactionTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionTheme.swift; sourceTree = "<group>"; };
 		84D5E8DB28B63AD9000DDE7E /* AddMessageReactionComponent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddMessageReactionComponent.swift; sourceTree = "<group>"; };
 		84D5E8DD28B63CDA000DDE7E /* AddMessageReactionAnimation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddMessageReactionAnimation.swift; sourceTree = "<group>"; };
 		84D5E91728B772F9000DDE7E /* PubNubChatModel-V3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "PubNubChatModel-V3.xcdatamodel"; sourceTree = "<group>"; };
+		84D5E91A28B7AB0E000DDE7E /* ReactionProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionProvider.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -305,7 +311,9 @@
 				350AC6D52643464F00C3D323 /* Products */,
 				350AC6EA2643467800C3D323 /* Frameworks */,
 			);
+			indentWidth = 2;
 			sourceTree = "<group>";
+			tabWidth = 2;
 		};
 		350AC6D52643464F00C3D323 /* Products */ = {
 			isa = PBXGroup;
@@ -379,6 +387,7 @@
 			isa = PBXGroup;
 			children = (
 				350AC7292643496300C3D323 /* PubNubChatComponentsTests.swift */,
+				84862C9D28C0EFB2004C4B9E /* MessageReactionComponentTests.swift */,
 				350AC72B2643496300C3D323 /* Info.plist */,
 			);
 			path = PubNubChatComponentsTests;
@@ -508,6 +517,7 @@
 		355526CE26D449FE009698E3 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				84D5E91828B78980000DDE7E /* Reaction */,
 				350BFB0D27290CF700F0F95B /* Reusable Views */,
 				35074AD72725EE4700462624 /* Cells */,
 				355526CF26D454BD009698E3 /* BubbleView.swift */,
@@ -516,9 +526,6 @@
 				35B3B5B92656C21C00473120 /* ImageComponentView.swift */,
 				35B418BA26DE82D100DB49A7 /* LabelComponentView.swift */,
 				350BFB102729151500F0F95B /* UserInlineDetailComponentView.swift */,
-				35DB0C4E2875E094001E1F76 /* MessageReactionView.swift */,
-				35DB0C502875E0B6001E1F76 /* MessageReactionListView.swift */,
-				84D5E8DB28B63AD9000DDE7E /* AddMessageReactionComponent.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -671,6 +678,7 @@
 		35F436D9270A3A1800033720 /* Theming */ = {
 			isa = PBXGroup;
 			children = (
+				84A7D3E028BF8DA2003F06E9 /* Reaction */,
 				35F436C92702236600033720 /* ThemeProvider.swift */,
 				3501A586265D8BDF00063403 /* AppearanceTemplate.swift */,
 				352A5D21270B953300B521A9 /* ChannelListComponentTheme.swift */,
@@ -693,6 +701,33 @@
 				35B3B523264B38E500473120 /* SubscribeAPI.swift */,
 			);
 			path = APIs;
+			sourceTree = "<group>";
+		};
+		84A7D3E028BF8DA2003F06E9 /* Reaction */ = {
+			isa = PBXGroup;
+			children = (
+				84A7D3E128BF8DAF003F06E9 /* ReactionTheme.swift */,
+			);
+			path = Reaction;
+			sourceTree = "<group>";
+		};
+		84D5E91828B78980000DDE7E /* Reaction */ = {
+			isa = PBXGroup;
+			children = (
+				84D5E91928B7AB01000DDE7E /* Provider */,
+				35DB0C4E2875E094001E1F76 /* MessageReactionView.swift */,
+				35DB0C502875E0B6001E1F76 /* MessageReactionListView.swift */,
+				84D5E8DB28B63AD9000DDE7E /* AddMessageReactionComponent.swift */,
+			);
+			path = Reaction;
+			sourceTree = "<group>";
+		};
+		84D5E91928B7AB01000DDE7E /* Provider */ = {
+			isa = PBXGroup;
+			children = (
+				84D5E91A28B7AB0E000DDE7E /* ReactionProvider.swift */,
+			);
+			path = Provider;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -970,8 +1005,10 @@
 				352A5D22270B953300B521A9 /* ChannelListComponentTheme.swift in Sources */,
 				3501A587265D8BDF00063403 /* AppearanceTemplate.swift in Sources */,
 				35DB0C512875E0B6001E1F76 /* MessageReactionListView.swift in Sources */,
+				84A7D3E328BF8DCB003F06E9 /* ReactionTheme.swift in Sources */,
 				350BFB0F27290DC400F0F95B /* ChannelMemberComponentCell.swift in Sources */,
 				35F436CA2702236600033720 /* ThemeProvider.swift in Sources */,
+				84D5E91F28B7B06D000DDE7E /* ReactionProvider.swift in Sources */,
 				35F436D02704BB0000033720 /* Combine+PubNub.swift in Sources */,
 				35074ACE271878DE00462624 /* MessageInputComponentTheme.swift in Sources */,
 				35074AD92725EE5900462624 /* ComponentCollectionViewCell.swift in Sources */,
@@ -1001,6 +1038,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				84862C9E28C0EFB2004C4B9E /* MessageReactionComponentTests.swift in Sources */,
 				350AC72A2643496300C3D323 /* PubNubChatComponentsTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

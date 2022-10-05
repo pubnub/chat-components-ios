@@ -66,6 +66,7 @@ extension ChatProvider
     customTheme: MessageListComponentTheme? = nil,
     customInputTheme: MessageInputComponentTheme? = nil
   ) throws -> MessageListComponentViewModel<ModelData, ManagedEntities> {
+    
     let sender = try fetchCurrentUser()
     
     guard let channel = try fetchChannel(byPubNubId: pubnubChannelId) else {
@@ -164,7 +165,7 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
       collectionViewType: messageListTheme.collectionViewTheme.viewType,
       collectionViewLayout: layout,
       messageInputComponent: messageInputComponent,
-      enableReactions: messageListTheme.enableReactions
+      reactionTheme: messageListTheme.reactionTheme
     )
     
     // Configure Message Input
@@ -322,10 +323,8 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
     }
   }
   
-  // MARK: Scroll to Bottom
-  
   // MARK: Typing Indicator
-
+    
   open func typingIndicatorCell(
     collectionView: UICollectionView,
     indexPath: IndexPath,
@@ -462,10 +461,11 @@ open class MessageListComponentViewModel<ModelData, ManagedEntities>:
     cell.configure(message, theme: theme)
     
     // Configure Message Reaction List
-    if componentTheme.enableReactions {
+    if let reactionTheme = componentTheme.reactionTheme {
       cell.configure(
         message,
         currentUser: author,
+        reactionProvider: reactionTheme.provider,
         onTapAction: { [weak self] (button, message, completion) in
           self?.messageActionTapped?(self, button, message, completion)
         }

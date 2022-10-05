@@ -59,18 +59,18 @@ open class ChatViewController<ModelData, ManagedEntities>: CollectionViewCompone
   
   private var preferredPickerViewSize: CGSize = .zero
   
-  private let enableReactions: Bool
+  private let reactionTheme: ReactionTheme?
   
   public init(
     viewModel: MessageListComponentViewModel<ModelData, ManagedEntities>,
     collectionViewType: UICollectionView.Type,
     collectionViewLayout: UICollectionViewLayout,
     messageInputComponent: MessageInputComponent,
-    enableReactions: Bool
+    reactionTheme: ReactionTheme?
   ) {
     
     self.messageInputComponent = messageInputComponent
-    self.enableReactions = enableReactions
+    self.reactionTheme = reactionTheme
     
     super.init(
       viewModel: viewModel,
@@ -104,8 +104,7 @@ open class ChatViewController<ModelData, ManagedEntities>: CollectionViewCompone
   
   open override func onLongPressGestureRecognized(gesture: UIGestureRecognizer) {
     
-    if enableReactions && gesture.state == .began {
-      
+    if let reactionTheme = reactionTheme, gesture.state == .began {
       // Finds the cell that was pressed
       guard let affectedCell = collectionView.visibleCells.first(where: {
         $0.frame.contains(gesture.location(in: collectionView))
@@ -113,11 +112,10 @@ open class ChatViewController<ModelData, ManagedEntities>: CollectionViewCompone
         return
       }
       
-      let reactionList = affectedCell.reactionListView.allReactions.map() { $0.reaction }
-      let pickerView = AddMessageReactionComponent.DefaultPickerView(reactionList: reactionList)
+      let pickerView = AddMessageReactionComponent.DefaultPickerView(theme: reactionTheme)
       
       // Creates and configures a view controller responsible for displaying the emoji picker view
-      let viewController = AddMessageReactionComponent(pickerView: pickerView, reactionList: reactionList)
+      let viewController = AddMessageReactionComponent(pickerView: pickerView)
       viewController.modalPresentationStyle = .custom
       viewController.transitioningDelegate = self
       
@@ -148,18 +146,15 @@ open class ChatViewController<ModelData, ManagedEntities>: CollectionViewCompone
     }
     
     let message = viewModel.fetchedEntities.object(at: indexPath) as ManagedEntities.Message
-    let buttonComponent = cell.reactionListView.allReactions.first(where: { $0.reaction == value} )
+    let buttonComponent = cell.reactionListView.button(for: value)
     
-    if let buttonComponent = buttonComponent {
-      viewModel.messageActionTapped?(
-        viewModel,
-        buttonComponent,
-        message,
-        nil
-      )
-    } else {
-      preconditionFailure("Not supported yet")
-    }
+    viewModel.messageActionTapped?(
+      viewModel,
+      buttonComponent,
+      message,
+      nil
+    )
+    
     dismiss(animated: true)
   }
     

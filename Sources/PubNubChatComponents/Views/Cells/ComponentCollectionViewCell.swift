@@ -173,6 +173,7 @@ open class CollectionViewCellComponent: UICollectionViewCell, ReloadCellDelegate
   open func configure<Message: ManagedMessageViewModel, User: ManagedUserViewModel>(
     _ message: Message,
     currentUser: User,
+    reactionProvider: ReactionProvider,
     onTapAction: ((MessageReactionButtonComponent?, Message, (() -> Void)?) -> Void)?
   ) {
 
@@ -232,7 +233,7 @@ open class MessageListItemCell: MessageCollectionViewCellComponent {
   
   // Text
   lazy public var bubbleContainer = BubbleContainerView(frame: bounds)
-  lazy public var reactionListView = MessageReactionListComponent(frame: bounds)
+  lazy public var reactionListView = MessageReactionListComponent()
   
   public var contentEdgeSpacing: CGFloat = .zero
   
@@ -314,6 +315,7 @@ open class MessageListItemCell: MessageCollectionViewCellComponent {
     _ message: Message,
     theme: MessageListCellComponentTheme
   ) {
+    
     theme.$alignment.sink { [weak self] newAlignment in
       self?.cellContainer.alignment = newAlignment.stackViewAlignment
     }.store(in: &contentCancellables)
@@ -349,6 +351,7 @@ open class MessageListItemCell: MessageCollectionViewCellComponent {
   open override func configure<Message: ManagedMessageViewModel, User: ManagedUserViewModel>(
     _ message: Message,
     currentUser: User,
+    reactionProvider: ReactionProvider,
     onTapAction: ((MessageReactionButtonComponent?, Message, (() -> Void)?) -> Void)?
   ) {
     if message.messageActions.count == 0 {
@@ -356,9 +359,11 @@ open class MessageListItemCell: MessageCollectionViewCellComponent {
       reactionListView.isHiddenSafe = true
     } else {
       // Update
+      
       reactionListView.configure(
         message,
         currentUserId: currentUser.pubnubId,
+        reactionProvider: reactionProvider,
         onMessageActionTap: onTapAction
       )
       

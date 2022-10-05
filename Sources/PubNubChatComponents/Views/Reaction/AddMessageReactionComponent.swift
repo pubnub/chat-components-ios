@@ -36,18 +36,13 @@ public protocol AnyMessageReactionComponent {
 }
 
 open class AddMessageReactionComponent: UIViewController, AnyMessageReactionComponent {
-
-  private var reactionList: [String]
   private var pickerView: UIView & AnyMessageReactionComponent
   private var cancellables = Set<AnyCancellable>()
 
   init(
-    pickerView view: UIView & AnyMessageReactionComponent,
-    reactionList list: [String]
+    pickerView view: UIView & AnyMessageReactionComponent
   ) {
     pickerView = view
-    reactionList = list
-    
     super.init(nibName: nil, bundle: nil)
   }
   
@@ -73,17 +68,20 @@ open class AddMessageReactionComponent: UIViewController, AnyMessageReactionComp
     )
   }
   
-  final class DefaultPickerView: UIStackContainerView, AnyMessageReactionComponent {
+  final class DefaultPickerView: UIView, AnyMessageReactionComponent {
+    private let stackView = UIStackView()
+    private let scrollView = UIScrollView()
     
-    private let reactionList: [String]
-    private let selectedReactionSubject: PassthroughSubject<String, Never>
+    private let theme: ReactionTheme
+    private var reactionList: [String] { theme.reactions }
+    private let selectedReactionSubject = PassthroughSubject<String, Never>()
     
-    init(reactionList list: [String]) {
-      
-      reactionList = list
-      selectedReactionSubject = PassthroughSubject<String, Never>()
-      
+    init(theme: ReactionTheme) {
+      self.theme = theme
+
       super.init(frame: .zero)
+      
+      setup()
     }
     
     public required init?(coder: NSCoder) {
@@ -94,20 +92,41 @@ open class AddMessageReactionComponent: UIViewController, AnyMessageReactionComp
       selectedReactionSubject.eraseToAnyPublisher()
     }
     
-    override func setupSubviews() {
-      super.setupSubviews()
+    private func setupScrollView() {
+      addSubview(scrollView)
+      scrollView.translatesAutoresizingMaskIntoConstraints = false
+      scrollView.showsHorizontalScrollIndicator = false
+      scrollView.contentInset = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
+      scrollView.contentOffset = .init(x: -10, y: 0)
       
-      layoutMargins = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
-      backgroundColor = .lightGray
-      layer.cornerRadius = 20
-      
+      NSLayoutConstraint.activate([
+        scrollView.leadingAnchor.constraint(equalTo: leadingAnchor),
+        scrollView.topAnchor.constraint(equalTo: topAnchor),
+        scrollView.trailingAnchor.constraint(equalTo: trailingAnchor),
+        scrollView.bottomAnchor.constraint(equalTo: bottomAnchor)
+      ])
+    }
+    
+    private func setupStackView() {
       stackView.alignment = .center
       stackView.axis = .horizontal
       stackView.spacing = 10
       stackView.distribution = .fillEqually
+      stackView.translatesAutoresizingMaskIntoConstraints = false
       
+      scrollView.addSubview(stackView)
+      NSLayoutConstraint.activate([
+        stackView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+        stackView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+        stackView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+        stackView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+        stackView.heightAnchor.constraint(equalTo: heightAnchor),
+        stackView.widthAnchor.constraint(equalTo: widthAnchor, constant: -20).priority(.defaultLow)
+      ])
+    }
+    
+    private func setupButtons() {
       reactionList.enumerated().forEach() { index, value in
-        
         let buttonView = UIButton(type: .custom)
         buttonView.tag = index
         buttonView.setTitle(value, for: .normal)
@@ -117,6 +136,20 @@ open class AddMessageReactionComponent: UIViewController, AnyMessageReactionComp
         
         stackView.addArrangedSubview(buttonView)
       }
+    }
+    
+    private func setup() {
+      translatesAutoresizingMaskIntoConstraints = false
+      NSLayoutConstraint.activate([
+        widthAnchor.constraint(lessThanOrEqualToConstant: theme.pickerMaxWidth).priority(.defaultHigh)
+      ])
+      
+      backgroundColor = .lightGray
+      layer.cornerRadius = 20
+      
+      setupScrollView()
+      setupStackView()
+      setupButtons()
     }
     
     @objc

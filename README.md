@@ -17,11 +17,11 @@ Our iOS component library provides chat features like direct and group messaging
 
 ## Available components
 
-* [ChannelList](https://www.pubnub.com//docs/chat/components/ios/ui-components-ios#channellist)
-* [MemberList](https://www.pubnub.com//docs/chat/components/ios/ui-components-ios#memberlist)
-* [MessageList](https://www.pubnub.com//docs/chat/components/ios/ui-components-ios#messagelist)
-* [MessageInput](https://www.pubnub.com//docs/chat/components/ios/ui-components-ios#messageinput)
-* [ChatProvider](https://www.pubnub.com//docs/chat/components/ios/chat-provider-ios)
+* [ChannelList](https://www.pubnub.com//docs/chat/components/ios/ui-components#channellist)
+* [MemberList](https://www.pubnub.com//docs/chat/components/ios/ui-components#memberlist)
+* [MessageList](https://www.pubnub.com//docs/chat/components/ios/ui-components#messagelist)
+* [MessageInput](https://www.pubnub.com//docs/chat/components/ios/ui-components#messageinput)
+* [ChatProvider](https://www.pubnub.com//docs/chat/components/ios/chat-provider)
 
 ## Prerequisites
 
@@ -47,11 +47,11 @@ For any additional questions, refer to [Apple documentation](https://developer.a
 
 Explore [sample apps](https://github.com/pubnub/chat-components-ios-examples/blob/master/README.md) that are built using chat components.
 
-Follow the steps in the [Getting Started guide](https://www.pubnub.com/docs/chat/components/ios/get-started-ios) to set up a sample chat app and send your first message.
+Follow the steps in the [Getting Started guide](https://www.pubnub.com/docs/chat/components/ios) to set up a sample chat app and send your first message.
 
 ## Related documentation
 
-* [PubNub Chat Components for iOS Documentation](https://www.pubnub.com/docs/chat/components/ios/get-started-ios)
+* [PubNub Chat Components for iOS Documentation](https://www.pubnub.com/docs/chat/components/ios)
 * [Swift SDK Documentation](https://www.pubnub.com/docs/sdks/swift)
 * [Core Data Documentation](https://developer.apple.com/documentation/coredata)
 * [UIKit Documentation](https://developer.apple.com/documentation/uikit/)

@@ -104,7 +104,7 @@ extension PubNubManagedChannel: ManagedChannelViewModel {
   
   public var oldestMessagePublisher: AnyPublisher<PubNubManagedMessage?, Never> {
     return publisher(for: \.messages)
-      .map { $0.min { $0.sortedDate > $1.sortedDate } }
+      .map { $0.min { $0.sortedDate < $1.sortedDate } }
       .eraseToAnyPublisher()
   }
 }

@@ -657,7 +657,7 @@ public class InputTextViewComponentTheme: TextViewComponentTheme {
     backgroundColor: UIColor = .clear,
     textColor: UIColor = .black,
     textFont: UIFont = .preferredFont(forTextStyle: .body),
-    usesStandardTextScaling: Bool = true,
+    usesStandardTextScaling: Bool = false,
     dataDetectorTypes: UIDataDetectorTypes = .all,
     linkTextAttributes: [NSAttributedString.Key: Any] = [:],
     isEditable: Bool = false,

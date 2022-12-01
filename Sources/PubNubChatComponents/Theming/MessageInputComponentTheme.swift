@@ -279,7 +279,7 @@ extension InputTextViewComponentTheme {
       backgroundColor: .tertiarySystemBackground,
       textColor: .systemGray2,
       textFont: AppearanceTemplate.Font.body,
-      usesStandardTextScaling: true,
+      usesStandardTextScaling: false,
       dataDetectorTypes: .all,
       linkTextAttributes: [:],
       isEditable: true,

@@ -183,7 +183,7 @@ extension PubNubManagedMember: ManagedMemberEntity {
     self.custom = try member.custom.custom.jsonDataResult.get()
     
     if let presence = member.presence {
-      self.isPresent = isPresent
+      self.isPresent = presence.isPresent
       switch presence.presenceState {
       case .noChange:
         break

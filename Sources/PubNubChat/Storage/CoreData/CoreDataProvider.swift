@@ -248,6 +248,7 @@ public class CoreDataProvider: NSPersistentContainer {
           try session(mutableBackgroundContext)
         }
         try mutableBackgroundContext.performSave()
+        mutableBackgroundContext.reset()
       } catch {
         errorHandler?(error)
       }
@@ -266,6 +267,7 @@ public class CoreDataProvider: NSPersistentContainer {
           try session(mutableBackgroundContext)
         }
         try mutableBackgroundContext.performSave()
+        mutableBackgroundContext.reset()
       } catch {
         operationError = error
       }
@@ -309,6 +311,7 @@ extension CoreDataProvider: TransientPropertyHolder {
         
         if self.mutableBackgroundContext.hasChanges {
           try self.mutableBackgroundContext.save()
+          self.mutableBackgroundContext.reset()
         }
         PubNub.log.debug("CoreDataContainer successfully cleared transient properties")
       } catch {

@@ -1,5 +1,7 @@
 # PubNub Chat Components for iOS
 
+> WARNING: PubNub no longer supports this software library, but you are welcome to contribute.
+
 Chat components provide easy-to-use building blocks to create iOS chat applications, for use cases like live event messaging, telemedicine, and service desk support.
 
 Our iOS component library provides chat features like direct and group messaging, typing indicators, presence, and reactions.  You don't need to implement a data source by yourself and go through the complexity of designing the architecture of a realtime network. Instead, use our components, predefined repositories, and view models to create custom apps for a wide range of use cases.
@@ -17,11 +19,11 @@ Our iOS component library provides chat features like direct and group messaging
 
 ## Available components
 
-* [ChannelList](https://www.pubnub.com//docs/chat/components/ios/ui-components#channellist)
-* [MemberList](https://www.pubnub.com//docs/chat/components/ios/ui-components#memberlist)
-* [MessageList](https://www.pubnub.com//docs/chat/components/ios/ui-components#messagelist)
-* [MessageInput](https://www.pubnub.com//docs/chat/components/ios/ui-components#messageinput)
-* [ChatProvider](https://www.pubnub.com//docs/chat/components/ios/chat-provider)
+* [ChannelList](https://www.pubnub.com/docs/chat/community-supported/ios/ui-components#channellist)
+* [MemberList](https://www.pubnub.com/docs/chat/community-supported/ios/ui-components#memberlist)
+* [MessageList](https://www.pubnub.com/docs/chat/community-supported/ios/ui-components#messagelist)
+* [MessageInput](https://www.pubnub.com/docs/chat/community-supported/ios/ui-components#messageinput)
+* [ChatProvider](https://www.pubnub.com/docs/chat/community-supported/ios/chat-provider)
 
 ## Prerequisites
 
@@ -47,11 +49,11 @@ For any additional questions, refer to [Apple documentation](https://developer.a
 
 Explore [sample apps](https://github.com/pubnub/chat-components-ios-examples/blob/master/README.md) that are built using chat components.
 
-Follow the steps in the [Getting Started guide](https://www.pubnub.com/docs/chat/components/ios) to set up a sample chat app and send your first message.
+Follow the steps in the [Getting Started guide](https://www.pubnub.com/docs/chat/community-supported/ios) to set up a sample chat app and send your first message.
 
 ## Related documentation
 
-* [PubNub Chat Components for iOS Documentation](https://www.pubnub.com/docs/chat/components/ios)
+* [PubNub Chat Components for iOS Documentation](https://www.pubnub.com/docs/chat/community-supported/ios)
 * [Swift SDK Documentation](https://www.pubnub.com/docs/sdks/swift)
 * [Core Data Documentation](https://developer.apple.com/documentation/coredata)
 * [UIKit Documentation](https://developer.apple.com/documentation/uikit/)

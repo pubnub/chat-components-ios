@@ -375,21 +375,26 @@ open class ManagedEntityListViewModel<ModelData, ManagedEntities>:
   }
   
   // MARK: - Data Source
+  public var dataSourceSnapshotWillAppply: ((NSDiffableDataSourceSnapshot<String, NSManagedObjectID>) -> (NSDiffableDataSourceSnapshot<String, NSManagedObjectID>))?
   
-  public var dataSourceSnapshotWillAppply: ((NSDiffableDataSourceSnapshot<String,NSManagedObjectID>) -> (NSDiffableDataSourceSnapshot<String,NSManagedObjectID>))?
   open func controller(
     _ controller: NSFetchedResultsController<NSFetchRequestResult>,
     didChangeContentWith snapshot: NSDiffableDataSourceSnapshotReference
   ) {
-    let snapshot = snapshot as NSDiffableDataSourceSnapshot<String,NSManagedObjectID>
+    guard let dataSource = dataSource else {
+      PubNub.log.error("dataSource is nil")
+      return
+    }
     
+    let snapshot = snapshot as NSDiffableDataSourceSnapshot<String, NSManagedObjectID>
     let finalSnapshot = dataSourceSnapshotWillAppply?(snapshot) ?? snapshot
     
-    dataSnapshotQueue.async { [dataSource] in
-      dataSource?.apply(
-        finalSnapshot,
-        animatingDifferences: true
-      )
+    dataSnapshotQueue.async {
+      dataSource.apply(finalSnapshot, animatingDifferences: true) {
+        if #unavailable(iOS 15) {
+          dataSource.apply(finalSnapshot, animatingDifferences: false)
+        }
+      }
     }
   }
   
